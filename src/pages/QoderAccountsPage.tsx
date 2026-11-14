@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../utils/scrollbarContainment';
 import { useDurableUiBooleanSetting } from '../hooks/useDurableUiSetting';
 import { useAccountsOverviewFilterState } from '../hooks/useAccountsOverviewFilterState';
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -500,7 +501,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     const onPointerDown = (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
-      if (tagFilterRef.current?.contains(target)) return;
+      if (containsWithScrollbar(tagFilterRef.current, target)) return;
       setShowTagFilter(false);
     };
     document.addEventListener('mousedown', onPointerDown);

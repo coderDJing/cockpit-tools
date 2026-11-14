@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../utils/scrollbarContainment';
 import { hydrateDurableUiSettings } from '../utils/durableUiSettings';
 import {
   ChangeEvent,
@@ -208,7 +209,7 @@ function IconSelector({
     }
     const handleMouseDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (rootRef.current?.contains(target)) {
+      if (containsWithScrollbar(rootRef.current, target)) {
         return;
       }
       setOpen(false);

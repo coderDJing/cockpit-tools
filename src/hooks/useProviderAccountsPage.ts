@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../utils/scrollbarContainment';
 import { useDurableUiBooleanSetting } from './useDurableUiSetting';
 import type { FlowNoticeSettingKey } from '../utils/durableUiSettings';
 import { useAccountsOverviewFilterState } from './useAccountsOverviewFilterState';
@@ -992,7 +993,7 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
     if (!showTagFilter) return;
     const handleClick = (event: MouseEvent) => {
       if (!tagFilterRef.current) return;
-      if (!tagFilterRef.current.contains(event.target as Node)) {
+      if (!containsWithScrollbar(tagFilterRef.current, event.target as Node)) {
         setShowTagFilter(false);
       }
     };

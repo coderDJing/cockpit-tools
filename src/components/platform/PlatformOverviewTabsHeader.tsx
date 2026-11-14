@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../../utils/scrollbarContainment';
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Clock3, FolderOpen, Github, Globe2, Layers, MoreHorizontal, PanelTop, Server } from 'lucide-react';
@@ -264,7 +265,7 @@ export function PlatformOverviewTabsHeader<T extends string = PlatformOverviewTa
     if (!moreOpen) return;
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node | null;
-      if (target && !moreRef.current?.contains(target)) {
+      if (target && !containsWithScrollbar(moreRef.current, target)) {
         setMoreOpen(false);
       }
     };

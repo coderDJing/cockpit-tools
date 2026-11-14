@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../../utils/scrollbarContainment';
 import {
   ChevronDown,
   GripVertical,
@@ -483,7 +484,7 @@ export function CodexExperimentalModelEditor({
     if (!addMenuOpen) return;
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (addMenuRef.current && !addMenuRef.current.contains(target)) {
+      if (addMenuRef.current && !containsWithScrollbar(addMenuRef.current, target)) {
         setAddMenuOpen(false);
       }
     };
@@ -495,7 +496,7 @@ export function CodexExperimentalModelEditor({
     if (!pickerOpen) return;
     const updateMenuPosition = (event?: Event) => {
       const target = event?.target;
-      if (event?.type === "scroll" && target instanceof Node && pickerMenuRef.current?.contains(target)) return;
+      if (event?.type === "scroll" && target instanceof Node && containsWithScrollbar(pickerMenuRef.current, target)) return;
       const trigger = pickerTriggerRef.current;
       if (!trigger) return;
       const layers: string[] = [];
@@ -510,7 +511,7 @@ export function CodexExperimentalModelEditor({
     };
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (pickerTriggerRef.current?.contains(target) || pickerMenuRef.current?.contains(target)) return;
+      if (containsWithScrollbar(pickerTriggerRef.current, target) || containsWithScrollbar(pickerMenuRef.current, target)) return;
       closePicker(false);
     };
     updateMenuPosition();

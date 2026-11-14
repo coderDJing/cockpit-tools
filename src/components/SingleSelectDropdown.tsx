@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../utils/scrollbarContainment';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useEscCloseTopmost } from "../hooks/useEscClose";
@@ -66,7 +67,7 @@ export function SingleSelectDropdown({
       if (
         event?.type === "scroll" &&
         eventTarget instanceof Node &&
-        menuRef.current?.contains(eventTarget)
+        containsWithScrollbar(menuRef.current, eventTarget)
       ) {
         return;
       }
@@ -94,8 +95,8 @@ export function SingleSelectDropdown({
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (!target) return;
-      if (rootRef.current?.contains(target)) return;
-      if (menuRef.current?.contains(target)) return;
+      if (containsWithScrollbar(rootRef.current, target)) return;
+      if (containsWithScrollbar(menuRef.current, target)) return;
       setOpen(false);
     };
 
