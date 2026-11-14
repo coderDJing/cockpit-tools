@@ -245,6 +245,7 @@ const RENDERABLE_PAGE_VALUES: readonly Page[] = [
   'codebuddy',
   'codebuddy-cn',
   'qoder',
+  'qoder-cn',
   'zcode',
   'trae',
   'trae-solo',
