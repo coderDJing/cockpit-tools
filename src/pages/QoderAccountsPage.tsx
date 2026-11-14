@@ -1543,7 +1543,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
                   title={t('accounts.actions.export', '导出')}
                   disabled={exportModal.preparing || exportModal.saving}
                 >
-                  <Download size={14} />
+                  <Upload size={14} />
                 </button>
                 <button
                   className="card-action-btn danger"
