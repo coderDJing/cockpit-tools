@@ -5,7 +5,8 @@ if (-not $env:TAURI_SIGNING_PRIVATE_KEY) {
 Push-Location (Split-Path -Parent $PSScriptRoot)
 try {
     $profilePath = Join-Path $PSScriptRoot 'fork-release.toml'
-    & npm.cmd run tauri build -- --bundles nsis -- --config $profilePath
+    $runnerPath = Join-Path $PSScriptRoot 'cargo-fork-windows.cmd'
+    & npm.cmd run tauri build -- --bundles nsis --runner $runnerPath -- --config $profilePath
     if ($LASTEXITCODE -ne 0) { throw "Fork build failed ($LASTEXITCODE)" }
 } finally {
     Pop-Location
