@@ -4,9 +4,14 @@
 
 mod commands;
 pub mod error;
+mod fork_cli;
 mod models;
 mod modules;
 mod utils;
+
+pub fn try_run_fork_cli() -> Option<i32> {
+    fork_cli::try_run()
+}
 
 #[cfg(test)]
 mod dependency_tls_tests;

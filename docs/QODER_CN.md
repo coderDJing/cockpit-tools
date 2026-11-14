@@ -20,3 +20,5 @@ Qoder CN supports device authorization, JSON/native import, quota refresh, and s
 Credentials marked `qodercn` cannot be imported or refreshed through the global platform. Credentials are never tried against another region's endpoint. CN requests do not reuse global IDE machine tokens. Refresh-token rotation is persisted before subsequent quota requests, preserving upstream's renewal behavior. The existing `dedicated_qodercn` deployment remains in its upstream IDE platform; it is not reclassified as the public CN service.
 
 Native profile and device-login conventions are adapted from [WorkBuddy Switch Next](https://github.com/coderDJing/workbuddy-switch-next), licensed under MIT. Attribution is included in `resources/licenses/WorkBuddy-Switch-Next.txt` and the application bundle.
+
+The private fork additionally provides `--fork-cli status`, `self-test`, `import-native <cn|global> <desktop|cli>`, `refresh <cn|global> <id>`, and `migrate-cn` for local migration. Output excludes credentials. `migrate-cn` copies a legacy CN record to the CN store and verifies it before removing its global entry; existing native client profiles are not changed by migration.
