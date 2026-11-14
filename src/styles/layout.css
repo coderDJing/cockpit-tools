@@ -565,10 +565,6 @@
   overflow-x: hidden;
 }
 
-.side-nav.side-nav-classic .nav-items.nav-items-no-scroll {
-  overflow-y: hidden;
-}
-
 .side-nav.side-nav-classic .nav-item {
   width: 100%;
   min-height: var(--side-nav-classic-nav-item-height-scaled);

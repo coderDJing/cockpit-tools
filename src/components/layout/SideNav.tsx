@@ -87,10 +87,6 @@ const PAGE_PLATFORM_MAP: Partial<Record<Page, PlatformId>> = {
 const APP_DISPLAY_NAME =
   import.meta.env.VITE_COCKPIT_TOOLS_PROFILE === 'dev' ? 'Cockpit Tools Dev' : 'Cockpit Tools';
 
-const CLASSIC_NAV_MIN_SCALE = 0.5;
-const CLASSIC_NAV_SCALE_EPSILON = 0.004;
-const CLASSIC_NAV_SCROLL_EPSILON = 4;
-
 function renderEntryIcon(entry: SideNavEntry, size: number) {
   if (entry.kind === 'api-relay') {
     return (
@@ -152,8 +148,6 @@ export function SideNav({
   const { showModal } = useGlobalModal();
   const [flyingRockets, setFlyingRockets] = useState<FlyingRocket[]>([]);
   const [showMore, setShowMore] = useState(false);
-  const [classicAdaptiveScale, setClassicAdaptiveScale] = useState(1);
-  const [classicNavNeedsScroll, setClassicNavNeedsScroll] = useState(false);
   const [classicHandleTop, setClassicHandleTop] = useState<number | null>(null);
   const [morePopoverPosition, setMorePopoverPosition] = useState({
     top: 120,
@@ -171,11 +165,6 @@ export function SideNav({
   const showClassicLabels = isClassicLayout && !classicCollapsed;
   const rocketIdRef = useRef(0);
   const classicSwitchDontAskAgainRef = useRef(false);
-  const sideNavRef = useRef<HTMLElement>(null);
-  const updateEntryRef = useRef<HTMLDivElement>(null);
-  const brandRef = useRef<HTMLDivElement>(null);
-  const navItemsRef = useRef<HTMLDivElement>(null);
-  const bottomActionsRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const morePopoverRef = useRef<HTMLDivElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
@@ -325,13 +314,6 @@ export function SideNav({
     }
   }, [navigateToPlatform, setPage]);
 
-  const classicScaleContentKey = useMemo(
-    () => sidebarMenuEntries
-      .map((entry) => `${entry.id}:${entry.platformIds.join(',')}`)
-      .join('|'),
-    [sidebarMenuEntries],
-  );
-
   const sidebarMenuEntryIdSet = useMemo(
     () => new Set(sidebarMenuEntries.map((entry) => entry.id)),
     [sidebarMenuEntries],
@@ -387,194 +369,7 @@ export function SideNav({
       || updateActionState === 'installing'
       || updateActionState === 'ready'
     );
-  const recalculateClassicAdaptiveScale = useCallback(() => {
-    if (!isClassicLayout || typeof window === 'undefined') {
-      setClassicAdaptiveScale((prev) => (prev === 1 ? prev : 1));
-      setClassicNavNeedsScroll((prev) => (prev ? false : prev));
-      return;
-    }
-
-    const navElement = sideNavRef.current;
-    const navItemsElement = navItemsRef.current;
-    const brandElement = brandRef.current;
-    const bottomActionsElement = bottomActionsRef.current;
-
-    if (!navElement || !navItemsElement || !brandElement || !bottomActionsElement) {
-      return;
-    }
-
-    const parsePixel = (value: string): number => {
-      const parsed = Number.parseFloat(value);
-      return Number.isFinite(parsed) ? parsed : 0;
-    };
-
-    const currentScale = classicAdaptiveScale > 0 ? classicAdaptiveScale : 1;
-    const navStyles = window.getComputedStyle(navElement);
-    const navPaddingTop = parsePixel(navStyles.paddingTop);
-    const navPaddingBottom = parsePixel(navStyles.paddingBottom);
-    const navGap = parsePixel(navStyles.rowGap || navStyles.gap || '0');
-
-    const navItemsStyles = window.getComputedStyle(navItemsElement);
-    const navItemsPaddingTop = parsePixel(navItemsStyles.paddingTop);
-    const navItemsPaddingBottom = parsePixel(navItemsStyles.paddingBottom);
-    const navItemElements = Array.from(navItemsElement.children).filter(
-      (node): node is HTMLElement => node instanceof HTMLElement,
-    );
-    let navItemsContentHeight = 0;
-    if (navItemElements.length > 0) {
-      const firstRect = navItemElements[0].getBoundingClientRect();
-      const lastRect = navItemElements[navItemElements.length - 1].getBoundingClientRect();
-      navItemsContentHeight = Math.max(0, lastRect.bottom - firstRect.top);
-    }
-    const navItemsRequiredHeight = navItemsPaddingTop + navItemsContentHeight + navItemsPaddingBottom;
-
-    if (navItemsRequiredHeight <= 0) {
-      return;
-    }
-
-    const sections: number[] = [
-      brandElement.offsetHeight,
-      navItemsRequiredHeight,
-      bottomActionsElement.offsetHeight,
-    ];
-    if (updateEntryRef.current) {
-      sections.unshift(updateEntryRef.current.offsetHeight);
-    }
-
-    const sectionsHeight = sections.reduce((sum, height) => sum + height, 0);
-    const sectionsGap = Math.max(0, sections.length - 1) * navGap;
-    const requiredScaledHeight = navPaddingTop + navPaddingBottom + sectionsHeight + sectionsGap;
-    if (requiredScaledHeight <= 0) {
-      return;
-    }
-
-    const requiredBaseHeight = requiredScaledHeight / currentScale;
-    const availableHeight = window.innerHeight;
-    if (availableHeight <= 0) {
-      return;
-    }
-
-    const fitScale = Math.min(1, availableHeight / requiredBaseHeight);
-    let nextScale = requiredBaseHeight <= availableHeight + 0.5
-      ? 1
-      : Math.max(CLASSIC_NAV_MIN_SCALE, fitScale);
-
-    const currentOverflow = navItemsElement.scrollHeight - navItemsElement.clientHeight;
-    if (currentOverflow > CLASSIC_NAV_SCROLL_EPSILON && navItemsElement.scrollHeight > 0) {
-      const overflowFitScale = currentScale * (navItemsElement.clientHeight / navItemsElement.scrollHeight);
-      if (Number.isFinite(overflowFitScale) && overflowFitScale > 0) {
-        nextScale = Math.max(CLASSIC_NAV_MIN_SCALE, Math.min(nextScale, overflowFitScale));
-      }
-    }
-
-    const updateScrollNeed = () => {
-      const target = navItemsRef.current;
-      if (!target) {
-        return;
-      }
-      const overflow = target.scrollHeight - target.clientHeight;
-      const shouldScroll = overflow > CLASSIC_NAV_SCROLL_EPSILON;
-
-      if (
-        shouldScroll
-        && target.scrollHeight > 0
-        && classicAdaptiveScale > CLASSIC_NAV_MIN_SCALE + CLASSIC_NAV_SCALE_EPSILON
-      ) {
-        const overflowFitScale = classicAdaptiveScale * (target.clientHeight / target.scrollHeight);
-        if (Number.isFinite(overflowFitScale) && overflowFitScale > 0) {
-          const correctedScale = Math.max(CLASSIC_NAV_MIN_SCALE, overflowFitScale);
-          if (classicAdaptiveScale - correctedScale > CLASSIC_NAV_SCALE_EPSILON) {
-            setClassicAdaptiveScale(Number(correctedScale.toFixed(5)));
-            return;
-          }
-        }
-      }
-
-      setClassicNavNeedsScroll((prev) => (prev === shouldScroll ? prev : shouldScroll));
-    };
-
-    if (Math.abs(nextScale - classicAdaptiveScale) > CLASSIC_NAV_SCALE_EPSILON) {
-      setClassicAdaptiveScale(Number(nextScale.toFixed(5)));
-      window.requestAnimationFrame(updateScrollNeed);
-      return;
-    }
-
-    updateScrollNeed();
-  }, [classicAdaptiveScale, isClassicLayout]);
-
-  useLayoutEffect(() => {
-    if (!isClassicLayout || typeof window === 'undefined') {
-      return;
-    }
-    recalculateClassicAdaptiveScale();
-    const raf = window.requestAnimationFrame(recalculateClassicAdaptiveScale);
-    return () => {
-      window.cancelAnimationFrame(raf);
-    };
-  }, [
-    classicCollapsed,
-    classicScaleContentKey,
-    isClassicLayout,
-    recalculateClassicAdaptiveScale,
-    shouldShowUpdateActionEntry,
-  ]);
-
-  useEffect(() => {
-    if (!isClassicLayout || typeof window === 'undefined') {
-      return;
-    }
-    const onResize = () => {
-      recalculateClassicAdaptiveScale();
-    };
-    window.addEventListener('resize', onResize);
-
-    const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(() => {
-        recalculateClassicAdaptiveScale();
-      })
-      : null;
-
-    if (resizeObserver) {
-      if (sideNavRef.current) {
-        resizeObserver.observe(sideNavRef.current);
-      }
-      if (navItemsRef.current) {
-        resizeObserver.observe(navItemsRef.current);
-      }
-    }
-
-    const mutationObserver = typeof MutationObserver !== 'undefined' && navItemsRef.current
-      ? new MutationObserver(() => {
-        recalculateClassicAdaptiveScale();
-      })
-      : null;
-
-    if (mutationObserver && navItemsRef.current) {
-      mutationObserver.observe(navItemsRef.current, {
-        childList: true,
-        subtree: true,
-      });
-    }
-
-    return () => {
-      window.removeEventListener('resize', onResize);
-      resizeObserver?.disconnect();
-      mutationObserver?.disconnect();
-    };
-  }, [isClassicLayout, recalculateClassicAdaptiveScale]);
-
-  const classicMainIconSize = Math.max(14, Math.round(20 * classicAdaptiveScale));
-  const classicBrandLogoIconSize = Math.max(14, Math.round(20 * classicAdaptiveScale));
-  const classicHandleIconSize = Math.max(12, Math.round(16 * classicAdaptiveScale));
-
-  const classicScaleStyle = isClassicLayout
-    ? ({ '--side-nav-classic-adaptive-scale': classicAdaptiveScale } as CSSProperties)
-    : undefined;
-
-  const classicHandleStyle = ({
-    '--side-nav-classic-adaptive-scale': classicAdaptiveScale,
-    ...(classicHandleTop == null ? {} : { top: `${classicHandleTop}px` }),
-  } as CSSProperties);
+  const classicHandleStyle = classicHandleTop == null ? undefined : { top: `${classicHandleTop}px` };
 
   const handleClassicLayoutEntryClick = useCallback(() => {
     if (hideClassicSwitchPrompt) {
@@ -851,12 +646,10 @@ export function SideNav({
   return (
     <>
       <nav
-        ref={sideNavRef}
-        style={classicScaleStyle}
         className={`side-nav${isClassicLayout ? ' side-nav-classic' : ''}${isClassicCollapsed ? ' side-nav-classic-collapsed' : ''}`}
       >
       {shouldShowUpdateActionEntry && (
-        <div className="side-nav-update-entry" ref={updateEntryRef}>
+        <div className="side-nav-update-entry">
           <button
             type="button"
             className={`side-nav-update-btn is-${updateVisualState}`}
@@ -886,7 +679,7 @@ export function SideNav({
         </div>
       )}
 
-      <div className="nav-brand" ref={brandRef} style={{ position: 'relative', zIndex: 10 }}>
+      <div className="nav-brand" style={{ position: 'relative', zIndex: 10 }}>
         <div className="side-nav-brand-main">
           <div
             ref={logoRef}
@@ -894,7 +687,7 @@ export function SideNav({
             onClick={handleLogoClick}
             title={hasBreakoutSession ? t('breakout.resumeGameNav', '继续游戏') : undefined}
           >
-            <Rocket size={isClassicLayout ? classicBrandLogoIconSize : 20} />
+            <Rocket size={20} />
             {hasBreakoutSession && <span className="rocket-session-indicator" aria-hidden="true" />}
             {!hasBreakoutSession && easterEggClickCount > 0 && (
               <span className="rocket-click-count">{easterEggClickCount}</span>
@@ -929,16 +722,13 @@ export function SideNav({
 
       </div>
 
-      <div
-        className={`nav-items${isClassicLayout && !classicNavNeedsScroll ? ' nav-items-no-scroll' : ''}`}
-        ref={navItemsRef}
-      >
+      <div className="nav-items">
         <button
           className={`nav-item ${page === 'dashboard' && !shouldLockActiveOnMore ? 'active' : ''}`}
           onClick={() => setPage('dashboard')}
           title={t('nav.dashboard')}
         >
-          <GaugeCircle size={isClassicLayout ? classicMainIconSize : 20} />
+          <GaugeCircle size={20} />
           {showClassicLabels ? (
             <span className="nav-item-text">{t('nav.dashboard')}</span>
           ) : !isClassicLayout ? (
@@ -955,7 +745,7 @@ export function SideNav({
               onClick={() => navigateToEntry(entry)}
               title={entry.kind === 'api-relay' && campaignActive ? `${entry.label} · ${t('apiKeyFun.campaign.title')}` : entry.label}
             >
-              {renderEntryIcon(entry, isClassicLayout ? classicMainIconSize : 20)}
+              {renderEntryIcon(entry, 20)}
               {entry.kind === 'api-relay' && campaignActive && (
                 <span className={`api-relay-campaign-badge ${showClassicLabels ? 'with-label' : 'icon-badge'}`}>
                   {t('apiKeyFun.campaign.badge')}
@@ -976,7 +766,7 @@ export function SideNav({
           onClick={() => setShowMore((prev) => !prev)}
           title={t('nav.morePlatforms', '更多平台')}
         >
-          <LayoutGrid size={isClassicLayout ? classicMainIconSize : 20} />
+          <LayoutGrid size={20} />
           {showClassicLabels ? (
             <span className="nav-item-text">{t('nav.morePlatforms', '更多平台')}</span>
           ) : !isClassicLayout ? (
@@ -993,7 +783,7 @@ export function SideNav({
       </div>
 
       {isClassicLayout && (
-        <div className="nav-bottom-actions" ref={bottomActionsRef}>
+        <div className="nav-bottom-actions">
 
 
           <button
@@ -1001,7 +791,7 @@ export function SideNav({
             onClick={() => setPage('2fa')}
             title={t('nav.2faManager', '2FA / MFA 管理')}
           >
-            <ShieldCheck size={isClassicLayout ? classicMainIconSize : 20} />
+            <ShieldCheck size={20} />
             {showClassicLabels ? (
               <span className="nav-item-text">{t('nav.2faManager', '2FA / MFA 管理')}</span>
             ) : null}
@@ -1012,7 +802,7 @@ export function SideNav({
             onClick={onOpenLogViewer}
             title={t('nav.logs', '日志')}
           >
-            <FileText size={isClassicLayout ? classicMainIconSize : 20} />
+            <FileText size={20} />
             {showClassicLabels ? (
               <span className="nav-item-text">{t('nav.logs', '日志')}</span>
             ) : null}
@@ -1023,7 +813,7 @@ export function SideNav({
             onClick={() => setPage('settings')}
             title={t('nav.settings')}
           >
-            <Settings size={isClassicLayout ? classicMainIconSize : 20} />
+            <Settings size={20} />
             {showClassicLabels ? (
               <span className="nav-item-text">{t('nav.settings')}</span>
             ) : null}
@@ -1076,8 +866,8 @@ export function SideNav({
           }
         >
           {classicCollapsed
-            ? <PanelLeftOpen size={classicHandleIconSize} />
-            : <PanelLeftClose size={classicHandleIconSize} />}
+            ? <PanelLeftOpen size={16} />
+            : <PanelLeftClose size={16} />}
         </button>
       )}
     </>
