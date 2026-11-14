@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../utils/scrollbarContainment';
 import { useDurableUiSetting } from '../hooks/useDurableUiSetting';
 import { useLocalHistory, type LocalHistoryRead } from '../hooks/useLocalHistory';
 import { useAccountsOverviewFilterState } from '../hooks/useAccountsOverviewFilterState'
@@ -1364,7 +1365,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
     const handleClickOutside = (e: MouseEvent) => {
       if (
         colorPickerRef.current &&
-        !colorPickerRef.current.contains(e.target as Node)
+        !containsWithScrollbar(colorPickerRef.current, e.target as Node)
       ) {
         setShowColorPicker(null)
         setColorPickerPos(null)

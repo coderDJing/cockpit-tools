@@ -94,7 +94,8 @@
       "../src/assets/icons/zcode.png": "native-menu-icons/zcode.png",
       "../resources/codex/LICENSE.CLIProxyAPI": "licenses/CLIProxyAPI.txt",
       "../resources/licenses/WorkBuddy-Switch-Next.txt": "licenses/WorkBuddy-Switch-Next.txt",
-      "../resources/licenses/dnd-kit.txt": "licenses/dnd-kit.txt"
+      "../resources/licenses/dnd-kit.txt": "licenses/dnd-kit.txt",
+      "../resources/licenses/OverlayScrollbars.txt": "licenses/OverlayScrollbars.txt"
     },
     "macOS": {
       "bundleName": "Cockpit Tools",

@@ -1,0 +1,31 @@
+@import 'overlayscrollbars/styles/overlayscrollbars.css' layer(overlay-scrollbars);
+
+@layer overlay-scrollbars {
+  /* The existing element remains the viewport. Keep its original positioning. */
+  [data-overlayscrollbars] { position: revert-layer; }
+  [data-overlayscrollbars-viewport] { overflow: revert-layer; }
+}
+
+.app-scrollbars {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  pointer-events: none;
+}
+
+.app-scrollbar-slot {
+  position: absolute;
+  pointer-events: none;
+}
+
+.os-theme-cockpit {
+  --os-size: 10px;
+  --os-padding-perpendicular: 2px;
+  --os-padding-axis: 2px;
+  --os-track-border-radius: 8px;
+  --os-handle-border-radius: 8px;
+  --os-handle-bg: color-mix(in srgb, var(--text-muted, #94a3b8) 60%, transparent);
+  --os-handle-bg-hover: var(--text-secondary, #64748b);
+  --os-handle-bg-active: var(--primary, #1d4ed8);
+  --os-handle-min-size: 30px;
+}

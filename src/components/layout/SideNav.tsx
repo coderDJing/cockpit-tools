@@ -1,3 +1,4 @@
+import { containsWithScrollbar } from '../../utils/scrollbarContainment';
 import { Settings, Rocket, GaugeCircle, LayoutGrid, SlidersHorizontal, FileText, ChevronDown, PanelLeftClose, PanelLeftOpen, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo, type CSSProperties } from 'react';
@@ -498,8 +499,8 @@ export function SideNav({
     if (!showMore) return;
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (morePopoverRef.current?.contains(target)) return;
-      if (moreButtonRef.current?.contains(target)) return;
+      if (containsWithScrollbar(morePopoverRef.current, target)) return;
+      if (containsWithScrollbar(moreButtonRef.current, target)) return;
       setShowMore(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
