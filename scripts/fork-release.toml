@@ -1,0 +1,10 @@
+# Local Windows fork builds: keep dependencies optimized and avoid MSVC PDB limits.
+[profile.release]
+opt-level = 1
+codegen-units = 128
+lto = "off"
+
+[profile.release.package.cockpit-tools]
+opt-level = 0
+debug = 0
+strip = "debuginfo"
