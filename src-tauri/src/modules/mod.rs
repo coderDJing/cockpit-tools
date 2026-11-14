@@ -246,3 +246,12 @@ pub mod buddy_resource_api;
 
 #[path = "../../../crates/cockpit-core/src/modules/qoder_usage.rs"]
 pub mod qoder_usage;
+
+pub mod qoder_cn_account;
+#[path = "../../../crates/cockpit-core/src/modules/qoder_cn_oauth.rs"]
+pub mod qoder_cn_oauth;
+pub mod qoder_native;
+#[path = "../../../crates/cockpit-core/src/modules/qoder_native_profile.rs"]
+pub mod qoder_native_profile;
+#[path = "../../../crates/cockpit-core/src/modules/qoder_region.rs"]
+pub mod qoder_region;

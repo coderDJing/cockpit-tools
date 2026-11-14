@@ -70,6 +70,7 @@ import * as grokService from './grokService';
 import * as codebuddyService from './codebuddyService';
 import * as codebuddyCnService from './codebuddyCnService';
 import * as qoderService from './qoderService';
+import * as qoderCnService from './qoderCnService';
 import * as zcodeService from './zcodeService';
 import * as traeService from './traeService';
 import * as workbuddyService from './workbuddyService';
@@ -319,6 +320,7 @@ const ACCOUNT_LOADERS: Record<PlatformId, AccountLoader> = {
   codebuddy_cn: async () =>
     (await codebuddyCnService.listCodebuddyCnAccounts()) as unknown as TransferAccountRecord[],
   qoder: async () => (await qoderService.listQoderAccounts()) as unknown as TransferAccountRecord[],
+  qoder_cn: async () => (await qoderCnService.listQoderAccounts()) as unknown as TransferAccountRecord[],
   zcode: async () => (await zcodeService.listZcodeAccounts()) as unknown as TransferAccountRecord[],
   trae: async () => (await traeService.listTraeAccounts()) as unknown as TransferAccountRecord[],
   trae_solo: async () => (await traeService.listTraeAccounts()) as unknown as TransferAccountRecord[],
@@ -344,6 +346,7 @@ const LEGACY_IMPORTERS: Record<PlatformId, ((jsonContent: string) => Promise<unk
   codebuddy: codebuddyService.importCodebuddyFromJson,
   codebuddy_cn: codebuddyCnService.importCodebuddyCnFromJson,
   qoder: qoderService.importQoderFromJson,
+  qoder_cn: qoderCnService.importQoderFromJson,
   zcode: zcodeService.importZcodeFromJson,
   trae: traeService.importTraeFromJson,
   trae_solo: traeService.importTraeFromJson,
@@ -501,6 +504,7 @@ function buildAccountRef(platform: PlatformId, account: TransferAccountRecord): 
         normalizeString(account.user_id) ?? normalizeString(account.principal_id) ?? undefined;
       break;
     case 'qoder':
+    case 'qoder_cn':
     case 'trae':
     case 'trae_solo':
     case 'trae_cn':
@@ -582,6 +586,7 @@ function scoreAccountRef(ref: DataTransferAccountRef, account: TransferAccountRe
       addStringScore(ref.email, account.email, 10);
       break;
     case 'qoder':
+    case 'qoder_cn':
     case 'trae':
     case 'trae_solo':
     case 'trae_cn':
@@ -1397,7 +1402,7 @@ function detectLegacyPlatform(value: unknown): PlatformId | null {
     return 'trae';
   }
   if ('auth_user_info_raw' in sample || 'auth_credit_usage_raw' in sample || 'credits_usage_percent' in sample) {
-    return 'qoder';
+    return (sample.auth_user_info_raw as Record<string, unknown> | undefined)?.login_source === 'qodercn' ? 'qoder_cn' : 'qoder';
   }
   if ('zcode_jwt_token' in sample || ('quota_raw' in sample && 'provider' in sample)) {
     return 'zcode';

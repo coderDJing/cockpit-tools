@@ -232,6 +232,7 @@ pub(crate) enum PlatformId {
     Codebuddy,
     CodebuddyCn,
     Qoder,
+    QoderCn,
     Zcode,
     Trae,
     TraeSolo,
@@ -242,7 +243,7 @@ pub(crate) enum PlatformId {
 }
 
 impl PlatformId {
-    pub(crate) fn default_order() -> [Self; 19] {
+    pub(crate) fn default_order() -> [Self; 20] {
         [
             Self::Claude,
             Self::Codex,
@@ -256,6 +257,7 @@ impl PlatformId {
             Self::Codebuddy,
             Self::CodebuddyCn,
             Self::Qoder,
+            Self::QoderCn,
             Self::Zcode,
             Self::Trae,
             Self::TraeSolo,
@@ -280,6 +282,7 @@ impl PlatformId {
             crate::modules::tray_layout::PLATFORM_CODEBUDDY => Some(Self::Codebuddy),
             crate::modules::tray_layout::PLATFORM_CODEBUDDY_CN => Some(Self::CodebuddyCn),
             crate::modules::tray_layout::PLATFORM_QODER => Some(Self::Qoder),
+            crate::modules::tray_layout::PLATFORM_QODER_CN => Some(Self::QoderCn),
             crate::modules::tray_layout::PLATFORM_ZCODE => Some(Self::Zcode),
             crate::modules::tray_layout::PLATFORM_TRAE => Some(Self::Trae),
             crate::modules::tray_layout::PLATFORM_TRAE_SOLO => Some(Self::TraeSolo),
@@ -305,6 +308,7 @@ impl PlatformId {
             Self::Codebuddy => crate::modules::tray_layout::PLATFORM_CODEBUDDY,
             Self::CodebuddyCn => crate::modules::tray_layout::PLATFORM_CODEBUDDY_CN,
             Self::Qoder => crate::modules::tray_layout::PLATFORM_QODER,
+            Self::QoderCn => crate::modules::tray_layout::PLATFORM_QODER_CN,
             Self::Zcode => crate::modules::tray_layout::PLATFORM_ZCODE,
             Self::Trae => crate::modules::tray_layout::PLATFORM_TRAE,
             Self::TraeSolo => crate::modules::tray_layout::PLATFORM_TRAE_SOLO,
@@ -329,6 +333,7 @@ impl PlatformId {
             Self::Codebuddy => "CodeBuddy",
             Self::CodebuddyCn => "CodeBuddy CN",
             Self::Qoder => "Qoder",
+            Self::QoderCn => "Qoder CN",
             Self::Zcode => "ZCode",
             Self::Trae => "Trae",
             Self::TraeSolo => super::trae_account::TraePlatformKind::TraeSolo.display_name(),
@@ -353,6 +358,7 @@ impl PlatformId {
             Self::Codebuddy => "codebuddy",
             Self::CodebuddyCn => "codebuddy-cn",
             Self::Qoder => "qoder",
+            Self::QoderCn => "qoder-cn",
             Self::Zcode => "zcode",
             Self::Trae => "trae",
             Self::TraeSolo => "trae-solo",
@@ -970,6 +976,7 @@ fn get_account_display_info(platform: PlatformId, lang: &str) -> AccountDisplayI
         PlatformId::Codebuddy => build_codebuddy_display_info(lang),
         PlatformId::CodebuddyCn => build_codebuddy_cn_display_info(lang),
         PlatformId::Qoder => build_qoder_display_info(lang),
+        PlatformId::QoderCn => build_qoder_cn_display_info(lang),
         PlatformId::Zcode => build_zcode_display_info(lang),
         PlatformId::Trae | PlatformId::TraeSolo | PlatformId::TraeCn | PlatformId::TraeSoloCn => {
             build_trae_display_info(lang, platform)
@@ -1932,6 +1939,144 @@ fn json_as_f64(value: &serde_json::Value) -> Option<f64> {
 fn build_qoder_display_info(lang: &str) -> AccountDisplayInfo {
     let accounts = crate::modules::qoder_account::list_accounts();
     let account = crate::modules::qoder_account::resolve_current_account_id(&accounts)
+        .and_then(|account_id| accounts.iter().find(|item| item.id == account_id).cloned());
+
+    let Some(account) = account else {
+        return AccountDisplayInfo {
+            account: format!("📧 {}", get_text("not_logged_in", lang)),
+            quota_lines: vec!["—".to_string()],
+        };
+    };
+
+    let mut quota_lines = Vec::new();
+
+    // Parse plan tag from raw data (matching frontend getRawPlanTag)
+    let plan_tag = json_first_string(&[
+        json_nested(&account.auth_user_plan_raw, &["plan_tier_name"]),
+        json_nested(&account.auth_user_plan_raw, &["tier_name"]),
+        json_nested(&account.auth_user_plan_raw, &["tierName"]),
+        json_nested(&account.auth_user_plan_raw, &["planTierName"]),
+        json_nested(&account.auth_user_plan_raw, &["plan"]),
+        json_nested(&account.auth_user_info_raw, &["userTag"]),
+        json_nested(&account.auth_user_info_raw, &["user_tag"]),
+        json_nested(&account.auth_credit_usage_raw, &["plan_tier_name"]),
+        json_nested(&account.auth_credit_usage_raw, &["tier_name"]),
+        json_nested(&account.auth_credit_usage_raw, &["tierName"]),
+        json_nested(&account.auth_credit_usage_raw, &["planTierName"]),
+        account.plan_type.as_deref().map(|s| s.to_string()),
+    ]);
+    if let Some(ref tag) = plan_tag {
+        quota_lines.push(format!("Plan: {}", tag));
+    }
+
+    // Parse userQuota from auth_credit_usage_raw / auth_user_plan_raw / auth_user_info_raw
+    let user_quota = parse_qoder_quota_bucket(
+        &[
+            json_nested_obj(&account.auth_credit_usage_raw, &["userQuota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["userQuota"]),
+            json_nested_obj(&account.auth_user_info_raw, &["userQuota"]),
+        ],
+        Some((
+            &account.credits_used,
+            &account.credits_total,
+            &account.credits_remaining,
+        )),
+    );
+
+    let credits_label = if lang == "zh" || lang == "zh-CN" {
+        "套餐内 Credits"
+    } else {
+        "Credits"
+    };
+    quota_lines.push(format_qoder_quota_line(
+        lang,
+        credits_label,
+        &plan_tag,
+        &user_quota,
+    ));
+
+    // Parse addOnQuota
+    let addon_quota = parse_qoder_quota_bucket(
+        &[
+            json_nested_obj(&account.auth_credit_usage_raw, &["addOnQuota"]),
+            json_nested_obj(&account.auth_credit_usage_raw, &["addonQuota"]),
+            json_nested_obj(&account.auth_credit_usage_raw, &["add_on_quota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["addOnQuota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["addonQuota"]),
+            json_nested_obj(&account.auth_user_plan_raw, &["add_on_quota"]),
+        ],
+        None,
+    );
+
+    let addon_label = if lang == "zh" || lang == "zh-CN" {
+        "附加 Credits"
+    } else {
+        "Add-on Credits"
+    };
+    quota_lines.push(format_qoder_quota_line(
+        lang,
+        addon_label,
+        &None,
+        &addon_quota,
+    ));
+
+    // Parse shared credit package
+    let shared_used = json_first_f64(&[
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "used"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "usage"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "consumed"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["orgResourcePackage", "count"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["organizationResourcePackage", "used"],
+        ),
+        json_nested_f64(
+            &account.auth_credit_usage_raw,
+            &["sharedCreditPackage", "used"],
+        ),
+        json_nested_f64(&account.auth_credit_usage_raw, &["resourcePackage", "used"]),
+        json_nested_f64(&account.auth_user_plan_raw, &["orgResourcePackage", "used"]),
+    ]);
+    let shared_label = if lang == "zh" || lang == "zh-CN" {
+        "共享资源包"
+    } else {
+        "Shared Package"
+    };
+    if let Some(used) = shared_used {
+        quota_lines.push(format!("{}: {:.0}", shared_label, used));
+    } else {
+        quota_lines.push(format!("{}: --", shared_label));
+    }
+
+    let display_email = first_non_empty(&[
+        Some(account.email.as_str()),
+        account.display_name.as_deref(),
+        account.user_id.as_deref(),
+        Some(account.id.as_str()),
+    ])
+    .unwrap_or("—");
+
+    AccountDisplayInfo {
+        account: format!("📧 {}", display_email),
+        quota_lines,
+    }
+}
+#[cfg(not(target_os = "macos"))]
+fn build_qoder_cn_display_info(lang: &str) -> AccountDisplayInfo {
+    let accounts = crate::modules::qoder_cn_account::list_accounts();
+    let account = crate::modules::qoder_cn_account::resolve_current_account_id(&accounts)
         .and_then(|account_id| accounts.iter().find(|item| item.id == account_id).cloned());
 
     let Some(account) = account else {

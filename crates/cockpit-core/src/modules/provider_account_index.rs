@@ -383,3 +383,11 @@ provider_index!(
     false,
     None
 );
+
+provider_index!(
+    crate::models::qoder::QoderCnAccountIndex,
+    crate::models::qoder::QoderAccountSummary,
+    "qoder_cn",
+    false,
+    None
+);

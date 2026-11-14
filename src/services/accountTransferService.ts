@@ -9,6 +9,7 @@ import * as cursorService from './cursorService';
 import * as codebuddyService from './codebuddyService';
 import * as codebuddyCnService from './codebuddyCnService';
 import * as qoderService from './qoderService';
+import * as qoderCnService from './qoderCnService';
 import * as zcodeService from './zcodeService';
 import * as traeService from './traeService';
 import * as workbuddyService from './workbuddyService';
@@ -98,6 +99,11 @@ const PLATFORM_ADAPTERS: Partial<Record<PlatformId, TransferAdapter>> = {
     listAccounts: qoderService.listQoderAccounts,
     exportAccounts: qoderService.exportQoderAccounts,
     importFromJson: qoderService.importQoderFromJson,
+  },
+  qoder_cn: {
+    listAccounts: qoderCnService.listQoderAccounts,
+    exportAccounts: qoderCnService.exportQoderAccounts,
+    importFromJson: qoderCnService.importQoderFromJson,
   },
   zcode: {
     listAccounts: zcodeService.listZcodeAccounts,

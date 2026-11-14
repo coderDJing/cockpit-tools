@@ -122,6 +122,8 @@ pub struct UserConfig {
     /// Qoder 自动刷新间隔（分钟），-1 表示禁用
     #[serde(default = "default_qoder_auto_refresh")]
     pub qoder_auto_refresh_minutes: i32,
+    #[serde(default = "default_qoder_auto_refresh")]
+    pub qoder_cn_auto_refresh_minutes: i32,
     /// Trae 自动刷新间隔（分钟），-1 表示禁用
     #[serde(default = "default_trae_auto_refresh")]
     pub trae_auto_refresh_minutes: i32,
@@ -816,6 +818,7 @@ impl Default for UserConfig {
             codebuddy_cn_auto_refresh_minutes: default_codebuddy_cn_auto_refresh(),
             workbuddy_auto_refresh_minutes: default_workbuddy_auto_refresh(),
             qoder_auto_refresh_minutes: default_qoder_auto_refresh(),
+            qoder_cn_auto_refresh_minutes: default_qoder_auto_refresh(),
             trae_auto_refresh_minutes: default_trae_auto_refresh(),
             trae_solo_auto_refresh_minutes: default_trae_auto_refresh(),
             trae_cn_auto_refresh_minutes: default_trae_auto_refresh(),

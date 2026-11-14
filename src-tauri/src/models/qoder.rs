@@ -81,6 +81,30 @@ impl Default for QoderAccountIndex {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QoderCnAccountIndex {
+    pub version: String,
+    pub accounts: Vec<QoderAccountSummary>,
+    #[serde(skip)]
+    pub(crate) storage_revision: crate::modules::provider_account_index::Revision,
+}
+
+impl QoderCnAccountIndex {
+    pub fn new() -> Self {
+        Self {
+            version: "1.0".to_string(),
+            accounts: Vec::new(),
+            storage_revision: Default::default(),
+        }
+    }
+}
+
+impl Default for QoderCnAccountIndex {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QoderOAuthStartResponse {
     pub login_id: String,

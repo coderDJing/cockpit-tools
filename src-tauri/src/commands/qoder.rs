@@ -10,6 +10,40 @@ pub fn list_qoder_accounts() -> Result<Vec<QoderAccount>, String> {
 }
 
 #[tauri::command]
+pub async fn import_qoder_native(
+    region: String,
+    client: String,
+) -> Result<Vec<QoderAccount>, String> {
+    let region = crate::modules::qoder_region::QoderRegion::parse(Some(&region))?;
+    if region != crate::modules::qoder_region::QoderRegion::Global {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
+    let client = crate::modules::qoder_native::NativeClient::parse(&client)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::modules::qoder_native::import(region, client).map(|account| vec![account])
+    })
+    .await
+    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())?
+}
+
+#[tauri::command]
+pub async fn inject_qoder_native(account_id: String, client: String) -> Result<String, String> {
+    let target = crate::modules::qoder_native::NativeClient::parse(&client)?;
+    qoder_oauth::prepare_account_for_switch(&account_id).await?;
+    let id = account_id.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::modules::qoder_native::switch(
+            crate::modules::qoder_region::QoderRegion::Global,
+            &id,
+            target,
+        )
+    })
+    .await
+    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
+    Ok(account_id)
+}
+
+#[tauri::command]
 pub fn delete_qoder_account(account_id: String) -> Result<(), String> {
     qoder_account::remove_account(&account_id)
 }
@@ -20,8 +54,23 @@ pub fn delete_qoder_accounts(account_ids: Vec<String>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn import_qoder_from_json(json_content: String) -> Result<Vec<QoderAccount>, String> {
-    qoder_account::import_from_json(&json_content)
+pub fn import_qoder_from_json(
+    json_content: String,
+    region: Option<String>,
+) -> Result<Vec<QoderAccount>, String> {
+    if let Some(value) = region.as_deref() {
+        if crate::modules::qoder_region::QoderRegion::parse(Some(value))?
+            != crate::modules::qoder_region::QoderRegion::Global
+        {
+            return Err("QODER_PLATFORM_MISMATCH".into());
+        }
+    }
+    let mut value = serde_json::from_str(&json_content).map_err(|e| format!("Qoder JSON: {e}"))?;
+    crate::modules::qoder_native_profile::prepare_import(
+        &mut value,
+        crate::modules::qoder_region::QoderRegion::Global,
+    )?;
+    qoder_account::import_from_json(&serde_json::to_string(&value).map_err(|e| e.to_string())?)
 }
 
 #[tauri::command]
@@ -45,10 +94,13 @@ pub async fn import_qoder_from_local(app: AppHandle) -> Result<Vec<QoderAccount>
 }
 
 #[tauri::command]
-pub async fn qoder_oauth_login_start() -> Result<QoderOAuthStartResponse, String> {
+pub async fn qoder_oauth_login_start(
+    region: Option<String>,
+) -> Result<QoderOAuthStartResponse, String> {
     let started_at = Instant::now();
     logger::log_info("[Qoder OAuth] start 命令触发");
-    let result = qoder_oauth::start_login().await;
+    let region = crate::modules::qoder_region::QoderRegion::parse(region.as_deref())?;
+    let result = qoder_oauth::start_login_with_region(region).await;
     match &result {
         Ok(response) => logger::log_info(&format!(
             "[Qoder OAuth] start 命令完成: login_id={}, verification_uri_len={}, callback_url={}, elapsed={}ms",

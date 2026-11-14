@@ -166,6 +166,8 @@ pub struct UserConfig {
     /// Qoder 自动刷新间隔（分钟），-1 表示禁用
     #[serde(default = "default_qoder_auto_refresh")]
     pub qoder_auto_refresh_minutes: i32,
+    #[serde(default = "default_qoder_auto_refresh")]
+    pub qoder_cn_auto_refresh_minutes: i32,
     /// ZCode 自动刷新间隔（分钟），-1 表示禁用
     #[serde(default = "default_zcode_auto_refresh")]
     pub zcode_auto_refresh_minutes: i32,
@@ -1295,6 +1297,7 @@ impl Default for UserConfig {
             workbuddy_auto_refresh_minutes: default_workbuddy_auto_refresh(),
             minimax_code_auto_refresh_minutes: default_minimax_code_auto_refresh(),
             qoder_auto_refresh_minutes: default_qoder_auto_refresh(),
+            qoder_cn_auto_refresh_minutes: default_qoder_auto_refresh(),
             zcode_auto_refresh_minutes: default_zcode_auto_refresh(),
             trae_auto_refresh_minutes: default_trae_auto_refresh(),
             trae_solo_auto_refresh_minutes: default_trae_auto_refresh(),
@@ -2518,7 +2521,11 @@ fn acquire_config_file_lock(path: &Path) -> Result<fs::File, String> {
     loop {
         match file.try_lock() {
             Ok(()) => break,
-            Err(std::fs::TryLockError::WouldBlock) if started.elapsed() < std::time::Duration::from_secs(5) => std::thread::sleep(std::time::Duration::from_millis(10)),
+            Err(std::fs::TryLockError::WouldBlock)
+                if started.elapsed() < std::time::Duration::from_secs(5) =>
+            {
+                std::thread::sleep(std::time::Duration::from_millis(10))
+            }
             Err(std::fs::TryLockError::WouldBlock) => return Err("common.configSaveTimeout".into()),
             Err(error) => return Err(format!("锁定配置文件失败: {}", error)),
         }
@@ -2555,8 +2562,14 @@ where
     let _transaction = loop {
         match TRANSACTION_LOCK.try_lock() {
             Ok(guard) => break guard,
-            Err(std::sync::TryLockError::WouldBlock) if started.elapsed() < std::time::Duration::from_secs(5) => std::thread::sleep(std::time::Duration::from_millis(10)),
-            Err(std::sync::TryLockError::WouldBlock) => return Err("common.configSaveTimeout".into()),
+            Err(std::sync::TryLockError::WouldBlock)
+                if started.elapsed() < std::time::Duration::from_secs(5) =>
+            {
+                std::thread::sleep(std::time::Duration::from_millis(10))
+            }
+            Err(std::sync::TryLockError::WouldBlock) => {
+                return Err("common.configSaveTimeout".into())
+            }
             Err(_) => return Err("用户配置事务锁已损坏".into()),
         }
     };

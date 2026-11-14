@@ -138,6 +138,7 @@ mod tests {
         config.workbuddy_auto_refresh_minutes = -1;
         config.minimax_code_auto_refresh_minutes = -1;
         config.qoder_auto_refresh_minutes = -1;
+        config.qoder_cn_auto_refresh_minutes = -1;
         config.zcode_auto_refresh_minutes = -1;
         config.trae_auto_refresh_minutes = -1;
         config.trae_solo_auto_refresh_minutes = -1;
@@ -263,6 +264,7 @@ fn has_enabled_periodic_account_refresh(config: &modules::config::UserConfig) ->
         config.workbuddy_auto_refresh_minutes,
         config.minimax_code_auto_refresh_minutes,
         config.qoder_auto_refresh_minutes,
+        config.qoder_cn_auto_refresh_minutes,
         config.zcode_auto_refresh_minutes,
         config.trae_auto_refresh_minutes,
         config.trae_solo_auto_refresh_minutes,
@@ -1598,6 +1600,25 @@ pub fn run() {
             commands::codebuddy_cn_instance::codebuddy_cn_close_all_instances,
             // Qoder Commands
             commands::qoder::list_qoder_accounts,
+            commands::qoder_cn::list_qoder_cn_accounts,
+            commands::qoder_cn::import_qoder_cn_native,
+            commands::qoder_cn::inject_qoder_cn_native,
+            commands::qoder_cn::delete_qoder_cn_account,
+            commands::qoder_cn::delete_qoder_cn_accounts,
+            commands::qoder_cn::import_qoder_cn_from_json,
+            commands::qoder_cn::import_qoder_cn_from_local,
+            commands::qoder_cn::qoder_cn_oauth_login_start,
+            commands::qoder_cn::qoder_cn_oauth_login_peek,
+            commands::qoder_cn::qoder_cn_oauth_login_complete,
+            commands::qoder_cn::qoder_cn_oauth_login_cancel,
+            commands::qoder_cn::export_qoder_cn_accounts,
+            commands::qoder_cn::refresh_qoder_cn_token,
+            commands::qoder_cn::refresh_all_qoder_cn_tokens,
+            commands::qoder_cn::inject_qoder_cn_account,
+            commands::qoder_cn::update_qoder_cn_account_tags,
+            commands::qoder_cn::get_qoder_cn_accounts_index_path,
+            commands::qoder::import_qoder_native,
+            commands::qoder::inject_qoder_native,
             commands::qoder::delete_qoder_account,
             commands::qoder::delete_qoder_accounts,
             commands::qoder::import_qoder_from_json,

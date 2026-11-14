@@ -15,6 +15,7 @@ const TRAY_MIGRATED_PLATFORM_IDS: PlatformId[] = [
   'codebuddy',
   'codebuddy_cn',
   'qoder',
+  'qoder_cn',
   'zcode',
   'trae',
   'trae_solo',
@@ -568,6 +569,9 @@ function normalizeGroupName(raw: unknown, fallbackPlatform: PlatformId): string 
   }
   if (fallbackPlatform === 'qoder') {
     return 'Qoder';
+  }
+  if (fallbackPlatform === 'qoder_cn') {
+    return 'Qoder CN';
   }
   if (fallbackPlatform === 'zcode') {
     return 'ZCode';

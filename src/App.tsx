@@ -165,6 +165,7 @@ const CodebuddyAccountsPage = lazy(() =>
 const CodebuddyCnAccountsPage = lazy(() =>
   import('./pages/CodebuddyCnAccountsPage').then((module) => ({ default: module.CodebuddyCnAccountsPage })),
 );
+const QoderCnAccountsPage = lazy(() => import('./pages/QoderCnAccountsPage').then((module) => ({default:module.QoderCnAccountsPage})));
 const QoderAccountsPage = lazy(() =>
   import('./pages/QoderAccountsPage').then((module) => ({ default: module.QoderAccountsPage })),
 );
@@ -281,6 +282,7 @@ const TOP_PROMO_PAGE_PLATFORM_TARGETS: Partial<Record<Page, readonly string[]>> 
   codebuddy: ['codebuddy'],
   'codebuddy-cn': ['codebuddy-cn'],
   qoder: ['qoder'],
+  'qoder-cn': ['qoder-cn'],
   zcode: ['zcode'],
   trae: ['trae', 'trae-suite'],
   'trae-solo': ['trae-solo', 'trae-suite'],
@@ -3929,6 +3931,9 @@ function MainApp() {
           </VisibleBootPage>
           <VisibleBootPage when={page === 'qoder'}>
             <QoderAccountsPage />
+          </VisibleBootPage>
+          <VisibleBootPage when={page === 'qoder-cn'}>
+            <QoderCnAccountsPage />
           </VisibleBootPage>
           <VisibleBootPage when={page === 'zcode'}>
             <ZcodeAccountsPage />

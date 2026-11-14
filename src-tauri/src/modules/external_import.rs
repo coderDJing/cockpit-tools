@@ -65,6 +65,7 @@ fn resolve_provider_and_page(value: &str) -> Option<(&'static str, &'static str)
         "codebuddy" => Some(("codebuddy", "codebuddy")),
         "codebuddy_cn" | "codebuddycn" => Some(("codebuddy_cn", "codebuddy-cn")),
         "qoder" => Some(("qoder", "qoder")),
+        "qoder_cn" | "qodercn" => Some(("qoder_cn", "qoder-cn")),
         "zcode" => Some(("zcode", "zcode")),
         "trae" => Some(("trae", "trae")),
         "workbuddy" => Some(("workbuddy", "workbuddy")),

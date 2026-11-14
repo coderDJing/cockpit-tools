@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { QoderAccount } from '../types/qoder';
+import type { QoderRegion, QoderClient } from '../utils/qoderRegion';
 
 export interface QoderOAuthStartResponse {
   loginId: string;
@@ -49,17 +50,24 @@ export async function deleteQoderAccounts(accountIds: string[]): Promise<void> {
   return await invoke('delete_qoder_accounts', { accountIds });
 }
 
-export async function importQoderFromJson(jsonContent: string): Promise<QoderAccount[]> {
-  return await invoke('import_qoder_from_json', { jsonContent });
+export async function importQoderFromJson(jsonContent: string, region?: QoderRegion): Promise<QoderAccount[]> {
+  return await invoke('import_qoder_from_json', { jsonContent, region });
 }
 
 export async function importQoderFromLocal(): Promise<QoderAccount[]> {
   return await invoke('import_qoder_from_local');
 }
 
-export async function qoderOauthLoginStart(): Promise<QoderOAuthStartResponse> {
-  const raw = await invoke<QoderOAuthStartResponseRaw>('qoder_oauth_login_start');
+export async function qoderOauthLoginStart(region: QoderRegion = 'global'): Promise<QoderOAuthStartResponse> {
+  const raw = await invoke<QoderOAuthStartResponseRaw>('qoder_oauth_login_start', { region });
   return normalizeQoderOAuthStartResponse(raw);
+}
+
+export async function importQoderNative(region: QoderRegion, client: QoderClient): Promise<QoderAccount[]> {
+  return await invoke('import_qoder_native', { region, client });
+}
+export async function injectQoderNative(accountId: string, client: QoderClient): Promise<string> {
+  return await invoke('inject_qoder_native', { accountId, client });
 }
 
 export async function qoderOauthLoginPeek(): Promise<QoderOAuthStartResponse | null> {
