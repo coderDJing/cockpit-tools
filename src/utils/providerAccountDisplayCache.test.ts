@@ -4,6 +4,16 @@ import { loadHookModule } from '../../tests/helpers/reactHookHarness';
 import { toProviderAccountDisplayCache } from './providerAccountDisplayCache';
 import { getTraeAccountDisplayName, getTraeAccountPlatformId, type TraeAccount } from '../types/trae';
 
+for (const platform of ['qoder', 'qoder_cn'] as const) {
+  test(`${platform} cache retains platform scope without access or refresh credentials`, () => {
+    const account = { id: 'fixture', auth_user_info_raw: { id: 'fixture-user', login_source: platform === 'qoder_cn' ? 'qodercn' : 'qoder', token: 'fixture-access', refreshToken: 'fixture-refresh', cockpit_native_user: { token: 'fixture-nested' } } };
+    const cached = toProviderAccountDisplayCache(account, platform);
+    assert.equal(cached.auth_user_info_raw.login_source, account.auth_user_info_raw.login_source);
+    assert.doesNotMatch(JSON.stringify(cached), /fixture-access|fixture-refresh|fixture-nested/);
+    assert.equal(account.auth_user_info_raw.token, 'fixture-access');
+  });
+}
+
 test('cache keeps the TRAE edition and display name while excluding its authorization payload', () => {
   const account = {
     id: 'trae-1', email: 'example@test.invalid', created_at: 1, last_used: 2,

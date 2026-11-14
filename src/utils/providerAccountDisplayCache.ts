@@ -25,7 +25,9 @@ export function toProviderAccountDisplayCache<T extends { id: string }>(account:
   }
   for (const field of PRIVATE_FIELDS) delete cached[field];
 
-  if (platform === 'cursor') {
+  if (platform === 'qoder' || platform === 'qoder_cn') {
+    cached.auth_user_info_raw = selectScalars(cached.auth_user_info_raw, ['id', 'email', 'name', 'login_source']);
+  } else if (platform === 'cursor') {
     cached.cursor_auth_raw = selectScalars(cached.cursor_auth_raw, [
       'isEnterprise', 'is_enterprise', 'teamMembershipType', 'team_membership_type', 'isTeamMember', 'is_team_member',
     ]);
