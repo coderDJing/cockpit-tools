@@ -413,6 +413,10 @@
         }
     }
 
+    fn qoder_percent_points(value: f64) -> i32 {
+        clamp_percent(crate::modules::qoder_usage::percent_points(value))
+    }
+
     fn build_qoder_subscription_info(
         account: &crate::models::qoder::QoderAccount,
     ) -> QoderSubscriptionInfo {
@@ -469,6 +473,7 @@
                         _ => None,
                     });
                 let percentage = crate::modules::qoder_usage::derived_percent(used, total)
+                    .map(clamp_percent)
                     .or_else(|| {
                         raw.and_then(|value| {
                             json_path(Some(value), &["percentage"])
@@ -476,7 +481,7 @@
                                 .or_else(|| json_path(Some(value), &["usage_percentage"]))
                                 .and_then(parse_json_number)
                         })
-                        .map(crate::modules::qoder_usage::percent_points)
+                        .map(qoder_percent_points)
                     })
                     .or(fallback.percentage);
 
@@ -500,7 +505,7 @@
                 remaining: account.credits_remaining,
                 percentage: account
                     .credits_usage_percent
-                    .map(crate::modules::qoder_usage::percent_points),
+                    .map(qoder_percent_points),
             },
         );
         let add_on_quota = parse_bucket(
@@ -548,7 +553,7 @@
                 &roots,
                 &[&["totalUsagePercentage"], &["total_usage_percentage"]],
             )
-            .map(crate::modules::qoder_usage::percent_points),
+            .map(qoder_percent_points),
         }
     }
 
@@ -2385,3 +2390,48 @@
         (cards, current_id, recommended)
     }
 
+    #[cfg(test)]
+    mod qoder_percentage_tests {
+        use super::*;
+
+        fn qoder_account(value: serde_json::Value) -> crate::models::qoder::QoderAccount {
+            serde_json::from_value(value).expect("fixture account")
+        }
+
+        #[test]
+        fn ratio_and_percent_points_both_render_the_same_percentage() {
+            assert_eq!(qoder_percent_points(0.62), 62);
+            assert_eq!(qoder_percent_points(62.0), 62);
+            assert_eq!(qoder_percent_points(1.5), 2);
+        }
+
+        #[test]
+        fn stored_ratio_usage_percent_is_normalized_in_menu_bucket() {
+            let account = qoder_account(serde_json::json!({
+                "id": "qoder-menu-fixture",
+                "email": "fixture@example.invalid",
+                "credits_usage_percent": 0.62,
+                "created_at": 1,
+                "last_used": 2
+            }));
+            let subscription = build_qoder_subscription_info(&account);
+            assert_eq!(subscription.user_quota.percentage, Some(62));
+        }
+
+        #[test]
+        fn used_and_total_win_over_raw_ratio_and_round_to_points() {
+            let account = qoder_account(serde_json::json!({
+                "id": "qoder-menu-fixture",
+                "email": "fixture@example.invalid",
+                "credits_used": 1618.0,
+                "credits_total": 2600.0,
+                "auth_credit_usage_raw": {
+                    "userQuota": {"used": 1618, "total": 2600, "percentage": 0.62}
+                },
+                "created_at": 1,
+                "last_used": 2
+            }));
+            let subscription = build_qoder_subscription_info(&account);
+            assert_eq!(subscription.user_quota.percentage, Some(62));
+        }
+    }
