@@ -6982,6 +6982,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "Use -1 to disable.",
     "codexWindow": {
       "orDivider": "Any condition can trigger this"
     },
@@ -7714,7 +7715,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · China",
+      "global": "Qoder · International"
+    },
+    "clientTarget": {
+      "label": "Switch / local import target",
+      "ariaLabel": "Qoder client",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Account switched. Reopen the target client."
+    },
+    "cn": {
+      "nativeOnly": "Select Desktop or CLI for Qoder CN accounts.",
+      "ideUnavailable": "Select Desktop or CLI for Qoder CN accounts. The IDE adapter here is for the international version only.",
+      "instancesUnsupported": "Qoder CN Desktop and CLI support switching accounts for the default client. App multi-instance is not supported yet.",
+      "flowNoticeDesc": "Supports official Qoder CN sign-in, local Desktop/CLI import, JSON import, account switching, and quota queries. Quit the target client before switching and reopen it afterward.",
+      "flowNoticePermission": "Local access: reads the sign-in store (auth credentials and user info) of Qoder CN Desktop or CLI for account switching and session injection. All data stays on this device.",
+      "flowNoticeNetwork": "Network access: official sign-in contacts Qoder CN services to complete the callback; quota queries fetch usage from the Qoder CN API. Local keys and credentials are never uploaded."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Qoder OAuth authorization URL is empty.",
       "launchUnconfirmed": "Could not confirm that Qoder IDE started.",
       "workerFailed": "The Qoder background operation failed. {{detail}}",
       "profileUninitialized": "Qoder IDE setup is incomplete. Open this profile as the current system user, quit the IDE, then retry. Folder: {{detail}}",

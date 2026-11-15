@@ -73,6 +73,7 @@ import { useCodebuddyCnAccountStore } from '../stores/useCodebuddyCnAccountStore
 import { useWorkbuddyAccountStore } from '../stores/useWorkbuddyAccountStore';
 import { useMinimaxCodeAccountStore } from '../stores/useMinimaxCodeAccountStore';
 import { useQoderAccountStore } from '../stores/useQoderAccountStore';
+import { useQoderCnAccountStore } from '../stores/useQoderCnAccountStore';
 import { useZcodeAccountStore } from '../stores/useZcodeAccountStore';
 import { useTraeAccountStore } from '../stores/useTraeAccountStore';
 import { useZedAccountStore } from '../stores/useZedAccountStore';
@@ -215,6 +216,7 @@ interface GeneralConfig {
   workbuddy_auto_refresh_minutes: number;
   minimax_code_auto_refresh_minutes: number;
   qoder_auto_refresh_minutes: number;
+  qoder_cn_auto_refresh_minutes: number;
   zcode_auto_refresh_minutes: number;
   trae_auto_refresh_minutes: number;
   trae_solo_auto_refresh_minutes: number;
@@ -624,6 +626,7 @@ export function useSettingsPageController() {
   const [workbuddyAutoRefresh, setWorkbuddyAutoRefresh] = useState('10');
   const [minimaxCodeAutoRefresh, setMinimaxCodeAutoRefresh] = useState('10');
   const [qoderAutoRefresh, setQoderAutoRefresh] = useState('10');
+  const [qoderCnAutoRefresh, setQoderCnAutoRefresh] = useState('10');
   const [zcodeAutoRefresh, setZcodeAutoRefresh] = useState('10');
   const [traeAutoRefresh, setTraeAutoRefresh] = useState('10');
   const [traeSoloAutoRefresh, setTraeSoloAutoRefresh] = useState('10');
@@ -670,6 +673,7 @@ export function useSettingsPageController() {
   const [minimaxCodeAutoRefreshCustomMode, setMinimaxCodeAutoRefreshCustomMode] = useState(false);
   const [codebuddyQuotaAlertThresholdCustomMode, setCodebuddyQuotaAlertThresholdCustomMode] = useState(false);
   const [qoderAutoRefreshCustomMode, setQoderAutoRefreshCustomMode] = useState(false);
+  const [qoderCnAutoRefreshCustomMode, setQoderCnAutoRefreshCustomMode] = useState(false);
   const [zcodeAutoRefreshCustomMode, setZcodeAutoRefreshCustomMode] = useState(false);
   const [qoderQuotaAlertThresholdCustomMode, setQoderQuotaAlertThresholdCustomMode] = useState(false);
   const [traeAutoRefreshCustomMode, setTraeAutoRefreshCustomMode] = useState(false);
@@ -1049,6 +1053,7 @@ export function useSettingsPageController() {
       !workbuddyAutoRefresh.trim() ||
       !minimaxCodeAutoRefresh.trim() ||
       !qoderAutoRefresh.trim() ||
+      !qoderCnAutoRefresh.trim() ||
       !zcodeAutoRefresh.trim() ||
       !traeAutoRefresh.trim() ||
       !traeSoloAutoRefresh.trim() ||
@@ -1072,6 +1077,7 @@ export function useSettingsPageController() {
     const workbuddyAutoRefreshNum = parseInt(workbuddyAutoRefresh, 10) || -1;
     const minimaxCodeAutoRefreshNum = parseInt(minimaxCodeAutoRefresh, 10) || -1;
     const qoderAutoRefreshNum = parseInt(qoderAutoRefresh, 10) || -1;
+    const qoderCnAutoRefreshNum = parseInt(qoderCnAutoRefresh, 10) || -1;
     const zcodeAutoRefreshNum = parseInt(zcodeAutoRefresh, 10) || -1;
     const traeAutoRefreshNum = parseInt(traeAutoRefresh, 10) || -1;
     const traeSoloAutoRefreshNum = parseInt(traeSoloAutoRefresh, 10) || -1;
@@ -1128,6 +1134,7 @@ export function useSettingsPageController() {
       workbuddy_auto_refresh_minutes: workbuddyAutoRefreshNum,
       minimax_code_auto_refresh_minutes: minimaxCodeAutoRefreshNum,
       qoder_auto_refresh_minutes: qoderAutoRefreshNum,
+      qoder_cn_auto_refresh_minutes: qoderCnAutoRefreshNum,
       zcode_auto_refresh_minutes: zcodeAutoRefreshNum,
       trae_auto_refresh_minutes: traeAutoRefreshNum,
       trae_solo_auto_refresh_minutes: traeSoloAutoRefreshNum,
@@ -1372,6 +1379,7 @@ export function useSettingsPageController() {
     workbuddyAutoRefresh,
     minimaxCodeAutoRefresh,
     qoderAutoRefresh,
+    qoderCnAutoRefresh,
     zcodeAutoRefresh,
     cursorAutoRefresh,
     grokAutoRefresh,
@@ -1758,6 +1766,7 @@ export function useSettingsPageController() {
       setWorkbuddyAutoRefresh(String(config.workbuddy_auto_refresh_minutes ?? 10));
       setMinimaxCodeAutoRefresh(String(config.minimax_code_auto_refresh_minutes ?? 10));
       setQoderAutoRefresh(String(config.qoder_auto_refresh_minutes ?? 10));
+      setQoderCnAutoRefresh(String(config.qoder_cn_auto_refresh_minutes ?? 10));
       setZcodeAutoRefresh(String(config.zcode_auto_refresh_minutes ?? 10));
       setTraeAutoRefresh(String(config.trae_auto_refresh_minutes ?? 10));
       setTraeSoloAutoRefresh(String(config.trae_solo_auto_refresh_minutes ?? 10));
@@ -1844,6 +1853,7 @@ export function useSettingsPageController() {
       setCodebuddyCnAutoRefreshCustomMode(false);
       setWorkbuddyAutoRefreshCustomMode(false);
       setQoderAutoRefreshCustomMode(false);
+      setQoderCnAutoRefreshCustomMode(false);
       setZcodeAutoRefreshCustomMode(false);
       setTraeAutoRefreshCustomMode(false);
       setTraeSoloAutoRefreshCustomMode(false);
@@ -2448,7 +2458,7 @@ export function useSettingsPageController() {
       case 'qoder':
         return parseRefresh(qoderAutoRefresh) > 0;
       case 'qoder_cn':
-        return true;
+        return parseRefresh(qoderCnAutoRefresh) > 0;
       case 'zcode':
         return parseRefresh(zcodeAutoRefresh) > 0;
       case 'trae':
@@ -2608,6 +2618,8 @@ export function useSettingsPageController() {
         return getProviderAccounts(useMinimaxCodeAccountStore, getMinimaxCodeAccountDisplayEmail);
       case 'qoder':
         return getProviderAccounts(useQoderAccountStore, getQoderAccountDisplayEmail);
+      case 'qoder_cn':
+        return getProviderAccounts(useQoderCnAccountStore, getQoderAccountDisplayEmail);
       case 'zcode':
         return getProviderAccounts(useZcodeAccountStore, getZcodeAccountDisplayEmail);
       case 'trae':
@@ -3098,6 +3110,7 @@ export function useSettingsPageController() {
   const workbuddyAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(workbuddyAutoRefresh);
   const minimaxCodeAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(minimaxCodeAutoRefresh);
   const qoderAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(qoderAutoRefresh);
+  const qoderCnAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(qoderCnAutoRefresh);
   const zcodeAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(zcodeAutoRefresh);
   const traeAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(traeAutoRefresh);
   const traeSoloAutoRefreshIsPreset = REFRESH_PRESET_VALUES.includes(traeSoloAutoRefresh);
@@ -3453,6 +3466,9 @@ export function useSettingsPageController() {
     qoderAutoRefresh,
     qoderAutoRefreshCustomMode,
     qoderAutoRefreshIsPreset,
+    qoderCnAutoRefresh,
+    qoderCnAutoRefreshCustomMode,
+    qoderCnAutoRefreshIsPreset,
     qoderQuotaAlertEnabled,
     qoderQuotaAlertThreshold,
     qoderQuotaAlertThresholdCustomMode,
@@ -3600,6 +3616,8 @@ export function useSettingsPageController() {
     setQoderAppPath,
     setQoderAutoRefresh,
     setQoderAutoRefreshCustomMode,
+    setQoderCnAutoRefresh,
+    setQoderCnAutoRefreshCustomMode,
     setQoderQuotaAlertEnabled,
     setQoderQuotaAlertThreshold,
     setQoderQuotaAlertThresholdCustomMode,

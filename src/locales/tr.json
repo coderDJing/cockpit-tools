@@ -6625,6 +6625,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 otomatik yenilemeyi devre dışı bırakır.",
     "codexWindow": {
       "orDivider": "Herhangi bir koşul yeterli"
     },
@@ -7473,7 +7474,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · Çin",
+      "global": "Qoder · Uluslararası"
+    },
+    "clientTarget": {
+      "label": "Değiştirme / yerel içe aktarma hedefi",
+      "ariaLabel": "Qoder istemcisi",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Hesap değiştirildi. Hedef istemciyi yeniden açın."
+    },
+    "cn": {
+      "nativeOnly": "Qoder CN hesapları için Desktop veya CLI seçin.",
+      "ideUnavailable": "Qoder CN hesapları için Desktop veya CLI seçin. Buradaki IDE bağdaştırıcısı yalnızca uluslararası sürüm içindir.",
+      "instancesUnsupported": "Qoder CN Desktop ve CLI, varsayılan istemci hesap değişimini destekler. Uygulama çoklu örneği henüz desteklenmiyor.",
+      "flowNoticeDesc": "Qoder CN resmi oturum açma, yerel Desktop/CLI içe aktarma, JSON içe aktarma, hesap değiştirme ve kota sorgularını destekler. Değiştirmeden önce hedef istemciyi kapatın, değiştirdikten sonra yeniden açın.",
+      "flowNoticePermission": "Yerel erişim: hesap değiştirme ve oturum enjeksiyonu için Qoder CN Desktop veya CLI'nin yerel kimlik doğrulama deposunu (auth kimlik bilgileri ve kullanıcı bilgileri) okur. Tüm veriler bu cihazda kalır.",
+      "flowNoticeNetwork": "Ağ erişimi: resmi oturum açma, geri çağırmayı tamamlamak için Qoder CN hizmetlerine bağlanır; kota sorguları kullanım verilerini Qoder CN API'sinden alır. Yerel anahtarlar ve kimlik bilgileri hiçbir zaman yüklenmez."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Qoder OAuth yetkilendirme URL'si boş.",
       "profileUninitialized": "Qoder IDE kurulumu tamamlanmadı. Bu profili mevcut sistem kullanıcısıyla açın, IDE’yi kapatıp tekrar deneyin. Klasör: {{detail}}",
       "storageUnavailable": "Qoder IDE kimlik bilgilerine erişilemiyor. İki uygulamayı aynı sistem kullanıcısıyla çalıştırın. {{detail}}",
       "profileConflict": "Başlatma ayarları başka bir profili gösteriyor. Gerçek klasör: {{detail}}",

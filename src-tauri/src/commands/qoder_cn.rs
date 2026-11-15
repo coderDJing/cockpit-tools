@@ -228,6 +228,20 @@ pub async fn refresh_all_qoder_cn_tokens(app: AppHandle) -> Result<i32, String> 
 }
 
 #[tauri::command]
+pub async fn get_qoder_cn_checkin_status(
+    account_id: String,
+) -> Result<qoder_cn_oauth::QoderCheckinStatus, String> {
+    qoder_cn_oauth::get_qoder_checkin_status(&account_id).await
+}
+
+#[tauri::command]
+pub async fn claim_qoder_cn_checkin(
+    account_id: String,
+) -> Result<qoder_cn_oauth::QoderCheckinStatus, String> {
+    qoder_cn_oauth::claim_qoder_checkin(&account_id).await
+}
+
+#[tauri::command]
 pub async fn inject_qoder_cn_account(account_id: String) -> Result<String, String> {
     qoder_cn_oauth::prepare_account_for_switch(&account_id).await?;
     let id = account_id.clone();

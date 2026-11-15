@@ -6672,6 +6672,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 يعطّل التحديث التلقائي.",
     "codexWindow": {
       "orDivider": "يكفي تحقق أي شرط"
     },
@@ -7520,7 +7521,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · الصين",
+      "global": "Qoder · الدولي"
+    },
+    "clientTarget": {
+      "label": "هدف التبديل / الاستيراد المحلي",
+      "ariaLabel": "عميل Qoder",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "تم تبديل الحساب. أعد فتح العميل الهدف."
+    },
+    "cn": {
+      "nativeOnly": "اختر Desktop أو CLI لحسابات Qoder CN.",
+      "ideUnavailable": "اختر Desktop أو CLI لحسابات Qoder CN. محول IDE هنا مخصص للنسخة الدولية فقط.",
+      "instancesUnsupported": "يدعم Qoder CN Desktop وCLI تبديل حساب العميل الافتراضي. تعدد مثيلات التطبيق غير مدعوم بعد.",
+      "flowNoticeDesc": "يدعم تسجيل الدخول الرسمي لـ Qoder CN والاستيراد المحلي من Desktop/CLI واستيراد JSON وتبديل الحساب واستعلامات الحصة. أغلق العميل الهدف قبل التبديل ثم أعد فتحه بعده.",
+      "flowNoticePermission": "نطاق محلي: يقرأ مخزن المصادقة المحلي (بيانات اعتماد auth ومعلومات المستخدم) الخاص بـ Qoder CN Desktop أو CLI لتبديل الحساب وحقن الجلسة. تبقى جميع البيانات على هذا الجهاز.",
+      "flowNoticeNetwork": "نطاق الشبكة: يتصل تسجيل الدخول الرسمي بخدمات Qoder CN لإكمال الاستدعاء؛ وتجلب استعلامات الحصة بيانات الاستخدام عبر واجهة Qoder CN API. لا يتم رفع المفاتيح أو بيانات الاعتماد المحلية."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "رابط تفويض Qoder OAuth فارغ.",
       "profileUninitialized": "لم يكتمل إعداد Qoder IDE. افتح هذا الملف الشخصي بحساب النظام الحالي، ثم أغلق التطبيق وأعد المحاولة. المجلد: {{detail}}",
       "storageUnavailable": "بيانات اعتماد Qoder IDE غير متاحة. شغّل التطبيقين بحساب النظام نفسه. {{detail}}",
       "profileConflict": "تشير إعدادات التشغيل إلى ملف شخصي آخر. المجلد الفعلي: {{detail}}",

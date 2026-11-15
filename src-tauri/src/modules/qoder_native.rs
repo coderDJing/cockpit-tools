@@ -209,6 +209,52 @@ pub fn import(region: QoderRegion, client: NativeClient) -> Result<QoderAccount,
         }
     }
 }
+
+fn local_profile(region: QoderRegion, client: NativeClient) -> Option<Value> {
+    let root = client.root(region).ok()?;
+    let bytes = fs::read(root.join(client.filename())).ok()?;
+    let profile = decode(&root, client, &bytes).ok()?;
+    qoder_native_profile::from_client(&profile, region).ok()
+}
+
+pub fn local_identity(region: QoderRegion) -> Option<String> {
+    for client in [NativeClient::Desktop, NativeClient::Cli] {
+        let Some(info) = local_profile(region, client) else {
+            continue;
+        };
+        let user = info
+            .get("id")
+            .and_then(Value::as_str)
+            .or_else(|| info.get("email").and_then(Value::as_str))?;
+        return Some(serde_json::json!([region.source(), user]).to_string());
+    }
+    None
+}
+
+pub fn import_from_local(region: QoderRegion) -> Result<bool, String> {
+    let mut found = false;
+    let mut last_error = None;
+    let mut imported = false;
+    for client in [NativeClient::Desktop, NativeClient::Cli] {
+        let path = client.root(region)?.join(client.filename());
+        if !path.exists() {
+            continue;
+        }
+        found = true;
+        match import(region, client) {
+            Ok(_) => imported = true,
+            Err(error) => last_error = Some(error),
+        }
+    }
+    if !found {
+        return Ok(false);
+    }
+    if imported {
+        Ok(true)
+    } else {
+        Err(last_error.unwrap_or_else(|| "QODER_NATIVE_IMPORT_FAILED".into()))
+    }
+}
 fn ensure_idle(region: QoderRegion, client: NativeClient) -> Result<(), String> {
     let system = sysinfo::System::new_all();
     if system.processes().is_empty() {

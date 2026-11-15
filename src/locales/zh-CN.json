@@ -6982,6 +6982,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 表示禁用",
     "codexWindow": {
       "orDivider": "满足任一条件即触发"
     },
@@ -7714,7 +7715,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · 国内版",
+      "global": "Qoder · 国际版"
+    },
+    "clientTarget": {
+      "label": "切换／本机导入目标",
+      "ariaLabel": "Qoder 客户端",
+      "desktop": "Qoder 桌面端",
+      "desktopCn": "Qoder CN 桌面端",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "账号已切换，请重新打开对应客户端。"
+    },
+    "cn": {
+      "nativeOnly": "国内账号请选择桌面端或 CLI。",
+      "ideUnavailable": "国内账号请选择桌面端或 CLI；此处 IDE 适配器只用于国际版。",
+      "instancesUnsupported": "国内版桌面端与 CLI 支持默认客户端账号切换，当前暂不支持应用多开。",
+      "flowNoticeDesc": "支持 Qoder CN 官方授权登录、本机桌面端／CLI 导入、JSON 导入、账号切换和配额查询。切换前请退出目标客户端，切换后重新打开。",
+      "flowNoticePermission": "权限范围：读取 Qoder CN 桌面端或 CLI 的本机认证存储（auth 凭据与用户信息），用于账号切换与会话注入；所有数据仅在本机处理。",
+      "flowNoticeNetwork": "网络范围：官方授权登录需联网请求 Qoder CN 官方服务完成回调；配额查询通过 Qoder CN API 获取用量数据。不上传本地密钥或凭证。"
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Qoder OAuth 授权链接为空",
       "launchUnconfirmed": "未能确认 Qoder IDE 已启动。",
       "workerFailed": "Qoder 后台操作失败。{{detail}}",
       "profileUninitialized": "Qoder IDE 未完成初始化。请用当前系统账号打开该资料目录，退出后重试。目录：{{detail}}",

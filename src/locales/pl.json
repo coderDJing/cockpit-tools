@@ -6625,6 +6625,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 wyłącza automatyczne odświeżanie.",
     "codexWindow": {
       "orDivider": "Wystarczy dowolny warunek"
     },
@@ -7473,7 +7474,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · Chiny",
+      "global": "Qoder · Międzynarodowy"
+    },
+    "clientTarget": {
+      "label": "Cel przełączania / importu lokalnego",
+      "ariaLabel": "Klient Qoder",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Konto zostało przełączone. Otwórz ponownie docelowego klienta."
+    },
+    "cn": {
+      "nativeOnly": "Dla kont Qoder CN wybierz Desktop lub CLI.",
+      "ideUnavailable": "Dla kont Qoder CN wybierz Desktop lub CLI. Adapter IDE jest tutaj tylko dla wersji międzynarodowej.",
+      "instancesUnsupported": "Qoder CN Desktop i CLI obsługują przełączanie konta domyślnego klienta. Wiele instancji aplikacji nie jest jeszcze obsługiwanych.",
+      "flowNoticeDesc": "Obsługuje oficjalne logowanie Qoder CN, lokalny import Desktop/CLI, import JSON, przełączanie kont i zapytania o limity. Zamknij docelowego klienta przed przełączeniem i otwórz go ponownie potem.",
+      "flowNoticePermission": "Dostęp lokalny: odczytuje lokalny magazyn uwierzytelniania (dane auth i informacje o użytkowniku) Qoder CN Desktop lub CLI na potrzeby przełączania kont i wstrzykiwania sesji. Wszystkie dane pozostają na tym urządzeniu.",
+      "flowNoticeNetwork": "Dostęp sieciowy: oficjalne logowanie łączy się z usługami Qoder CN w celu zakończenia callbacku; zapytania o limity pobierają dane użycia przez API Qoder CN. Klucze i dane logowania nigdy nie są przesyłane."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Adres URL autoryzacji Qoder OAuth jest pusty.",
       "profileUninitialized": "Konfiguracja Qoder IDE nie jest ukończona. Otwórz profil na bieżącym koncie systemowym, zamknij IDE i spróbuj ponownie. Folder: {{detail}}",
       "storageUnavailable": "Dane logowania Qoder IDE są niedostępne. Uruchom obie aplikacje na tym samym koncie systemowym. {{detail}}",
       "profileConflict": "Ustawienia uruchamiania wskazują inny profil. Rzeczywisty folder: {{detail}}",

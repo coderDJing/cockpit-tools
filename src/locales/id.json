@@ -6788,6 +6788,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 menonaktifkan penyegaran otomatis.",
     "codexWindow": {
       "orDivider": "Satu kondisi saja sudah cukup"
     },
@@ -7520,7 +7521,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · Tiongkok",
+      "global": "Qoder · Internasional"
+    },
+    "clientTarget": {
+      "label": "Target ganti / impor lokal",
+      "ariaLabel": "Klien Qoder",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Akun diganti. Buka kembali klien tujuan."
+    },
+    "cn": {
+      "nativeOnly": "Pilih Desktop atau CLI untuk akun Qoder CN.",
+      "ideUnavailable": "Pilih Desktop atau CLI untuk akun Qoder CN. Adaptor IDE di sini hanya untuk versi internasional.",
+      "instancesUnsupported": "Qoder CN Desktop dan CLI mendukung pergantian akun klien default. Multi-instans aplikasi belum didukung.",
+      "flowNoticeDesc": "Mendukung login resmi Qoder CN, impor Desktop/CLI lokal, impor JSON, pergantian akun, dan kueri kuota. Tutup klien tujuan sebelum mengganti dan buka kembali setelahnya.",
+      "flowNoticePermission": "Akses lokal: membaca penyimpanan autentikasi (kredensial auth dan info pengguna) Qoder CN Desktop atau CLI untuk pergantian akun dan injeksi sesi. Semua data tetap di perangkat ini.",
+      "flowNoticeNetwork": "Akses jaringan: login resmi menghubungi layanan Qoder CN untuk menyelesaikan callback; kueri kuota mengambil data penggunaan melalui API Qoder CN. Kunci dan kredensial lokal tidak pernah diunggah."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "URL otorisasi Qoder OAuth kosong.",
       "profileUninitialized": "Penyiapan Qoder IDE belum selesai. Buka profil ini sebagai pengguna sistem saat ini, tutup IDE, lalu coba lagi. Folder: {{detail}}",
       "storageUnavailable": "Kredensial Qoder IDE tidak tersedia. Jalankan kedua aplikasi sebagai pengguna sistem yang sama. {{detail}}",
       "profileConflict": "Pengaturan peluncuran menunjuk ke profil lain. Folder sebenarnya: {{detail}}",

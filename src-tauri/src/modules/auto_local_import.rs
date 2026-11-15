@@ -15,8 +15,8 @@ use crate::models::workbuddy::WorkbuddyOAuthCompletePayload;
 use crate::modules::{
     claude_account, codebuddy_account, codebuddy_cn_account, codebuddy_cn_oauth, codebuddy_oauth,
     codex_account, config, cursor_account, github_copilot_account, github_copilot_instance, import,
-    kiro_account, kiro_oauth, logger, minimax_code_account, qoder_account, trae_account,
-    windsurf_account, windsurf_oauth, workbuddy_account, workbuddy_oauth, zed_account,
+    kiro_account, kiro_oauth, logger, minimax_code_account, qoder_account, qoder_native,
+    trae_account, windsurf_account, windsurf_oauth, workbuddy_account, workbuddy_oauth, zed_account,
 };
 use serde::Serialize;
 
@@ -289,6 +289,10 @@ fn peek_qoder_identity() -> Option<String> {
     qoder_account::local_identity_key()
 }
 
+fn peek_qoder_cn_identity() -> Option<String> {
+    qoder_native::local_identity(crate::modules::qoder_region::QoderRegion::Cn)
+}
+
 fn peek_trae_identity(platform: trae_account::TraePlatformKind) -> Option<String> {
     let payload = trae_account::read_local_trae_auth_for_platform(platform)
         .ok()
@@ -556,6 +560,16 @@ fn import_qoder() -> ImportFuture {
     })
 }
 
+fn import_qoder_cn() -> ImportFuture {
+    Box::pin(async {
+        tauri::async_runtime::spawn_blocking(|| {
+            qoder_native::import_from_local(crate::modules::qoder_region::QoderRegion::Cn)
+        })
+        .await
+        .map_err(|error| error.to_string())?
+    })
+}
+
 fn import_trae(platform: trae_account::TraePlatformKind) -> ImportFuture {
     Box::pin(async move {
         trae_account::import_from_local_for_platform(platform)
@@ -633,6 +647,11 @@ fn platform_watchers() -> Vec<PlatformWatcher> {
             platform: "qoder",
             peek_identity: peek_qoder_identity,
             import_account: import_qoder,
+        },
+        PlatformWatcher {
+            platform: "qoder_cn",
+            peek_identity: peek_qoder_cn_identity,
+            import_account: import_qoder_cn,
         },
         PlatformWatcher {
             platform: "trae",

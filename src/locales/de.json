@@ -6625,6 +6625,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 deaktiviert die automatische Aktualisierung.",
     "codexWindow": {
       "orDivider": "Eine Bedingung genügt"
     },
@@ -7473,7 +7474,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · China",
+      "global": "Qoder · International"
+    },
+    "clientTarget": {
+      "label": "Wechsel-/lokales Importziel",
+      "ariaLabel": "Qoder-Client",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Konto gewechselt. Öffnen Sie den Ziel-Client erneut."
+    },
+    "cn": {
+      "nativeOnly": "Wählen Sie für Qoder-CN-Konten Desktop oder CLI.",
+      "ideUnavailable": "Wählen Sie für Qoder-CN-Konten Desktop oder CLI. Der IDE-Adapter hier ist nur für die internationale Version.",
+      "instancesUnsupported": "Qoder CN Desktop und CLI unterstützen den Kontowechsel für den Standard-Client. Mehrere App-Instanzen werden noch nicht unterstützt.",
+      "flowNoticeDesc": "Unterstützt die offizielle Qoder-CN-Anmeldung, lokalen Desktop-/CLI-Import, JSON-Import, Kontowechsel und Kontingentabfragen. Beenden Sie den Ziel-Client vor dem Wechsel und öffnen Sie ihn danach erneut.",
+      "flowNoticePermission": "Lokaler Zugriff: liest den Anmeldespeicher (Auth-Anmeldedaten und Benutzerinformationen) von Qoder CN Desktop oder CLI für Kontowechsel und Sitzungsinjektion. Alle Daten bleiben auf diesem Gerät.",
+      "flowNoticeNetwork": "Netzwerkzugriff: Die offizielle Anmeldung kontaktiert Qoder-CN-Dienste für den Callback; Kontingentabfragen rufen Nutzungsdaten über die Qoder-CN-API ab. Lokale Schlüssel und Anmeldedaten werden nie hochgeladen."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Die Qoder-OAuth-Autorisierungs-URL ist leer.",
       "profileUninitialized": "Qoder IDE ist noch nicht eingerichtet. Öffne dieses Profil mit dem aktuellen Systemkonto, beende die IDE und versuche es erneut. Ordner: {{detail}}",
       "storageUnavailable": "Qoder-IDE-Zugangsdaten sind nicht verfügbar. Beide Apps müssen unter demselben Systemkonto laufen. {{detail}}",
       "profileConflict": "Die Startkonfiguration verweist auf ein anderes Profil. Tatsächlicher Ordner: {{detail}}",

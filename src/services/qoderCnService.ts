@@ -96,6 +96,24 @@ export async function refreshQoderToken(accountId: string): Promise<QoderAccount
   return await invoke('refresh_qoder_cn_token', { accountId });
 }
 
+export interface QoderCheckinStatus {
+  checkedIn: boolean;
+  active: boolean;
+  amount?: number | null;
+  validityDays?: number | null;
+  nextRefreshAt?: number | null;
+  campaignKey?: string | null;
+  message: string;
+}
+
+export async function getQoderCnCheckinStatus(accountId: string): Promise<QoderCheckinStatus> {
+  return await invoke('get_qoder_cn_checkin_status', { accountId });
+}
+
+export async function claimQoderCnCheckin(accountId: string): Promise<QoderCheckinStatus> {
+  return await invoke('claim_qoder_cn_checkin', { accountId });
+}
+
 export async function refreshAllQoderTokens(): Promise<number> {
   return await invoke('refresh_all_qoder_cn_tokens');
 }

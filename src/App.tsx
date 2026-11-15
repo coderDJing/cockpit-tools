@@ -3014,6 +3014,10 @@ function MainApp() {
         errorMessage: 'Failed to refresh Qoder:',
       },
       {
+        command: 'refresh_all_qoder_cn_tokens',
+        errorMessage: 'Failed to refresh Qoder CN:',
+      },
+      {
         command: 'refresh_all_zcode_accounts',
         errorMessage: 'Failed to refresh ZCode:',
       },

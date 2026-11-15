@@ -6625,6 +6625,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 disattiva l'aggiornamento automatico.",
     "codexWindow": {
       "orDivider": "Basta una condizione"
     },
@@ -7473,7 +7474,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · Cina",
+      "global": "Qoder · Internazionale"
+    },
+    "clientTarget": {
+      "label": "Destinazione cambio / importazione locale",
+      "ariaLabel": "Client Qoder",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Account cambiato. Riapri il client di destinazione."
+    },
+    "cn": {
+      "nativeOnly": "Seleziona Desktop o CLI per gli account Qoder CN.",
+      "ideUnavailable": "Seleziona Desktop o CLI per gli account Qoder CN. L'adattatore IDE qui è solo per la versione internazionale.",
+      "instancesUnsupported": "Qoder CN Desktop e CLI supportano il cambio account del client predefinito. Le istanze multiple dell'app non sono ancora supportate.",
+      "flowNoticeDesc": "Supporta l'accesso ufficiale Qoder CN, l'importazione locale Desktop/CLI, l'importazione JSON, il cambio account e le query sulle quote. Chiudi il client di destinazione prima del cambio e riaprilo dopo.",
+      "flowNoticePermission": "Accesso locale: legge l'archivio di autenticazione (credenziali auth e informazioni utente) di Qoder CN Desktop o CLI per il cambio account e l'iniezione della sessione. Tutti i dati restano su questo dispositivo.",
+      "flowNoticeNetwork": "Accesso di rete: l'accesso ufficiale contatta i servizi Qoder CN per completare il callback; le query sulle quote recuperano l'utilizzo tramite l'API Qoder CN. Le chiavi e le credenziali locali non vengono mai caricate."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "L'URL di autorizzazione OAuth di Qoder è vuota.",
       "profileUninitialized": "Qoder IDE non è ancora inizializzato. Apri questo profilo con l’utente di sistema corrente, chiudi l’IDE e riprova. Cartella: {{detail}}",
       "storageUnavailable": "Le credenziali di Qoder IDE non sono disponibili. Avvia entrambe le app con lo stesso utente di sistema. {{detail}}",
       "profileConflict": "La configurazione di avvio punta a un altro profilo. Cartella effettiva: {{detail}}",

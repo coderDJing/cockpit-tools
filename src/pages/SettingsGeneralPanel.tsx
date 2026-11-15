@@ -145,6 +145,11 @@ export function SettingsGeneralPanel(props: SettingsPageViewProps) {
     qoderAutoRefresh,
     qoderAutoRefreshCustomMode,
     qoderAutoRefreshIsPreset,
+    qoderCnAutoRefresh,
+    qoderCnAutoRefreshCustomMode,
+    qoderCnAutoRefreshIsPreset,
+    setQoderCnAutoRefresh,
+    setQoderCnAutoRefreshCustomMode,
     qoderQuotaAlertEnabled,
     qoderQuotaAlertThreshold,
     qoderQuotaAlertThresholdCustomMode,
@@ -2857,6 +2862,23 @@ export function SettingsGeneralPanel(props: SettingsPageViewProps) {
                       </div>
                     </div>
                   )}
+                </div>
+              </PlatformSettingsSection>
+
+              <PlatformSettingsSection platformId={'qoder_cn'} order={platformSettingsOrder.qoder_cn}>
+                <div className="group-title">{t('nav.qoderCn', 'Qoder CN')}</div>
+                <div className="settings-group">
+                  {renderPlatformAutoRefreshRow({
+                    title: t('settings.general.qoderAutoRefresh', 'Qoder 自动刷新配额'),
+                    description: t('settings.general.qoderAutoRefreshDesc', '后台自动更新频率'),
+                    value: qoderCnAutoRefresh,
+                    setValue: setQoderCnAutoRefresh,
+                    customMode: qoderCnAutoRefreshCustomMode,
+                    setCustomMode: setQoderCnAutoRefreshCustomMode,
+                    isPreset: qoderCnAutoRefreshIsPreset,
+                  })}
+                  {renderCurrentAccountRefreshRow('qoder_cn')}
+                  {renderAccountLevelRefreshConfig('qoder_cn')}
                 </div>
               </PlatformSettingsSection>
 

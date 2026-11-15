@@ -468,21 +468,17 @@
                         (Some(used), Some(total)) => Some((total - used).max(0.0)),
                         _ => None,
                     });
-                let percentage = raw
-                    .and_then(|value| {
-                        json_path(Some(value), &["percentage"])
-                            .or_else(|| json_path(Some(value), &["usagePercent"]))
-                            .or_else(|| json_path(Some(value), &["usage_percentage"]))
-                            .and_then(parse_json_number)
+                let percentage = crate::modules::qoder_usage::derived_percent(used, total)
+                    .or_else(|| {
+                        raw.and_then(|value| {
+                            json_path(Some(value), &["percentage"])
+                                .or_else(|| json_path(Some(value), &["usagePercent"]))
+                                .or_else(|| json_path(Some(value), &["usage_percentage"]))
+                                .and_then(parse_json_number)
+                        })
+                        .map(crate::modules::qoder_usage::percent_points)
                     })
-                    .map(clamp_percent)
-                    .or(fallback.percentage)
-                    .or_else(|| match (used, total) {
-                        (Some(used), Some(total)) if total > 0.0 => {
-                            Some(clamp_percent((used / total) * 100.0))
-                        }
-                        _ => None,
-                    });
+                    .or(fallback.percentage);
 
                 QoderQuotaBucket {
                     used,
@@ -502,7 +498,9 @@
                 used: account.credits_used,
                 total: account.credits_total,
                 remaining: account.credits_remaining,
-                percentage: account.credits_usage_percent.map(clamp_percent),
+                percentage: account
+                    .credits_usage_percent
+                    .map(crate::modules::qoder_usage::percent_points),
             },
         );
         let add_on_quota = parse_bucket(
@@ -550,7 +548,7 @@
                 &roots,
                 &[&["totalUsagePercentage"], &["total_usage_percentage"]],
             )
-            .map(clamp_percent),
+            .map(crate::modules::qoder_usage::percent_points),
         }
     }
 
@@ -680,6 +678,7 @@
             PlatformId::Cursor => build_cursor_cards(lang),
             PlatformId::Grok => build_grok_cards(lang),
             PlatformId::Qoder => build_qoder_cards(lang),
+            PlatformId::QoderCn => build_qoder_cn_cards(lang),
             PlatformId::Zcode => build_zcode_cards(lang),
             PlatformId::Trae
             | PlatformId::TraeSolo
@@ -1667,8 +1666,22 @@
     }
 
     fn build_qoder_cards(lang: &str) -> (Vec<AccountCard>, Option<String>, Option<String>) {
-        let mut accounts = modules::qoder_account::list_accounts();
+        let accounts = modules::qoder_account::list_accounts();
         let current_id = modules::qoder_account::resolve_current_account_id(&accounts);
+        build_qoder_cards_for(lang, accounts, current_id)
+    }
+
+    fn build_qoder_cn_cards(lang: &str) -> (Vec<AccountCard>, Option<String>, Option<String>) {
+        let accounts = modules::qoder_cn_account::list_accounts();
+        let current_id = modules::qoder_cn_account::resolve_current_account_id(&accounts);
+        build_qoder_cards_for(lang, accounts, current_id)
+    }
+
+    fn build_qoder_cards_for(
+        lang: &str,
+        mut accounts: Vec<crate::models::qoder::QoderAccount>,
+        current_id: Option<String>,
+    ) -> (Vec<AccountCard>, Option<String>, Option<String>) {
         accounts
             .sort_by_key(|account| std::cmp::Reverse(account.last_used.max(account.created_at)));
         let cards = accounts

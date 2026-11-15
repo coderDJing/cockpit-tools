@@ -887,6 +887,7 @@ pub fn normalize_startup_page(value: &str) -> String {
         "codebuddy",
         "codebuddy-cn",
         "qoder",
+        "qoder-cn",
         "zcode",
         "trae",
         "trae-solo",
@@ -2768,7 +2769,7 @@ mod tests {
     include!("config_tests_proxy_env.rs");
     #[test]
     fn startup_client_preferences_preserve_app_ide_and_legacy_overview() {
-        for value in ["antigravity", "antigravity-ide", "overview", "last"] {
+        for value in ["antigravity", "antigravity-ide", "overview", "qoder-cn", "last"] {
             assert_eq!(super::normalize_startup_page(value), value);
         }
         assert_eq!(

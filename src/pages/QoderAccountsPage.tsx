@@ -4,6 +4,7 @@ import { useAccountsOverviewFilterState } from '../hooks/useAccountsOverviewFilt
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDownWideNarrow,
+  CalendarCheck,
   ChevronDown,
   ChevronLeft,
   CircleAlert,
@@ -31,6 +32,7 @@ import { AccountLastUsed } from '../components/AccountLastUsed';
 import { confirm as confirmDialog } from '@tauri-apps/plugin-dialog';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { TagEditModal } from '../components/TagEditModal';
 import { ExportJsonModal } from '../components/ExportJsonModal';
 import { ModalErrorMessage, useModalErrorState } from '../components/ModalErrorMessage';
@@ -39,6 +41,7 @@ import { PaginationControls } from '../components/PaginationControls';
 import { AccountSelectionToolbar } from '../components/AccountSelectionToolbar';
 import { usePlatformAccountGroups } from '../hooks/usePlatformAccountGroups';
 import { QoderCnQuickSettings } from '../components/QoderCnQuickSettings';
+import { QoderCheckinModal } from '../components/QoderCheckinModal';
 import { QuickSettingsPopover } from '../components/QuickSettingsPopover';
 import { MultiSelectFilterDropdown, type MultiSelectFilterOption } from '../components/MultiSelectFilterDropdown';
 import { SingleSelectFilterDropdown } from '../components/SingleSelectFilterDropdown';
@@ -160,7 +163,7 @@ function formatDateTime(value: number): string {
   // 绕开 WebView 默认/ICU 时区库回退 UTC 的问题（#时区）。
   const offsetMin = getLocalOffsetMinutes();
   const date = new Date(value * 1000 + offsetMin * 60000);
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString(i18n.language, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -171,7 +174,7 @@ function formatDateTime(value: number): string {
 }
 
 function formatDisplayDate(value: number): string {
-  return new Date(value).toLocaleDateString(undefined, {
+  return new Date(value).toLocaleDateString(i18n.language, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -305,6 +308,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const [injecting, setInjecting] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showTagModal, setShowTagModal] = useState<string | null>(null);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showTagFilter, setShowTagFilter] = useState(false);
   const [tagFilter, setTagFilter] = useAccountsOverviewFilterState<string[]>(persistenceScope, QODER_FILTER_FIELD_TAG_FILTER, () =>
     initialFilterPersistenceEnabled
@@ -758,13 +762,13 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
       try {
         if (clientTarget === 'ide') {
           const account = accounts.find((item) => item.id === accountId);
-          if (account && getQoderRegion(account) === 'cn') throw new Error('国内账号请选择桌面端或 CLI；此处 IDE 适配器只用于国际版。');
+          if (account && getQoderRegion(account) === 'cn') throw new Error(t('qoder.cn.ideUnavailable', '国内账号请选择桌面端或 CLI；此处 IDE 适配器只用于国际版。'));
           await store.switchAccount(accountId);
         } else {
           await service.injectQoderNative(accountId, clientTarget);
           await store.fetchAccounts();
         }
-        setMessage({ text: clientTarget === 'ide' ? t('accounts.switchSuccess', '切换成功') : '账号已切换，请重新打开对应客户端。' });
+        setMessage({ text: clientTarget === 'ide' ? t('accounts.switchSuccess', '切换成功') : t('qoder.clientTarget.switchSuccess', '账号已切换，请重新打开对应客户端。') });
       } catch (error) {
         if (String(error).startsWith('QODER_SWITCH_LAUNCH_FAILED:')) {
           await store.fetchAccounts();
@@ -897,7 +901,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     setAddMessage(null);
     try {
       if (clientTarget === 'ide') {
-        if (region === 'cn') throw new Error('国内账号请选择桌面端或 CLI。');
+        if (region === 'cn') throw new Error(t('qoder.cn.nativeOnly', '国内账号请选择桌面端或 CLI。'));
         await service.importQoderFromLocal();
       } else {
         await service.importQoderNative(region, clientTarget);
@@ -1149,7 +1153,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
           responseKeyCount: responseKeys.length,
           responseKeys: responseKeys.slice(0, 12),
         });
-        throw new Error('Qoder OAuth 授权链接为空');
+        throw new Error(t('qoder.diagnostics.oauthUrlEmpty', 'Qoder OAuth 授权链接为空'));
       }
       logQoderOauthUi('prepare:will-set-state', {
         loginId,
@@ -1480,7 +1484,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
               <span className="account-email" title={maskedEmail}>
                 {maskedEmail}
               </span>
-              <span className="status-pill">{qoderRegionLabel(getQoderRegion(account))}</span>
+              <span className="status-pill">{qoderRegionLabel(getQoderRegion(account), t)}</span>
               {quotaError && (
                 <span className="status-pill warning" title={quotaErrorTitle}>
                   <CircleAlert size={12} />
@@ -1805,15 +1809,15 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     <div className="ghcp-accounts-page qoder-accounts-page">
       <PlatformOverviewTabsHeader platform={platformId} active={activeTab} onTabChange={setActiveTab} tabs={region === 'cn' ? ['overview'] : undefined} />
       <div className="toolbar" style={{ marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
-        <label>切换／本机导入目标 <select aria-label="Qoder 客户端" value={clientTarget} disabled={showAddModal || !!injecting} onChange={(event) => setClientTarget(event.target.value as QoderClient)}>
-          <option value="desktop">{region === 'cn' ? 'Qoder CN 桌面端' : 'Qoder 桌面端'}</option>
-          <option value="cli">{region === 'cn' ? 'Qoder CN CLI' : 'Qoder CLI'}</option>
-          {region === 'global' && <option value="ide">Qoder IDE</option>}
+        <label>{t('qoder.clientTarget.label', '切换／本机导入目标')} <select aria-label={t('qoder.clientTarget.ariaLabel', 'Qoder 客户端')} value={clientTarget} disabled={showAddModal || !!injecting} onChange={(event) => setClientTarget(event.target.value as QoderClient)}>
+          <option value="desktop">{region === 'cn' ? t('qoder.clientTarget.desktopCn', 'Qoder CN 桌面端') : t('qoder.clientTarget.desktop', 'Qoder 桌面端')}</option>
+          <option value="cli">{region === 'cn' ? t('qoder.clientTarget.cliCn', 'Qoder CN CLI') : t('qoder.clientTarget.cli', 'Qoder CLI')}</option>
+          {region === 'global' && <option value="ide">{t('qoder.clientTarget.ide', 'Qoder IDE')}</option>}
         </select></label>
       </div>
 
       {activeTab === 'instances' ? (
-        region === 'global' ? <QoderInstancesContent accountsForSelect={filteredAccounts} /> : <div className="ghcp-flow-notice">国内版桌面端与 CLI 支持默认客户端账号切换，当前暂不支持应用多开。</div>
+        region === 'global' ? <QoderInstancesContent accountsForSelect={filteredAccounts} /> : <div className="ghcp-flow-notice">{t('qoder.cn.instancesUnsupported', '国内版桌面端与 CLI 支持默认客户端账号切换，当前暂不支持应用多开。')}</div>
       ) : (
         <>
           <div className={`ghcp-flow-notice ${isFlowNoticeCollapsed ? 'collapsed' : ''}`} role="note" aria-live="polite">
@@ -1832,14 +1836,18 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
             {!isFlowNoticeCollapsed && (
               <div className="ghcp-flow-notice-body">
                 <div className="ghcp-flow-notice-desc">
-                  {region === 'cn' ? '支持 Qoder CN 官方授权登录、本机桌面端／CLI 导入、JSON 导入、账号切换和配额查询。切换前请退出目标客户端，切换后重新打开。' : t(
+                  {region === 'cn' ? t('qoder.cn.flowNoticeDesc', '支持 Qoder CN 官方授权登录、本机桌面端／CLI 导入、JSON 导入、账号切换和配额查询。切换前请退出目标客户端，切换后重新打开。') : t(
                     'qoder.flowNotice.desc',
                     '当前支持官方授权登录（回调）、本地导入、JSON 导入、切号注入、应用多开绑定与配额概览。登录流程沿用 Qoder 客户端真实落盘数据。',
                   )}
                 </div>
                 <ul className="ghcp-flow-notice-list">
-                  <li>{t('qoder.flowNotice.permission', '权限范围：读取 Qoder 本地认证存储（auth 凭据与用户信息），用于账号切换与会话注入；所有数据仅在本机处理。')}</li>
-                  <li>{t('qoder.flowNotice.network', '网络范围：OAuth 授权登录需联网请求 Qoder 官方服务完成回调；配额查询通过 Qoder API 获取用量数据。不上传本地密钥或凭证。')}</li>
+                  <li>{region === 'cn'
+                    ? t('qoder.cn.flowNoticePermission', '权限范围：读取 Qoder CN 桌面端或 CLI 的本机认证存储（auth 凭据与用户信息），用于账号切换与会话注入；所有数据仅在本机处理。')
+                    : t('qoder.flowNotice.permission', '权限范围：读取 Qoder 本地认证存储（auth 凭据与用户信息），用于账号切换与会话注入；所有数据仅在本机处理。')}</li>
+                  <li>{region === 'cn'
+                    ? t('qoder.cn.flowNoticeNetwork', '网络范围：官方授权登录需联网请求 Qoder CN 官方服务完成回调；配额查询通过 Qoder CN API 获取用量数据。不上传本地密钥或凭证。')
+                    : t('qoder.flowNotice.network', '网络范围：OAuth 授权登录需联网请求 Qoder 官方服务完成回调；配额查询通过 Qoder API 获取用量数据。不上传本地密钥或凭证。')}</li>
                 </ul>
               </div>
             )}
@@ -1988,6 +1996,17 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
               >
                 <Plus size={14} />
               </button>
+              {region === 'cn' && (
+                <button
+                  className="btn btn-secondary icon-only"
+                  onClick={() => setShowCheckinModal(true)}
+                  disabled={accounts.length === 0}
+                  title={t('workbuddy.checkin.modalTitle', '每日签到')}
+                  aria-label={t('workbuddy.checkin.modalTitle', '每日签到')}
+                >
+                  <CalendarCheck size={14} />
+                </button>
+              )}
               <button
                 className="btn btn-secondary icon-only"
                 onClick={() => void handleRefreshAll()}
@@ -2103,7 +2122,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
           <div className="modal-content codex-add-modal platform-account-add-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <button className="btn btn-secondary icon-only" onClick={() => setShowAddModal(false)} title={t('common.back', '返回')} aria-label={t('common.back', '返回')}><ChevronLeft size={14} /></button>
-              <h2>{t('qoder.addModal.title')} · {qoderRegionLabel(region)}</h2>
+              <h2>{t('qoder.addModal.title')} · {qoderRegionLabel(region, t)}</h2>
               <button className="modal-close" onClick={() => setShowAddModal(false)} aria-label={t('common.close', '关闭')}>
                 <X />
               </button>
@@ -2288,6 +2307,19 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
           onClose={() => setShowTagModal(null)}
           onSave={async (tags) => {
             await handleSaveTags(showTagModal!, tags);
+          }}
+        />
+      )}
+
+      {region === 'cn' && showCheckinModal && (
+        <QoderCheckinModal
+          accounts={accounts}
+          platformLabel={qoderRegionLabel(region, t)}
+          onClose={() => setShowCheckinModal(false)}
+          onCheckinComplete={(accountId) => {
+            void store.refreshToken(accountId).catch((error) => {
+              console.warn('[QoderCheckin] 领取后刷新额度失败:', error);
+            });
           }}
         />
       )}

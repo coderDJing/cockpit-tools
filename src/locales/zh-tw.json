@@ -6625,6 +6625,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 表示停用",
     "codexWindow": {
       "orDivider": "符合任一條件即觸發"
     },
@@ -7473,7 +7474,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · 中國版",
+      "global": "Qoder · 國際版"
+    },
+    "clientTarget": {
+      "label": "切換／本機匯入目標",
+      "ariaLabel": "Qoder 用戶端",
+      "desktop": "Qoder 桌面端",
+      "desktopCn": "Qoder CN 桌面端",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "帳號已切換，請重新開啟對應用戶端。"
+    },
+    "cn": {
+      "nativeOnly": "國內帳號請選擇桌面端或 CLI。",
+      "ideUnavailable": "國內帳號請選擇桌面端或 CLI；此處 IDE 適配器僅用於國際版。",
+      "instancesUnsupported": "國內版桌面端與 CLI 支援預設用戶端帳號切換，目前暫不支援應用多開。",
+      "flowNoticeDesc": "支援 Qoder CN 官方授權登入、本機桌面端／CLI 匯入、JSON 匯入、帳號切換和配額查詢。切換前請結束目標用戶端，切換後重新開啟。",
+      "flowNoticePermission": "權限範圍：讀取 Qoder CN 桌面端或 CLI 的本機認證儲存（auth 憑證與使用者資訊），用於帳號切換與工作階段注入；所有資料僅在本機處理。",
+      "flowNoticeNetwork": "網路範圍：官方授權登入需連網請求 Qoder CN 官方服務完成回呼；配額查詢透過 Qoder CN API 取得用量資料。不上傳本機金鑰或憑證。"
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Qoder OAuth 授權連結為空",
       "profileUninitialized": "Qoder IDE 尚未初始化。請用目前的系統帳號開啟此設定檔，結束後再試。目錄：{{detail}}",
       "storageUnavailable": "無法存取 Qoder IDE 憑證。請確認兩個程式使用同一系統帳號。{{detail}}",
       "profileConflict": "啟動設定指向其他設定檔。實際目錄：{{detail}}",

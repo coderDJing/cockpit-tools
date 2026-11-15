@@ -38,7 +38,7 @@ export function QoderCnQuickSettings() {
       <label style={{ display: 'block', margin: '12px 0' }}>
         {t('quickSettings.refreshInterval', '配额自动刷新')}
         <input aria-label="Qoder CN refresh interval" type="number" value={minutes} disabled={saving} onChange={event => setMinutes(event.target.value)} style={{ width: 70, marginLeft: 8 }} />
-        {t('common.minutes', '分钟')}
+        {t('wakeup.refreshInterval.minutes', '分钟')}
       </label>
       <p>{t('quickSettings.disableRefreshHint', '-1 表示禁用')}</p>
       <button className="btn btn-primary" disabled={saving} onClick={() => void save()}>{t('common.save', '保存')}</button>

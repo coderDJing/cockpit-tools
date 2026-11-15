@@ -6625,6 +6625,7 @@
     }
   },
   "quickSettings": {
+    "disableRefreshHint": "-1 vypne automatickou aktualizaci.",
     "codexWindow": {
       "orDivider": "Stačí splnit jednu podmínku"
     },
@@ -7473,7 +7474,30 @@
     }
   },
   "qoder": {
+    "region": {
+      "cn": "Qoder CN · Čína",
+      "global": "Qoder · Mezinárodní"
+    },
+    "clientTarget": {
+      "label": "Cíl přepnutí / místního importu",
+      "ariaLabel": "Klient Qoder",
+      "desktop": "Qoder Desktop",
+      "desktopCn": "Qoder CN Desktop",
+      "cli": "Qoder CLI",
+      "cliCn": "Qoder CN CLI",
+      "ide": "Qoder IDE",
+      "switchSuccess": "Účet byl přepnut. Znovu otevřete cílového klienta."
+    },
+    "cn": {
+      "nativeOnly": "Pro účty Qoder CN vyberte Desktop nebo CLI.",
+      "ideUnavailable": "Pro účty Qoder CN vyberte Desktop nebo CLI. Adaptér IDE je zde pouze pro mezinárodní verzi.",
+      "instancesUnsupported": "Qoder CN Desktop a CLI podporují přepínání účtu výchozího klienta. Více instancí aplikace zatím není podporováno.",
+      "flowNoticeDesc": "Podporuje oficiální přihlášení Qoder CN, místní import Desktop/CLI, import JSON, přepínání účtů a dotazy na kvóty. Před přepnutím zavřete cílového klienta a poté jej znovu otevřete.",
+      "flowNoticePermission": "Místní přístup: čte místní úložiště ověřování (přihlašovací údaje auth a informace o uživateli) Qoder CN Desktop nebo CLI pro přepínání účtů a vkládání relace. Všechna data zůstávají na tomto zařízení.",
+      "flowNoticeNetwork": "Síťový přístup: oficiální přihlášení kontaktuje služby Qoder CN kvůli dokončení callbacku; dotazy na kvóty získávají data o využití přes API Qoder CN. Místní klíče a přihlašovací údaje se nikdy nenahrávají."
+    },
     "diagnostics": {
+      "oauthUrlEmpty": "Autorizační URL Qoder OAuth je prázdná.",
       "profileUninitialized": "Nastavení Qoder IDE nebylo dokončeno. Otevřete tento profil pod aktuálním uživatelem systému, ukončete IDE a zkuste to znovu. Složka: {{detail}}",
       "storageUnavailable": "Přihlašovací údaje Qoder IDE nejsou dostupné. Spusťte obě aplikace pod stejným uživatelem systému. {{detail}}",
       "profileConflict": "Nastavení spuštění ukazuje na jiný profil. Skutečná složka: {{detail}}",
