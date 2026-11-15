@@ -528,6 +528,7 @@ export function useSettingsPageController() {
     { value: 'codebuddy', label: 'CodeBuddy' },
     { value: 'codebuddy_cn', label: 'CodeBuddy CN' },
     { value: 'qoder', label: 'Qoder' },
+    { value: 'qoder_cn', label: 'Qoder CN' },
     { value: 'zcode', label: 'ZCode' },
     { value: 'trae', label: 'Trae' },
     { value: 'trae_solo', label: t('nav.traeSolo') },
