@@ -44,6 +44,8 @@ let socket;
     check(result.initial.every(x => x.hidden?.includes('scrollbarHidden')), 'Missing enhancement: ' + JSON.stringify(result.initial));
     check(result.initial.find(x => x.id === 'absolute').position === 'absolute', 'Position changed');
     check(result.initial.find(x => x.id === 'react-scroll').children === 20, 'React children changed');
+    result.handleSize = await ev(`(()=>{const v=[...document.querySelectorAll('.os-scrollbar-vertical .os-scrollbar-handle')].map(h=>parseFloat(getComputedStyle(h).width));const h=[...document.querySelectorAll('.os-scrollbar-horizontal .os-scrollbar-handle')].map(e=>parseFloat(getComputedStyle(e).height));return {vertical:v,horizontal:h}})()`);
+    check(result.handleSize.vertical.length && result.handleSize.vertical.every(w => w <= 5) && result.handleSize.horizontal.every(h => h <= 5), 'Scrollbar handle too thick: ' + JSON.stringify(result.handleSize));
     result.native = await ev(`(()=>{const e=document.getElementById('plain');let events=0;e.addEventListener('scroll',()=>events++);e.scrollTop=100;e.scrollLeft=80;return new Promise(r=>setTimeout(()=>r({top:e.scrollTop,left:e.scrollLeft,events}),100))})()`);
     check(result.native.top === 100 && result.native.left === 80 && result.native.events > 0, 'Native scroll broken');
     await ev(`window.renderRows(5);document.getElementById('textarea').value=Array.from({length:80},(_,i)=>'Line '+i).join('\\n');document.getElementById('textarea').dispatchEvent(new Event('input',{bubbles:true}))`);
