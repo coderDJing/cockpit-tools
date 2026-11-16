@@ -777,9 +777,24 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
           await service.injectQoderNative(accountId, clientTarget);
           await store.fetchAccounts();
         }
-        setMessage({ text: clientTarget === 'ide' ? t('accounts.switchSuccess', '切换成功') : t('qoder.clientTarget.switchSuccess', '账号已切换，请重新打开对应客户端。') });
+        setMessage({
+          text: clientTarget === 'ide'
+            ? t('accounts.switchSuccess', '切换成功')
+            : region === 'cn' && clientTarget === 'desktop'
+              ? t('qoder.clientTarget.desktopSwitchSuccess', '账号已切换，Qoder CN 桌面端已重新启动。')
+              : t('qoder.clientTarget.switchSuccess', '账号已切换，请重新打开对应客户端。'),
+        });
       } catch (error) {
-        if (String(error).startsWith('QODER_SWITCH_LAUNCH_FAILED:')) {
+        const errorText = String(error);
+        if (region === 'cn' && clientTarget === 'desktop' && errorText.startsWith('QODER_CN_RELAUNCH_FAILED:')) {
+          await store.fetchAccounts();
+          setMessage({
+            tone: 'error',
+            text: t('qoder.clientTarget.relaunchFailed', '账号已切换，但 Qoder CN 桌面端自动启动失败，请手动打开。'),
+          });
+          return;
+        }
+        if (errorText.startsWith('QODER_SWITCH_LAUNCH_FAILED:')) {
           await store.fetchAccounts();
         }
         setMessage({
@@ -790,7 +805,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
         setInjecting(null);
       }
     },
-    [injecting, store, t, clientTarget, accounts],
+    [injecting, store, t, clientTarget, accounts, region],
   );
 
   const handleDeleteAccounts = useCallback(

@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Предлагает следующее сообщение с помощью API-провайдера и модели текущего разговора. Расходует дополнительные API-кредиты; после сохранения перезапустите Codex."
       },
       "timeDisplayMode": "Показ времени",
-      "timeDisplayModeDesc": "Время в карточках и списках аккаунтов. По умолчанию — время переключения"
+      "timeDisplayModeDesc": "Время в карточках и списках аккаунтов. По умолчанию — время переключения",
+      "qoderCnAppPath": "Путь запуска Qoder CN",
+      "qoderCnAppPathDesc": "Оставьте пустым для автоопределения. При смене аккаунта клиент закрывается и запускается заново.",
+      "qoderCnAppPathPlaceholder": "Путь по умолчанию",
+      "qoderCnPathReset": "Сбросить по умолчанию"
     },
     "network": {
       "apiTitle": "API антигравитационной кабины",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Аккаунт переключён. Откройте целевой клиент заново."
+      "switchSuccess": "Аккаунт переключён. Откройте целевой клиент заново.",
+      "windowsOnly": " (только Windows)",
+      "desktopSwitchSuccess": "Аккаунт переключён. Qoder CN Desktop перезапущен.",
+      "relaunchFailed": "Аккаунт переключён, но Qoder CN Desktop не удалось запустить автоматически. Откройте его вручную."
     },
     "cn": {
       "nativeOnly": "Для аккаунтов Qoder CN выберите Desktop или CLI.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Аккаунт записан, но запустить Qoder IDE не удалось. {{detail}}",
       "refreshCount": "Обновлено аккаунтов: {{count}} из {{total}}.",
       "launchUnconfirmed": "Не удалось подтвердить запуск Qoder IDE.",
-      "workerFailed": "Фоновая операция Qoder завершилась ошибкой. {{detail}}"
+      "workerFailed": "Фоновая операция Qoder завершилась ошибкой. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop не найден. Укажите путь запуска в настройках или установите клиент и повторите попытку."
     },
     "title": "Управление аккаунтами Qoder",
     "comingSoon": {

@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "現在の会話の API プロバイダーとモデルを使って、次のメッセージを提案します。API クレジットを追加で消費します。保存後に Codex を再起動してください。"
       },
       "timeDisplayMode": "時刻表示",
-      "timeDisplayModeDesc": "アカウントカードと一覧に表示する時刻。既定は切替時刻です"
+      "timeDisplayModeDesc": "アカウントカードと一覧に表示する時刻。既定は切替時刻です",
+      "qoderCnAppPath": "Qoder CN 起動パス",
+      "qoderCnAppPathDesc": "空欄の場合は自動検出します。アカウント切り替え時にデスクトップクライアントを終了して再起動します",
+      "qoderCnAppPathPlaceholder": "デフォルトパス",
+      "qoderCnPathReset": "デフォルトに戻す"
     },
     "network": {
       "apiTitle": "反重力コックピット API",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "アカウントを切り替えました。対象のクライアントを再起動してください。"
+      "switchSuccess": "アカウントを切り替えました。対象のクライアントを再起動してください。",
+      "windowsOnly": "（Windows のみ）",
+      "desktopSwitchSuccess": "アカウントを切り替え、Qoder CN デスクトップを再起動しました。",
+      "relaunchFailed": "アカウントは切り替えましたが、Qoder CN デスクトップを自動起動できませんでした。手動で起動してください。"
     },
     "cn": {
       "nativeOnly": "Qoder CN アカウントではデスクトップまたは CLI を選択してください。",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "アカウントは書き込まれましたが、Qoder IDE を起動できませんでした。{{detail}}",
       "refreshCount": "{{total}} 件中 {{count}} 件を更新しました。",
       "launchUnconfirmed": "Qoder IDE の起動を確認できませんでした。",
-      "workerFailed": "Qoder のバックグラウンド処理に失敗しました。{{detail}}"
+      "workerFailed": "Qoder のバックグラウンド処理に失敗しました。{{detail}}",
+      "qoderCnPathMissing": "Qoder CN デスクトップが見つかりません。設定で起動パスを指定するか、インストールしてから再試行してください。"
     },
     "title": "Qoderアカウント管理",
     "comingSoon": {

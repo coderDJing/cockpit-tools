@@ -937,6 +937,25 @@ mod codex_path_migration_tests {
     }
 
     #[test]
+    fn scan_does_not_treat_global_qoder_as_cn_client() {
+        let exe_names = HashSet::from(["qoder.exe".to_string()]);
+        let keywords = vec!["qoder cn".to_string()];
+
+        assert!(score_windows_candidate(
+            Path::new("C:/Program Files/Qoder/Qoder.exe"),
+            &exe_names,
+            &keywords,
+        )
+        .is_none());
+        assert!(score_windows_candidate(
+            Path::new("C:/Program Files/Qoder CN/Qoder.exe"),
+            &exe_names,
+            &keywords,
+        )
+        .is_some());
+    }
+
+    #[test]
     fn scan_rejects_claude_cowork_service_inside_store_package() {
         let exe_names = HashSet::from(["claude.exe".to_string()]);
         let keywords = vec!["claude".to_string()];

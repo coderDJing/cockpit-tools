@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "使用目前對話的 API 供應商和模型產生下一則訊息建議，會額外消耗 API 額度；儲存後重新啟動 Codex 生效。"
       },
       "timeDisplayMode": "時間顯示",
-      "timeDisplayModeDesc": "選擇帳號卡片與列表的時間內容，預設為切換時間"
+      "timeDisplayModeDesc": "選擇帳號卡片與列表的時間內容，預設為切換時間",
+      "qoderCnAppPath": "Qoder CN 啟動路徑",
+      "qoderCnAppPathDesc": "留空則自動偵測；切換帳號時會自動關閉並重新啟動桌面端",
+      "qoderCnAppPathPlaceholder": "預設路徑",
+      "qoderCnPathReset": "重設預設"
     },
     "network": {
       "apiTitle": "反重力駕駛艙 API",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "帳號已切換，請重新開啟對應用戶端。"
+      "switchSuccess": "帳號已切換，請重新開啟對應用戶端。",
+      "windowsOnly": "（僅 Windows）",
+      "desktopSwitchSuccess": "帳號已切換，Qoder CN 桌面端已重新啟動。",
+      "relaunchFailed": "帳號已切換，但 Qoder CN 桌面端自動啟動失敗，請手動開啟。"
     },
     "cn": {
       "nativeOnly": "國內帳號請選擇桌面端或 CLI。",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "帳號已寫入，但 Qoder IDE 啟動失敗。{{detail}}",
       "refreshCount": "已重新整理 {{count}}／{{total}} 個帳號。",
       "launchUnconfirmed": "未確認 Qoder IDE 已啟動。",
-      "workerFailed": "Qoder 背景作業失敗。{{detail}}"
+      "workerFailed": "Qoder 背景作業失敗。{{detail}}",
+      "qoderCnPathMissing": "未找到 Qoder CN 桌面端。請在設定中填寫啟動路徑，或安裝後重試。"
     },
     "title": "Qoder 帳號管理",
     "comingSoon": {

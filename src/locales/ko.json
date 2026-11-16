@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "현재 대화의 API 제공업체와 모델로 다음 메시지를 제안합니다. API 크레딧을 추가로 사용합니다. 저장 후 Codex를 다시 시작하세요."
       },
       "timeDisplayMode": "시간 표시",
-      "timeDisplayModeDesc": "계정 카드와 목록에 표시할 시간입니다. 기본값은 전환 시간입니다"
+      "timeDisplayModeDesc": "계정 카드와 목록에 표시할 시간입니다. 기본값은 전환 시간입니다",
+      "qoderCnAppPath": "Qoder CN 실행 경로",
+      "qoderCnAppPathDesc": "비워 두면 자동으로 감지합니다. 계정을 전환하면 데스크톱 클라이언트를 닫고 다시 시작합니다",
+      "qoderCnAppPathPlaceholder": "기본 경로",
+      "qoderCnPathReset": "기본값으로 재설정"
     },
     "network": {
       "apiTitle": "반중력 조종석 API",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "계정이 전환되었습니다. 대상 클라이언트를 다시 여세요."
+      "switchSuccess": "계정이 전환되었습니다. 대상 클라이언트를 다시 여세요.",
+      "windowsOnly": " (Windows 전용)",
+      "desktopSwitchSuccess": "계정이 전환되었습니다. Qoder CN 데스크톱이 다시 시작되었습니다.",
+      "relaunchFailed": "계정은 전환되었지만 Qoder CN 데스크톱을 자동으로 시작하지 못했습니다. 직접 실행하세요."
     },
     "cn": {
       "nativeOnly": "Qoder CN 계정은 데스크톱 또는 CLI를 선택하세요.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "계정을 기록했지만 Qoder IDE를 시작하지 못했습니다. {{detail}}",
       "refreshCount": "계정 {{total}}개 중 {{count}}개를 갱신했습니다.",
       "launchUnconfirmed": "Qoder IDE 실행을 확인하지 못했습니다.",
-      "workerFailed": "Qoder 백그라운드 작업에 실패했습니다. {{detail}}"
+      "workerFailed": "Qoder 백그라운드 작업에 실패했습니다. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN 데스크톱을 찾을 수 없습니다. 설정에서 실행 경로를 지정하거나 설치한 후 다시 시도하세요."
     },
     "title": "Qoder 계정 관리",
     "comingSoon": {

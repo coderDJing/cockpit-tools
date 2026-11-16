@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Geçerli konuşmanın API sağlayıcısı ve modeliyle sonraki mesaj önerileri oluşturur. Ek API kredisi kullanır; kaydettikten sonra Codex’i yeniden başlatın."
       },
       "timeDisplayMode": "Zaman gösterimi",
-      "timeDisplayModeDesc": "Hesap kartları ve listelerindeki zaman. Varsayılan, hesap değiştirme zamanıdır"
+      "timeDisplayModeDesc": "Hesap kartları ve listelerindeki zaman. Varsayılan, hesap değiştirme zamanıdır",
+      "qoderCnAppPath": "Qoder CN başlatma yolu",
+      "qoderCnAppPathDesc": "Otomatik algılama için boş bırakın. Hesap değiştirirken masaüstü istemcisi kapatılıp yeniden başlatılır.",
+      "qoderCnAppPathPlaceholder": "Varsayılan yol",
+      "qoderCnPathReset": "Varsayılana sıfırla"
     },
     "network": {
       "apiTitle": "Yerçekimine Karşı Kokpit API'si",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Hesap değiştirildi. Hedef istemciyi yeniden açın."
+      "switchSuccess": "Hesap değiştirildi. Hedef istemciyi yeniden açın.",
+      "windowsOnly": " (yalnızca Windows)",
+      "desktopSwitchSuccess": "Hesap değiştirildi. Qoder CN Masaüstü yeniden başlatıldı.",
+      "relaunchFailed": "Hesap değiştirildi ancak Qoder CN Masaüstü otomatik olarak başlatılamadı. El ile açın."
     },
     "cn": {
       "nativeOnly": "Qoder CN hesapları için Desktop veya CLI seçin.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Hesap yazıldı ancak Qoder IDE başlatılamadı. {{detail}}",
       "refreshCount": "{{total}} hesaptan {{count}} tanesi yenilendi.",
       "launchUnconfirmed": "Qoder IDE’nin başladığı doğrulanamadı.",
-      "workerFailed": "Qoder arka plan işlemi başarısız oldu. {{detail}}"
+      "workerFailed": "Qoder arka plan işlemi başarısız oldu. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Masaüstü bulunamadı. Ayarlarda başlatma yolunu belirtin veya yükleyip yeniden deneyin."
     },
     "title": "Qoder Hesap Yönetimi",
     "comingSoon": {

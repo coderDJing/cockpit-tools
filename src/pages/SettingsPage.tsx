@@ -194,6 +194,7 @@ interface GeneralConfig {
   codebuddy_cn_app_path: string;
   codebuddy_cn_share_sessions_on_switch: boolean;
   qoder_app_path: string;
+  qoder_cn_app_path: string;
   zcode_app_path: string;
   trae_app_path: string;
   trae_solo_app_path: string;
@@ -298,6 +299,7 @@ type AppPathTarget =
   | 'codebuddy'
   | 'codebuddy_cn'
   | 'qoder'
+  | 'qoder_cn'
   | 'zcode'
   | 'trae'
   | 'trae_solo'
@@ -613,6 +615,7 @@ export function useSettingsPageController() {
   const [codebuddyCnAppPath, setCodebuddyCnAppPath] = useState('');
   const [codebuddyCnShareSessionsOnSwitch, setCodebuddyCnShareSessionsOnSwitch] = useState(false);
   const [qoderAppPath, setQoderAppPath] = useState('');
+  const [qoderCnAppPath, setQoderCnAppPath] = useState('');
   const [zcodeAppPath, setZcodeAppPath] = useState('');
   const [traeAppPath, setTraeAppPath] = useState('');
   const [traeSoloAppPath, setTraeSoloAppPath] = useState('');
@@ -1181,6 +1184,7 @@ export function useSettingsPageController() {
       codebuddy_cn_app_path: codebuddyCnAppPath,
       codebuddy_cn_share_sessions_on_switch: codebuddyCnShareSessionsOnSwitch,
       qoder_app_path: qoderAppPath,
+      qoder_cn_app_path: qoderCnAppPath,
       zcode_app_path: zcodeAppPath,
       trae_app_path: traeAppPath,
       trae_solo_app_path: traeSoloAppPath,
@@ -1431,6 +1435,7 @@ export function useSettingsPageController() {
     codebuddyCnAppPath,
     codebuddyCnShareSessionsOnSwitch,
     qoderAppPath,
+    qoderCnAppPath,
     zcodeAppPath,
     traeAppPath,
     traeSoloAppPath,
@@ -1747,6 +1752,7 @@ export function useSettingsPageController() {
       setCodebuddyCnAppPath(config.codebuddy_cn_app_path || '');
       setCodebuddyCnShareSessionsOnSwitch(config.codebuddy_cn_share_sessions_on_switch ?? false);
       setQoderAppPath(config.qoder_app_path || '');
+      setQoderCnAppPath(config.qoder_cn_app_path || '');
       setZcodeAppPath(config.zcode_app_path || '');
       setTraeAppPath(config.trae_app_path || '');
       setTraeSoloAppPath(config.trae_solo_app_path || '');
@@ -2117,6 +2123,8 @@ export function useSettingsPageController() {
       setCodebuddyCnAppPath(path);
     } else if (target === 'qoder') {
       setQoderAppPath(path);
+    } else if (target === 'qoder_cn') {
+      setQoderCnAppPath(path);
     } else if (target === 'zcode') {
       setZcodeAppPath(path);
     } else if (isTraeAppPathTarget(target)) {
@@ -2158,6 +2166,8 @@ export function useSettingsPageController() {
         return 'CodeBuddy CN';
       case 'qoder':
         return 'Qoder';
+      case 'qoder_cn':
+        return 'Qoder CN';
       case 'zcode':
         return 'ZCode';
       case 'trae':
@@ -2200,6 +2210,9 @@ export function useSettingsPageController() {
     }
     if (target === 'qoder') {
       return t('settings.general.qoderPathReset', '重置默认');
+    }
+    if (target === 'qoder_cn') {
+      return t('settings.general.qoderCnPathReset', '重置默认');
     }
     if (target === 'zcode') {
       return t('settings.general.codexPathReset', '重置默认');
@@ -3464,6 +3477,7 @@ export function useSettingsPageController() {
     openMenuBarQuotaModal,
     platformSettingsOrder,
     qoderAppPath,
+    qoderCnAppPath,
     qoderAutoRefresh,
     qoderAutoRefreshCustomMode,
     qoderAutoRefreshIsPreset,
@@ -3615,6 +3629,7 @@ export function useSettingsPageController() {
     setOpencodeAuthOverwriteOnSwitch,
     setOpencodeSyncOnSwitch,
     setQoderAppPath,
+    setQoderCnAppPath,
     setQoderAutoRefresh,
     setQoderAutoRefreshCustomMode,
     setQoderCnAutoRefresh,

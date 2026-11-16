@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Tạo gợi ý tin nhắn tiếp theo bằng nhà cung cấp API và mô hình của cuộc trò chuyện hiện tại. Tiêu tốn thêm tín dụng API; khởi động lại Codex sau khi lưu."
       },
       "timeDisplayMode": "Hiển thị thời gian",
-      "timeDisplayModeDesc": "Thời gian trên thẻ và danh sách tài khoản. Mặc định là thời gian chuyển tài khoản"
+      "timeDisplayModeDesc": "Thời gian trên thẻ và danh sách tài khoản. Mặc định là thời gian chuyển tài khoản",
+      "qoderCnAppPath": "Đường dẫn khởi chạy Qoder CN",
+      "qoderCnAppPathDesc": "Để trống để tự động phát hiện. Khi chuyển tài khoản, ứng dụng máy tính sẽ đóng và khởi động lại.",
+      "qoderCnAppPathPlaceholder": "Đường dẫn mặc định",
+      "qoderCnPathReset": "Đặt lại mặc định"
     },
     "network": {
       "apiTitle": "API Antigravity Cockpit",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Đã chuyển tài khoản. Hãy mở lại ứng dụng khách đích."
+      "switchSuccess": "Đã chuyển tài khoản. Hãy mở lại ứng dụng khách đích.",
+      "windowsOnly": " (chỉ Windows)",
+      "desktopSwitchSuccess": "Đã chuyển tài khoản. Qoder CN Desktop đã được khởi động lại.",
+      "relaunchFailed": "Đã chuyển tài khoản nhưng không thể tự động khởi chạy Qoder CN Desktop. Hãy mở thủ công."
     },
     "cn": {
       "nativeOnly": "Chọn Desktop hoặc CLI cho tài khoản Qoder CN.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Đã ghi tài khoản nhưng không khởi động được Qoder IDE. {{detail}}",
       "refreshCount": "Đã làm mới {{count}} trên {{total}} tài khoản.",
       "launchUnconfirmed": "Không xác nhận được Qoder IDE đã khởi chạy.",
-      "workerFailed": "Tác vụ nền Qoder thất bại. {{detail}}"
+      "workerFailed": "Tác vụ nền Qoder thất bại. {{detail}}",
+      "qoderCnPathMissing": "Không tìm thấy Qoder CN Desktop. Hãy đặt đường dẫn khởi chạy trong Cài đặt hoặc cài đặt ứng dụng rồi thử lại."
     },
     "title": "Quản lý tài khoản Qoder",
     "comingSoon": {

@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Gera sugestões para a próxima mensagem com o provedor de API e o modelo da conversa atual. Consome créditos de API adicionais; reinicie o Codex após salvar."
       },
       "timeDisplayMode": "Hora exibida",
-      "timeDisplayModeDesc": "Hora nos cartões e listas de contas. Por padrão, a hora da troca de conta"
+      "timeDisplayModeDesc": "Hora nos cartões e listas de contas. Por padrão, a hora da troca de conta",
+      "qoderCnAppPath": "Caminho de inicialização do Qoder CN",
+      "qoderCnAppPathDesc": "Deixe vazio para detectar automaticamente. Ao trocar de conta, o cliente desktop é fechado e reiniciado.",
+      "qoderCnAppPathPlaceholder": "Caminho padrão",
+      "qoderCnPathReset": "Redefinir padrão"
     },
     "network": {
       "apiTitle": "API de cockpit antigravidade",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Conta alterada. Reabra o cliente de destino."
+      "switchSuccess": "Conta alterada. Reabra o cliente de destino.",
+      "windowsOnly": " (somente Windows)",
+      "desktopSwitchSuccess": "Conta alterada. O Qoder CN Desktop foi reiniciado.",
+      "relaunchFailed": "Conta alterada, mas não foi possível iniciar o Qoder CN Desktop automaticamente. Abra-o manualmente."
     },
     "cn": {
       "nativeOnly": "Selecione Desktop ou CLI para contas Qoder CN.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "A conta foi gravada, mas o Qoder IDE não iniciou. {{detail}}",
       "refreshCount": "{{count}} de {{total}} contas atualizadas.",
       "launchUnconfirmed": "Não foi possível confirmar a inicialização do Qoder IDE.",
-      "workerFailed": "A operação do Qoder em segundo plano falhou. {{detail}}"
+      "workerFailed": "A operação do Qoder em segundo plano falhou. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop não encontrado. Defina o caminho de inicialização nas configurações ou instale-o e tente novamente."
     },
     "title": "Gerenciamento de contas do Qoder",
     "comingSoon": {

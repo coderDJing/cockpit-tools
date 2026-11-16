@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Erstellt Vorschläge für die nächste Nachricht mit dem API-Anbieter und Modell des aktuellen Chats. Verbraucht zusätzliche API-Credits; Codex nach dem Speichern neu starten."
       },
       "timeDisplayMode": "Zeitanzeige",
-      "timeDisplayModeDesc": "Zeitangabe auf Kontokarten und in Listen. Standard ist der Kontowechsel"
+      "timeDisplayModeDesc": "Zeitangabe auf Kontokarten und in Listen. Standard ist der Kontowechsel",
+      "qoderCnAppPath": "Qoder CN-Startpfad",
+      "qoderCnAppPathDesc": "Leer lassen für automatische Erkennung. Beim Kontowechsel wird der Desktop-Client geschlossen und neu gestartet.",
+      "qoderCnAppPathPlaceholder": "Standardpfad",
+      "qoderCnPathReset": "Auf Standard zurücksetzen"
     },
     "network": {
       "apiTitle": "Antigravity-Cockpit-API",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Konto gewechselt. Öffnen Sie den Ziel-Client erneut."
+      "switchSuccess": "Konto gewechselt. Öffnen Sie den Ziel-Client erneut.",
+      "windowsOnly": " (nur Windows)",
+      "desktopSwitchSuccess": "Konto gewechselt. Qoder CN Desktop wurde neu gestartet.",
+      "relaunchFailed": "Konto gewechselt, aber Qoder CN Desktop konnte nicht automatisch gestartet werden. Bitte manuell öffnen."
     },
     "cn": {
       "nativeOnly": "Wählen Sie für Qoder-CN-Konten Desktop oder CLI.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Das Konto wurde geschrieben, aber Qoder IDE konnte nicht starten. {{detail}}",
       "refreshCount": "{{count}} von {{total}} Konten aktualisiert.",
       "launchUnconfirmed": "Der Start von Qoder IDE konnte nicht bestätigt werden.",
-      "workerFailed": "Der Qoder-Hintergrundvorgang ist fehlgeschlagen. {{detail}}"
+      "workerFailed": "Der Qoder-Hintergrundvorgang ist fehlgeschlagen. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop wurde nicht gefunden. Legen Sie den Startpfad in den Einstellungen fest oder installieren Sie die App und versuchen Sie es erneut."
     },
     "title": "Qoder-Kontenverwaltung",
     "comingSoon": {

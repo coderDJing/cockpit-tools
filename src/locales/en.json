@@ -1619,6 +1619,10 @@
       "updateReminderOff": "Off (no reminders)",
       "updateReminderOn": "On (show reminders)",
       "qoderPathReset": "Reset to default",
+      "qoderCnAppPath": "Qoder CN launch path",
+      "qoderCnAppPathDesc": "Leave empty to auto-detect. Switching accounts closes and relaunches the desktop client.",
+      "qoderCnAppPathPlaceholder": "Default path",
+      "qoderCnPathReset": "Reset to default",
       "zedAutoRefresh": "Zed Auto Refresh Quota",
       "zedAutoRefreshDesc": "Background update frequency",
       "zedAppPath": "Zed Launch Path",
@@ -7727,13 +7731,16 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Account switched. Reopen the target client."
+      "switchSuccess": "Account switched. Reopen the target client.",
+      "desktopSwitchSuccess": "Account switched. Qoder CN Desktop has been restarted.",
+      "relaunchFailed": "Account switched, but Qoder CN Desktop could not be launched automatically. Open it manually.",
+      "windowsOnly": " (Windows only)"
     },
     "cn": {
       "nativeOnly": "Select Desktop or CLI for Qoder CN accounts.",
       "ideUnavailable": "Select Desktop or CLI for Qoder CN accounts. The IDE adapter here is for the international version only.",
       "instancesUnsupported": "Qoder CN Desktop and CLI support switching accounts for the default client. App multi-instance is not supported yet.",
-      "flowNoticeDesc": "Supports official Qoder CN sign-in, local Desktop/CLI import, JSON import, account switching, and quota queries. Quit the target client before switching and reopen it afterward.",
+      "flowNoticeDesc": "Supports official Qoder CN sign-in, local Desktop/CLI import, JSON import, account switching, and quota queries. Desktop switching closes and relaunches the client automatically; reopen your terminal after a CLI switch.",
       "flowNoticePermission": "Local access: reads the sign-in store (auth credentials and user info) of Qoder CN Desktop or CLI for account switching and session injection. All data stays on this device.",
       "flowNoticeNetwork": "Network access: official sign-in contacts Qoder CN services to complete the callback; quota queries fetch usage from the Qoder CN API. Local keys and credentials are never uploaded."
     },
@@ -7752,6 +7759,7 @@
       "sessionChanged": "The Qoder session changed. Refresh the account list and try again.",
       "endpointUnavailable": "The service address for this Qoder session could not be verified. Check the sign-in and organization settings in the corresponding Qoder IDE.",
       "switchLaunchFailed": "The account was written, but Qoder IDE failed to start. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop was not found. Set its launch path in Settings or install it, then retry.",
       "refreshCount": "Refreshed {{count}} of {{total}} accounts."
     },
     "title": "Qoder Account",

@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Génère des suggestions de message suivant avec le fournisseur d’API et le modèle de la conversation actuelle. Consomme des crédits d’API supplémentaires ; redémarrez Codex après l’enregistrement."
       },
       "timeDisplayMode": "Heure affichée",
-      "timeDisplayModeDesc": "Heure affichée sur les comptes. Par défaut, heure du changement de compte"
+      "timeDisplayModeDesc": "Heure affichée sur les comptes. Par défaut, heure du changement de compte",
+      "qoderCnAppPath": "Chemin de lancement Qoder CN",
+      "qoderCnAppPathDesc": "Laisser vide pour la détection automatique. Le changement de compte ferme et relance le client de bureau.",
+      "qoderCnAppPathPlaceholder": "Chemin par défaut",
+      "qoderCnPathReset": "Réinitialiser par défaut"
     },
     "network": {
       "apiTitle": "API du cockpit antigravité",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Compte changé. Rouvrez le client cible."
+      "switchSuccess": "Compte changé. Rouvrez le client cible.",
+      "windowsOnly": " (Windows uniquement)",
+      "desktopSwitchSuccess": "Compte changé. Qoder CN Desktop a été relancé.",
+      "relaunchFailed": "Compte changé, mais Qoder CN Desktop n'a pas pu être lancé automatiquement. Ouvrez-le manuellement."
     },
     "cn": {
       "nativeOnly": "Sélectionnez Desktop ou CLI pour les comptes Qoder CN.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Le compte a été enregistré, mais Qoder IDE n’a pas pu démarrer. {{detail}}",
       "refreshCount": "{{count}} comptes actualisés sur {{total}}.",
       "launchUnconfirmed": "Impossible de confirmer le démarrage de Qoder IDE.",
-      "workerFailed": "L’opération Qoder en arrière-plan a échoué. {{detail}}"
+      "workerFailed": "L’opération Qoder en arrière-plan a échoué. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop est introuvable. Définissez son chemin de lancement dans les paramètres ou installez-le, puis réessayez."
     },
     "title": "Gestion des comptes Qoder",
     "comingSoon": {

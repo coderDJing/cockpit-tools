@@ -32,16 +32,57 @@ pub async fn inject_qoder_cn_native(account_id: String, client: String) -> Resul
     let target = crate::modules::qoder_native::NativeClient::parse(&client)?;
     qoder_cn_oauth::prepare_account_for_switch(&account_id).await?;
     let id = account_id.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::modules::qoder_native::switch(
-            crate::modules::qoder_region::QoderRegion::Cn,
-            &id,
-            target,
-        )
-    })
-    .await
-    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
+    tauri::async_runtime::spawn_blocking(move || switch_qoder_cn(&id, target))
+        .await
+        .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
     Ok(account_id)
+}
+
+#[cfg(target_os = "windows")]
+fn switch_qoder_cn(
+    account_id: &str,
+    target: crate::modules::qoder_native::NativeClient,
+) -> Result<(), String> {
+    use crate::modules::qoder_native::NativeClient;
+
+    if target != NativeClient::Desktop {
+        return crate::modules::qoder_native::switch(
+            crate::modules::qoder_region::QoderRegion::Cn,
+            account_id,
+            target,
+        );
+    }
+
+    let launch_path = crate::modules::process::resolve_qoder_cn_launch_path()?;
+    crate::modules::process::close_qoder_cn_desktop(20)?;
+    if let Err(error) = crate::modules::qoder_native::switch(
+        crate::modules::qoder_region::QoderRegion::Cn,
+        account_id,
+        target,
+    ) {
+        if let Err(relaunch_error) = crate::modules::process::start_qoder_cn_desktop(&launch_path) {
+            logger::log_warn(&format!(
+                "[Qoder CN Switch] restore launch failed after switch failure: {}",
+                relaunch_error
+            ));
+        }
+        return Err(error);
+    }
+    crate::modules::process::start_qoder_cn_desktop(&launch_path)
+        .map(|_| ())
+        .map_err(|error| format!("QODER_CN_RELAUNCH_FAILED: {error}"))
+}
+
+#[cfg(not(target_os = "windows"))]
+fn switch_qoder_cn(
+    account_id: &str,
+    target: crate::modules::qoder_native::NativeClient,
+) -> Result<(), String> {
+    crate::modules::qoder_native::switch(
+        crate::modules::qoder_region::QoderRegion::Cn,
+        account_id,
+        target,
+    )
 }
 
 #[tauri::command]
@@ -246,11 +287,7 @@ pub async fn inject_qoder_cn_account(account_id: String) -> Result<String, Strin
     qoder_cn_oauth::prepare_account_for_switch(&account_id).await?;
     let id = account_id.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        crate::modules::qoder_native::switch(
-            crate::modules::qoder_region::QoderRegion::Cn,
-            &id,
-            crate::modules::qoder_native::NativeClient::Desktop,
-        )
+        switch_qoder_cn(&id, crate::modules::qoder_native::NativeClient::Desktop)
     })
     .await
     .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;

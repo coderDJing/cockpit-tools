@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Generuje návrhy další zprávy pomocí poskytovatele API a modelu aktuální konverzace. Spotřebovává další kredity API; po uložení restartujte Codex."
       },
       "timeDisplayMode": "Zobrazený čas",
-      "timeDisplayModeDesc": "Čas na kartách a v seznamu účtů. Výchozí je čas přepnutí účtu"
+      "timeDisplayModeDesc": "Čas na kartách a v seznamu účtů. Výchozí je čas přepnutí účtu",
+      "qoderCnAppPath": "Cesta spuštění Qoder CN",
+      "qoderCnAppPathDesc": "Ponechte prázdné pro automatické zjištění. Při přepnutí účtu se desktopový klient zavře a znovu spustí.",
+      "qoderCnAppPathPlaceholder": "Výchozí cesta",
+      "qoderCnPathReset": "Obnovit výchozí"
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API​",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Účet byl přepnut. Znovu otevřete cílového klienta."
+      "switchSuccess": "Účet byl přepnut. Znovu otevřete cílového klienta.",
+      "windowsOnly": " (pouze Windows)",
+      "desktopSwitchSuccess": "Účet byl přepnut. Qoder CN Desktop byl restartován.",
+      "relaunchFailed": "Účet byl přepnut, ale Qoder CN Desktop se nepodařilo automaticky spustit. Otevřete jej ručně."
     },
     "cn": {
       "nativeOnly": "Pro účty Qoder CN vyberte Desktop nebo CLI.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Účet byl zapsán, ale Qoder IDE se nepodařilo spustit. {{detail}}",
       "refreshCount": "Obnoveno {{count}} z {{total}} účtů.",
       "launchUnconfirmed": "Spuštění Qoder IDE se nepodařilo potvrdit.",
-      "workerFailed": "Operace Qoder na pozadí selhala. {{detail}}"
+      "workerFailed": "Operace Qoder na pozadí selhala. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop nebyl nalezen. Nastavte cestu spuštění v nastavení nebo jej nainstalujte a zkuste to znovu."
     },
     "title": "Správa účtů Qoder",
     "comingSoon": {

@@ -6,6 +6,11 @@ export function formatQoderError(error: unknown): string {
   const code = separator === -1 ? message : message.slice(0, separator);
   const detail = separator === -1 ? '' : message.slice(separator + 1).trim();
   switch (code) {
+    case 'APP_PATH_NOT_FOUND':
+      if (detail === 'qoder_cn') {
+        return i18n.t('qoder.diagnostics.qoderCnPathMissing');
+      }
+      return message;
     case 'QODER_PROFILE_UNINITIALIZED':
       return i18n.t('qoder.diagnostics.profileUninitialized', { detail });
     case 'QODER_STORAGE_UNAVAILABLE':

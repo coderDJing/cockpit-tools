@@ -197,6 +197,33 @@ pub fn close_qoder_instances(user_data_dirs: &[String], timeout_secs: u64) -> Re
     )
 }
 
+pub fn close_qoder_cn_desktop(timeout_secs: u64) -> Result<(), String> {
+    let system = sysinfo::System::new_all();
+    if system.processes().is_empty() {
+        return Err("QODER_NATIVE_PROCESS_PROBE_FAILED".into());
+    }
+    let names = crate::modules::qoder_native::CN_DESKTOP_PROCESS_NAMES;
+    let mut pids: Vec<u32> = system
+        .processes()
+        .values()
+        .filter(|process| {
+            names.contains(&process.name().to_string_lossy().to_ascii_lowercase().as_str())
+        })
+        .map(|process| process.pid().as_u32())
+        .collect();
+    pids.sort_unstable();
+    pids.dedup();
+    if pids.is_empty() {
+        crate::modules::logger::log_info("[Qoder CN Close] desktop client is not running");
+        return Ok(());
+    }
+    crate::modules::logger::log_info(&format!(
+        "[Qoder CN Close] closing desktop pids={:?}",
+        pids
+    ));
+    close_pids(&pids, timeout_secs)
+}
+
 pub fn close_trae_instances(user_data_dirs: &[String], timeout_secs: u64) -> Result<(), String> {
     let default_dir = get_default_trae_user_data_dir_for_os()
         .map(|value| normalize_path_for_compare(&value))

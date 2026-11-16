@@ -49,6 +49,8 @@ pub enum NativeClient {
     Desktop,
     Cli,
 }
+pub(crate) const CN_DESKTOP_PROCESS_NAMES: &[&str] =
+    &["qoder cn.exe", "qoder cn", "qoder launcher.exe", "qoderlauncher.exe", "qoderlauncher"];
 impl NativeClient {
     pub fn parse(value: &str) -> Result<Self, String> {
         match value {
@@ -261,9 +263,7 @@ fn ensure_idle(region: QoderRegion, client: NativeClient) -> Result<(), String> 
         return Err("QODER_NATIVE_PROCESS_PROBE_FAILED".into());
     }
     let names = match (region, client) {
-        (QoderRegion::Cn, NativeClient::Desktop) => {
-            &["qoder cn.exe", "qoder cn", "qoder launcher.exe", "qoderlauncher.exe", "qoderlauncher"][..]
-        }
+        (QoderRegion::Cn, NativeClient::Desktop) => CN_DESKTOP_PROCESS_NAMES,
         (QoderRegion::Global, NativeClient::Desktop) => {
             &["qoder.exe", "qoder", "qoder launcher.exe", "qoderlauncher.exe", "qoderlauncher"][..]
         }

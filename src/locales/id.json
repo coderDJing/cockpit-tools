@@ -1574,7 +1574,11 @@
         "nativePredictionsDesc": "Membuat saran pesan berikutnya dengan penyedia API dan model percakapan saat ini. Menggunakan kredit API tambahan; mulai ulang Codex setelah menyimpan."
       },
       "timeDisplayMode": "Tampilan waktu",
-      "timeDisplayModeDesc": "Waktu pada kartu dan daftar akun. Bawaan menggunakan waktu pergantian akun"
+      "timeDisplayModeDesc": "Waktu pada kartu dan daftar akun. Bawaan menggunakan waktu pergantian akun",
+      "qoderCnAppPath": "Jalur peluncuran Qoder CN",
+      "qoderCnAppPathDesc": "Biarkan kosong untuk deteksi otomatis. Saat berganti akun, klien desktop akan ditutup dan diluncurkan ulang.",
+      "qoderCnAppPathPlaceholder": "Jalur default",
+      "qoderCnPathReset": "Atur ulang ke default"
     },
     "network": {
       "apiTitle": "API Antigravity Cockpit",
@@ -7533,7 +7537,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Akun diganti. Buka kembali klien tujuan."
+      "switchSuccess": "Akun diganti. Buka kembali klien tujuan.",
+      "windowsOnly": " (hanya Windows)",
+      "desktopSwitchSuccess": "Akun diganti. Qoder CN Desktop telah diluncurkan ulang.",
+      "relaunchFailed": "Akun diganti, tetapi Qoder CN Desktop tidak dapat diluncurkan otomatis. Buka secara manual."
     },
     "cn": {
       "nativeOnly": "Pilih Desktop atau CLI untuk akun Qoder CN.",
@@ -7558,7 +7565,8 @@
       "switchLaunchFailed": "Akun sudah ditulis, tetapi Qoder IDE gagal dijalankan. {{detail}}",
       "refreshCount": "{{count}} dari {{total}} akun diperbarui.",
       "launchUnconfirmed": "Peluncuran Qoder IDE tidak dapat dikonfirmasi.",
-      "workerFailed": "Operasi latar belakang Qoder gagal. {{detail}}"
+      "workerFailed": "Operasi latar belakang Qoder gagal. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop tidak ditemukan. Atur jalur peluncurannya di Pengaturan atau pasang aplikasinya, lalu coba lagi."
     },
     "title": "Akun Qoder",
     "flowNotice": {

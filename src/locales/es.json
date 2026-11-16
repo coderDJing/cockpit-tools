@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Genera sugerencias para el siguiente mensaje con el proveedor de API y el modelo de la conversación actual. Consume créditos de API adicionales; reinicia Codex después de guardar."
       },
       "timeDisplayMode": "Hora mostrada",
-      "timeDisplayModeDesc": "Hora en las tarjetas y listas de cuentas. Por defecto, la del cambio de cuenta"
+      "timeDisplayModeDesc": "Hora en las tarjetas y listas de cuentas. Por defecto, la del cambio de cuenta",
+      "qoderCnAppPath": "Ruta de inicio de Qoder CN",
+      "qoderCnAppPathDesc": "Déjelo vacío para detectarla automáticamente. Al cambiar de cuenta se cierra y reinicia el cliente de escritorio.",
+      "qoderCnAppPathPlaceholder": "Ruta predeterminada",
+      "qoderCnPathReset": "Restablecer por defecto"
     },
     "network": {
       "apiTitle": "API de cabina antigravedad",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Cuenta cambiada. Vuelve a abrir el cliente de destino."
+      "switchSuccess": "Cuenta cambiada. Vuelve a abrir el cliente de destino.",
+      "windowsOnly": " (solo Windows)",
+      "desktopSwitchSuccess": "Cuenta cambiada. Qoder CN Desktop se ha reiniciado.",
+      "relaunchFailed": "Cuenta cambiada, pero no se pudo iniciar Qoder CN Desktop automáticamente. Ábrelo manualmente."
     },
     "cn": {
       "nativeOnly": "Selecciona Desktop o CLI para las cuentas de Qoder CN.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Se guardó la cuenta, pero Qoder IDE no pudo iniciarse. {{detail}}",
       "refreshCount": "Se actualizaron {{count}} de {{total}} cuentas.",
       "launchUnconfirmed": "No se pudo confirmar el inicio de Qoder IDE.",
-      "workerFailed": "Falló la operación en segundo plano de Qoder. {{detail}}"
+      "workerFailed": "Falló la operación en segundo plano de Qoder. {{detail}}",
+      "qoderCnPathMissing": "No se encontró Qoder CN Desktop. Define su ruta de inicio en Ajustes o instálalo y vuelve a intentarlo."
     },
     "title": "Gestión de cuentas de Qoder",
     "comingSoon": {

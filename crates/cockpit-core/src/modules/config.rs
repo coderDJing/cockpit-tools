@@ -223,6 +223,9 @@ pub struct UserConfig {
     /// Qoder 启动路径（为空则使用默认路径）
     #[serde(default = "default_qoder_app_path")]
     pub qoder_app_path: String,
+    /// Qoder CN 桌面端启动路径（为空则使用默认路径）
+    #[serde(default = "default_qoder_app_path")]
+    pub qoder_cn_app_path: String,
     /// Trae 启动路径（为空则使用默认路径）
     #[serde(default = "default_trae_app_path")]
     pub trae_app_path: String,
@@ -854,6 +857,7 @@ impl Default for UserConfig {
             codebuddy_share_sessions_on_switch: default_codebuddy_share_sessions_on_switch(),
             codebuddy_cn_app_path: default_codebuddy_cn_app_path(),
             qoder_app_path: default_qoder_app_path(),
+            qoder_cn_app_path: default_qoder_app_path(),
             trae_app_path: default_trae_app_path(),
             trae_solo_app_path: default_trae_app_path(),
             trae_cn_app_path: default_trae_app_path(),

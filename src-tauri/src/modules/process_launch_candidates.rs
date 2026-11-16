@@ -598,6 +598,9 @@ fn score_windows_candidate(
         if file_name == "electron.exe" && !has_keyword {
             return None;
         }
+        if file_name == "qoder.exe" && !has_keyword {
+            return None;
+        }
         let mut score = if file_name == "electron.exe" { 60 } else { 100 };
         if has_keyword {
             score += 5;
@@ -832,6 +835,26 @@ fn windows_app_launch_signature(app: &str) -> Option<WindowsAppLaunchSignature> 
             display_keywords: &["qoder"],
             common_paths: &[r"Qoder IDE\Qoder IDE.exe", r"Qoder\Qoder.exe"],
             supports_multi_instance: true,
+        }),
+        "qoder_cn" => Some(WindowsAppLaunchSignature {
+            label: "Qoder CN",
+            exe_names: &[
+                "Qoder CN.exe",
+                "Qoder.exe",
+                "Qoder Launcher.exe",
+                "QoderLauncher.exe",
+                "Electron.exe",
+            ],
+            command_names: &["qoder-cn"],
+            protocol_names: &["qoder-cn"],
+            display_keywords: &["qoder cn", "qoder-cn", "qodercn"],
+            common_paths: &[
+                r"Qoder CN\Qoder CN.exe",
+                r"Qoder CN\Qoder.exe",
+                r"Qoder CN\Qoder Launcher.exe",
+                r"QoderCN\Qoder CN.exe",
+            ],
+            supports_multi_instance: false,
         }),
         "zcode" => Some(WindowsAppLaunchSignature {
             label: "ZCode",
@@ -2199,6 +2222,7 @@ fn update_app_path_in_config(app: &str, path: &Path, expected_current: &str) {
             "codebuddy" => &mut current.codebuddy_app_path,
             "codebuddy_cn" => &mut current.codebuddy_cn_app_path,
             "qoder" => &mut current.qoder_app_path,
+            "qoder_cn" => &mut current.qoder_cn_app_path,
             "zcode" => &mut current.zcode_app_path,
             "trae" => &mut current.trae_app_path,
             "trae_solo" => &mut current.trae_solo_app_path,

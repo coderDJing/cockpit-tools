@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Generuje propozycje następnej wiadomości przy użyciu dostawcy API i modelu bieżącej rozmowy. Zużywa dodatkowe kredyty API; po zapisaniu uruchom ponownie Codex."
       },
       "timeDisplayMode": "Wyświetlany czas",
-      "timeDisplayModeDesc": "Czas na kartach i listach kont. Domyślnie czas przełączenia konta"
+      "timeDisplayModeDesc": "Czas na kartach i listach kont. Domyślnie czas przełączenia konta",
+      "qoderCnAppPath": "Ścieżka uruchamiania Qoder CN",
+      "qoderCnAppPathDesc": "Pozostaw puste, aby wykryć automatycznie. Podczas przełączania konta klient pulpitu zostanie zamknięty i uruchomiony ponownie.",
+      "qoderCnAppPathPlaceholder": "Domyślna ścieżka",
+      "qoderCnPathReset": "Przywróć domyślne"
     },
     "network": {
       "apiTitle": "API kokpitu antygrawitacyjnego",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Konto zostało przełączone. Otwórz ponownie docelowego klienta."
+      "switchSuccess": "Konto zostało przełączone. Otwórz ponownie docelowego klienta.",
+      "windowsOnly": " (tylko Windows)",
+      "desktopSwitchSuccess": "Konto zostało przełączone. Qoder CN Desktop został ponownie uruchomiony.",
+      "relaunchFailed": "Konto zostało przełączone, ale nie udało się automatycznie uruchomić Qoder CN Desktop. Otwórz go ręcznie."
     },
     "cn": {
       "nativeOnly": "Dla kont Qoder CN wybierz Desktop lub CLI.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "Zapisano konto, ale nie udało się uruchomić Qoder IDE. {{detail}}",
       "refreshCount": "Odświeżono {{count}} z {{total}} kont.",
       "launchUnconfirmed": "Nie udało się potwierdzić uruchomienia Qoder IDE.",
-      "workerFailed": "Operacja Qoder w tle nie powiodła się. {{detail}}"
+      "workerFailed": "Operacja Qoder w tle nie powiodła się. {{detail}}",
+      "qoderCnPathMissing": "Nie znaleziono Qoder CN Desktop. Ustaw ścieżkę uruchamiania w ustawieniach lub zainstaluj klienta i spróbuj ponownie."
     },
     "title": "Zarządzanie kontami Qoder",
     "comingSoon": {

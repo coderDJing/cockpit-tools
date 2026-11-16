@@ -1527,7 +1527,11 @@
         "nativePredictionsDesc": "Genera suggerimenti per il messaggio successivo con il fornitore API e il modello della conversazione corrente. Consuma crediti API aggiuntivi; riavvia Codex dopo il salvataggio."
       },
       "timeDisplayMode": "Orario mostrato",
-      "timeDisplayModeDesc": "Orario nelle schede e negli elenchi degli account. Predefinito: cambio account"
+      "timeDisplayModeDesc": "Orario nelle schede e negli elenchi degli account. Predefinito: cambio account",
+      "qoderCnAppPath": "Percorso di avvio di Qoder CN",
+      "qoderCnAppPathDesc": "Lascia vuoto per il rilevamento automatico. Il cambio account chiude e riavvia il client desktop.",
+      "qoderCnAppPathPlaceholder": "Percorso predefinito",
+      "qoderCnPathReset": "Ripristina predefinito"
     },
     "network": {
       "apiTitle": "API della cabina di pilotaggio antigravità",
@@ -7486,7 +7490,10 @@
       "cli": "Qoder CLI",
       "cliCn": "Qoder CN CLI",
       "ide": "Qoder IDE",
-      "switchSuccess": "Account cambiato. Riapri il client di destinazione."
+      "switchSuccess": "Account cambiato. Riapri il client di destinazione.",
+      "windowsOnly": " (solo Windows)",
+      "desktopSwitchSuccess": "Account cambiato. Qoder CN Desktop è stato riavviato.",
+      "relaunchFailed": "Account cambiato, ma non è stato possibile avviare automaticamente Qoder CN Desktop. Aprilo manualmente."
     },
     "cn": {
       "nativeOnly": "Seleziona Desktop o CLI per gli account Qoder CN.",
@@ -7511,7 +7518,8 @@
       "switchLaunchFailed": "L’account è stato salvato, ma Qoder IDE non si è avviato. {{detail}}",
       "refreshCount": "Aggiornati {{count}} account su {{total}}.",
       "launchUnconfirmed": "Impossibile confermare l’avvio di Qoder IDE.",
-      "workerFailed": "L’operazione Qoder in background non è riuscita. {{detail}}"
+      "workerFailed": "L’operazione Qoder in background non è riuscita. {{detail}}",
+      "qoderCnPathMissing": "Qoder CN Desktop non trovato. Imposta il percorso di avvio nelle impostazioni o installalo, quindi riprova."
     },
     "title": "Gestione account Qoder",
     "comingSoon": {
