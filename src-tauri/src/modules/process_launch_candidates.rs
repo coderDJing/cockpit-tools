@@ -1010,6 +1010,58 @@ fn push_app_launch_candidate(
 }
 
 #[cfg(target_os = "windows")]
+fn sort_windows_launch_candidates(
+    candidates: &mut [AppLaunchCandidate],
+    app: &str,
+    signature: WindowsAppLaunchSignature,
+) {
+    let exe_names_lower: HashSet<String> = signature
+        .exe_names
+        .iter()
+        .map(|value| value.to_lowercase())
+        .collect();
+    let keywords_lower: Vec<String> = signature
+        .display_keywords
+        .iter()
+        .map(|value| value.trim().to_lowercase())
+        .filter(|value| !value.is_empty())
+        .collect();
+    let score_of = |candidate: &AppLaunchCandidate| -> i32 {
+        score_windows_candidate(
+            std::path::Path::new(&candidate.target),
+            &exe_names_lower,
+            &keywords_lower,
+        )
+        .unwrap_or(0)
+    };
+
+    // 保留原有 target_type / ChatGPT.exe 优先级，同优先级内再按文件名命中分数排序，
+    // 避免仅命中目录关键字的辅助进程排到真实客户端前面。
+    candidates.sort_by_key(|candidate| {
+        let priority = if candidate.target_type == "windows_app" {
+            0
+        } else if app == "codex" {
+            let file_name = std::path::Path::new(&candidate.target)
+                .file_name()
+                .and_then(|value| value.to_str())
+                .unwrap_or("");
+            if file_name.eq_ignore_ascii_case("ChatGPT.exe") {
+                0
+            } else {
+                1
+            }
+        } else {
+            1
+        };
+        (
+            priority,
+            std::cmp::Reverse(score_of(candidate)),
+            candidate.target.to_ascii_lowercase(),
+        )
+    });
+}
+
+#[cfg(target_os = "windows")]
 fn windows_fixed_drive_roots() -> Vec<std::path::PathBuf> {
     use windows::core::PCWSTR;
     use windows::Win32::Storage::FileSystem::{GetDriveTypeW, GetLogicalDrives};
@@ -1130,12 +1182,26 @@ fn windows_trae_candidate_matches_platform(
 }
 
 #[cfg(target_os = "windows")]
+fn is_qoder_cn_cli_runtime_path(path: &std::path::Path) -> bool {
+    // ~/.qoder-cn 是 Qoder CN CLI 的数据目录，其 .bin 下会有 runtime-info.exe 等辅助进程，
+    // 它们同样命中 "qoder-cn" 关键字，但绝不能作为桌面端启动路径。
+    let normalized = path
+        .to_string_lossy()
+        .replace('/', "\\")
+        .to_ascii_lowercase();
+    normalized.contains("\\.qoder-cn\\")
+}
+
+#[cfg(target_os = "windows")]
 fn running_app_candidate_matches(
     app: &str,
     path: &std::path::Path,
     signature: WindowsAppLaunchSignature,
 ) -> bool {
     if app == "codex" && is_codex_embedded_backend_executable(path) {
+        return false;
+    }
+    if app == "qoder_cn" && is_qoder_cn_cli_runtime_path(path) {
         return false;
     }
 
@@ -1221,24 +1287,7 @@ fn scan_windows_app_launch_targets(
         }
     }
 
-    candidates.sort_by_key(|candidate| {
-        let priority = if candidate.target_type == "windows_app" {
-            0
-        } else if app == "codex" {
-            let file_name = std::path::Path::new(&candidate.target)
-                .file_name()
-                .and_then(|value| value.to_str())
-                .unwrap_or("");
-            if file_name.eq_ignore_ascii_case("ChatGPT.exe") {
-                0
-            } else {
-                1
-            }
-        } else {
-            1
-        };
-        (priority, candidate.target.to_ascii_lowercase())
-    });
+    sort_windows_launch_candidates(&mut candidates, app, signature);
     crate::modules::logger::log_info(&format!(
         "[Path Detect] running app probe: app={}, candidates={}, elapsed={}ms",
         app,
@@ -1982,6 +2031,61 @@ mod account_egress_proxy_tests {
         append_electron_proxy_args(&mut args, "socks5h://127.0.0.1:1080");
         assert_eq!(args[0], "--proxy-server=socks5://127.0.0.1:1080");
         assert!(args[1].contains("127.0.0.1"));
+    }
+}
+
+#[cfg(all(test, target_os = "windows"))]
+mod windows_launch_candidate_tests {
+    use super::*;
+
+    fn qoder_cn_signature() -> WindowsAppLaunchSignature {
+        windows_app_launch_signature("qoder_cn").expect("qoder_cn signature")
+    }
+
+    #[test]
+    fn qoder_cn_cli_runtime_helper_is_not_a_launch_candidate() {
+        let signature = qoder_cn_signature();
+        let helper = std::path::Path::new(
+            r"C:\Users\coder\.qoder-cn\.bin\umid-win32-x64-48d1294f147c9d89\runtime-info.exe",
+        );
+        assert!(!running_app_candidate_matches("qoder_cn", helper, signature));
+    }
+
+    #[test]
+    fn qoder_cn_versioned_desktop_exe_is_a_launch_candidate() {
+        let signature = qoder_cn_signature();
+        let desktop = std::path::Path::new(
+            r"C:\Users\coder\AppData\Local\Programs\Qoder CN\.qoder-versions\0.5.12\Qoder CN.exe",
+        );
+        assert!(running_app_candidate_matches("qoder_cn", desktop, signature));
+    }
+
+    #[test]
+    fn candidate_sort_prefers_exe_name_match_over_keyword_only_helper() {
+        let signature = qoder_cn_signature();
+        let mut candidates = vec![
+            AppLaunchCandidate {
+                target_type: "exe".to_string(),
+                label: "Qoder CN (runtime-info.exe)".to_string(),
+                target: r"C:\Tools\qodercn-helper\runtime-info.exe".to_string(),
+                source: "running_process".to_string(),
+                supports_multi_instance: signature.supports_multi_instance,
+            },
+            AppLaunchCandidate {
+                target_type: "exe".to_string(),
+                label: "Qoder CN (Qoder CN.exe)".to_string(),
+                target:
+                    r"C:\Users\coder\AppData\Local\Programs\Qoder CN\.qoder-versions\0.5.12\Qoder CN.exe"
+                        .to_string(),
+                source: "running_process".to_string(),
+                supports_multi_instance: signature.supports_multi_instance,
+            },
+        ];
+
+        sort_windows_launch_candidates(&mut candidates, "qoder_cn", signature);
+
+        assert_eq!(candidates.len(), 2);
+        assert!(candidates[0].target.ends_with(r"Qoder CN.exe"));
     }
 }
 
