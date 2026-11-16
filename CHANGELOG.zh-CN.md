@@ -10,6 +10,39 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **Codex 供应商额度**：查询 OpenCode Go 的 5 小时、周和月额度，以及兼容 codex-proxy-rs 服务的日、周预算。 [#1938](https://github.com/jlcodes99/cockpit-tools/pull/1938) · [#3019](https://github.com/jlcodes99/cockpit-tools/pull/3019)
+- **供应商预设**：Codex 新增 UberLLM。Codex、Claude Code 和 Claude Desktop 新增 Runcrate。 [#3075](https://github.com/jlcodes99/cockpit-tools/pull/3075) · [#2952](https://github.com/jlcodes99/cockpit-tools/pull/2952)
+- **MiniMax 预设**：Codex、Claude Code 和 Claude Desktop 可选择 MiniMax-M3.1-Flash。 [#2865](https://github.com/jlcodes99/cockpit-tools/pull/2865)
+- **Antigravity 自动切号**：可在通用设置和平台快捷设置中分别设定 5 小时及周额度的切号阈值。 [#3101](https://github.com/jlcodes99/cockpit-tools/pull/3101)
+- **模型探测**：WorkBuddy 和 CodeBuddy CN 支持按账号与模型组合批量探测，逐项查看结果，也可从单个账号卡片发起。 [#3096](https://github.com/jlcodes99/cockpit-tools/pull/3096) · [#3064](https://github.com/jlcodes99/cockpit-tools/pull/3064)
+
+### 修复
+
+- **Windows 上的 Codex API 服务**：原生网关停止后，子进程不会继续占用服务端口。 [#2850](https://github.com/jlcodes99/cockpit-tools/pull/2850)
+- **Codex API 服务**：选中的用量时间范围页签随当前主题配色。 [#2115](https://github.com/jlcodes99/cockpit-tools/pull/2115)
+- **Antigravity 账号授权**：添加或授权同一账号时可重建缺失的账号文件，并保留原账号 ID。 [#2854](https://github.com/jlcodes99/cockpit-tools/pull/2854)
+- **Codex API 服务**：按套餐排序调度时，将已过期的 OAuth 订阅按免费套餐处理。 [#2174](https://github.com/jlcodes99/cockpit-tools/pull/2174)
+- **Codex API Key**：保存密钥时保留供应商协议和 WebSocket 支持设置。 [#1980](https://github.com/jlcodes99/cockpit-tools/pull/1980)
+- **经典侧栏**：收起时导航图标保持居中，展开时长标签不会挤压图标。 [#2384](https://github.com/jlcodes99/cockpit-tools/pull/2384)
+- **Codex API 服务**：OpenCode 请求携带会话标识且未明确指定身份或续聊时，原生 HTTP 网关可保持同一会话。 [#3046](https://github.com/jlcodes99/cockpit-tools/pull/3046)
+- **Codex API 服务**：检测无响应的网络连接并重新连接，让后续请求可以继续。 [#3106](https://github.com/jlcodes99/cockpit-tools/pull/3106)
+- **Codex SSH**：切号后恢复目标账号的自动连接设置，并刷新匹配的远程会话。 [#3097](https://github.com/jlcodes99/cockpit-tools/pull/3097)
+- **Claude**：正确区分 Pro 和 Max 套餐，并显示对应的额度窗口。 [#3031](https://github.com/jlcodes99/cockpit-tools/pull/3031)
+- **CodeBuddy CN**：在账号摘要中显示剩余积分和资源包到期信息。 [#3023](https://github.com/jlcodes99/cockpit-tools/pull/3023)
+- **Codex 供应商配置**：模板提供默认值时，保留明确设置的模型上下文窗口和压缩阈值。 [#3091](https://github.com/jlcodes99/cockpit-tools/pull/3091)
+- **Codex API 服务**：在受影响的 Codex 路由上，重复内联图片以未压缩方式发送，保留完整请求内容。 [#3084](https://github.com/jlcodes99/cockpit-tools/pull/3084)
+- **Codex 供应商切换**：快捷切换弹框位于最上层且未提交切换时，可按 Escape 关闭。 [#2111](https://github.com/jlcodes99/cockpit-tools/pull/2111)
+- **智谱 Coding Plan**：兼容新版积分额度与旧版 Token 额度响应，显示对应的额度窗口。 [#3126](https://github.com/jlcodes99/cockpit-tools/pull/3126)
+- **Codex API 服务**：菜单栏和托盘汇总 5 小时额度时，排除周额度已耗尽账号的剩余额度。 [#3112](https://github.com/jlcodes99/cockpit-tools/pull/3112)
+- **MiniMax Code**：共用账号的凭据由客户端续期，Cockpit 读取并保存新凭据，避免客户端登录失效。 [#3092](https://github.com/jlcodes99/cockpit-tools/pull/3092)
+- **Codex 会话用量**：汇总、增量统计和单会话 Token 计数均支持压缩会话日志。 [#3079](https://github.com/jlcodes99/cockpit-tools/pull/3079)
+
+### 文档
+
+- 新增韩文 README，并更新巴西葡萄牙语 README 的支持平台列表。 [#2681](https://github.com/jlcodes99/cockpit-tools/pull/2681) · [#2610](https://github.com/jlcodes99/cockpit-tools/pull/2610)
+
 ## [1.3.84] - 2026-11-14
 
 ### 修复

@@ -6699,6 +6699,10 @@
       "hint": "監視対象のモデルグループがしきい値に達すると自動切替します。Credits 監視を有効にすると、残り Credits がしきい値を下回った場合にも実行されます。",
       "creditsEnable": "Credits を監視",
       "creditsThreshold": "Credits しきい値",
+      "windowThresholdsEnable": "5時間と週ごとのしきい値を分ける",
+      "fiveHourThreshold": "5時間のしきい値",
+      "weeklyThreshold": "週ごとのしきい値",
+      "windowThresholdsHint": "いずれかの残量がしきい値に達するとアカウントを切り替えます。共通のしきい値はモデル別の使用枠に適用します。",
       "creditsThresholdDesc": "残り Credits がこの値以下になった場合も自動切替します",
       "triggerModel": "トリガーモデル",
       "scopeAnyGroup": "任意のモデルグループ",
@@ -7846,6 +7850,9 @@
       "timeRangeError": "開始時間は終了時間より後にできません"
     },
     "modelProbe": {
+      "scopeAll": "すべて（{{count}}）",
+      "scopeSelected": "選択済み（{{count}}）",
+      "scopeCurrent": "現在のアカウント",
       "title": "モデル確認",
       "hint": "短いメッセージを送信して返信を確認します。少量の利用枠を消費します。テスト会話は既定で削除されます。",
       "account": "アカウント",
@@ -7876,6 +7883,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "MiniMax Code クライアントにログインしてから再試行してください。",
+      "authorizeAgain": "MiniMax Code アカウントを再認証するか、クライアントにログインしてから再インポートしてください。",
+      "credentialsChanged": "MiniMax Code の認証情報が更新されました。再試行してください。",
+      "missingAccessToken": "MiniMax Code は更新時にアクセストークンを返しませんでした。"
+    },
     "title": "MiniMax Codeアカウント管理",
     "noAccounts": "MiniMax Code アカウントがありません",
     "addAccount": "MiniMax Code アカウントを追加",

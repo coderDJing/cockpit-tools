@@ -6699,6 +6699,10 @@
       "hint": "Troca automaticamente quando os grupos de modelos monitorados atingem o limite; com o monitoramento de créditos ativo, também dispara quando os créditos restantes ficam abaixo do limite.",
       "creditsEnable": "Monitorar créditos",
       "creditsThreshold": "Limite de créditos",
+      "windowThresholdsEnable": "Limites separados de 5 h e semana",
+      "fiveHourThreshold": "Limite de 5 h",
+      "weeklyThreshold": "Limite semanal",
+      "windowThresholdsHint": "A conta muda quando qualquer limite é atingido. O limite geral continua valendo para as cotas dos modelos.",
       "creditsThresholdDesc": "Também trocar automaticamente quando os créditos restantes estiverem nesse valor ou abaixo",
       "triggerModel": "Modelo de acionamento",
       "scopeAnyGroup": "Qualquer grupo de modelos",
@@ -7846,6 +7850,9 @@
       "timeRangeError": "O horário de início não pode ser posterior ao horário de término"
     },
     "modelProbe": {
+      "scopeAll": "Todos ({{count}})",
+      "scopeSelected": "Selecionados ({{count}})",
+      "scopeCurrent": "Conta atual",
       "title": "Teste de modelo",
       "hint": "Envia uma mensagem curta e lê a resposta. Consome uma pequena cota. A conversa de teste é excluída por padrão.",
       "account": "Conta",
@@ -7876,6 +7883,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "Entre no cliente MiniMax Code e tente novamente.",
+      "authorizeAgain": "Autorize novamente a conta do MiniMax Code ou importe-a após entrar no cliente.",
+      "credentialsChanged": "As credenciais do MiniMax Code mudaram. Tente novamente.",
+      "missingAccessToken": "O MiniMax Code não retornou um token de acesso na renovação."
+    },
     "title": "Gerenciamento de contas do MiniMax Code",
     "noAccounts": "Nenhuma conta MiniMax Code",
     "addAccount": "Adicionar conta MiniMax Code",

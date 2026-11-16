@@ -6746,6 +6746,10 @@
       "hint": "يتم التبديل تلقائيًا عند وصول مجموعات النماذج المُراقبة إلى العتبة؛ وإذا فُعّل مراقبة الرصيد فسيتم التبديل أيضًا عند انخفاض الرصيد المتبقي دون العتبة.",
       "creditsEnable": "مراقبة الرصيد",
       "creditsThreshold": "حد الرصيد",
+      "windowThresholdsEnable": "حدود منفصلة لمدة 5 ساعات وأسبوع",
+      "fiveHourThreshold": "حد 5 ساعات",
+      "weeklyThreshold": "حد الأسبوع",
+      "windowThresholdsHint": "يتم تبديل الحساب عند بلوغ أي حد. يبقى الحد العام لحصص النماذج.",
       "creditsThresholdDesc": "بدّل تلقائيًا أيضًا عندما يصبح الرصيد المتبقي عند هذه القيمة أو أقل",
       "triggerModel": "نموذج التفعيل",
       "scopeAnyGroup": "أي مجموعة نماذج",
@@ -7893,6 +7897,9 @@
       "timeRangeError": "لا يمكن أن يكون وقت البدء متأخرًا عن وقت الانتهاء"
     },
     "modelProbe": {
+      "scopeAll": "الكل ({{count}})",
+      "scopeSelected": "المحدد ({{count}})",
+      "scopeCurrent": "الحساب الحالي",
       "title": "اختبار النموذج",
       "hint": "يرسل رسالة قصيرة ويقرأ الرد. يستهلك مقدارًا قليلًا من الحصة. تُحذف محادثة الاختبار افتراضيًا.",
       "account": "الحساب",
@@ -7923,6 +7930,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "جدّد تسجيل الدخول في عميل MiniMax Code ثم أعد المحاولة.",
+      "authorizeAgain": "أعد تفويض حساب MiniMax Code أو استورده من العميل بعد تسجيل الدخول.",
+      "credentialsChanged": "تغيّرت بيانات اعتماد MiniMax Code. أعد المحاولة.",
+      "missingAccessToken": "لم يعُد MiniMax Code برمز وصول بعد التجديد."
+    },
     "title": "إدارة حسابات MiniMax Code",
     "noAccounts": "لا توجد حسابات MiniMax Code",
     "addAccount": "إضافة حساب MiniMax Code",

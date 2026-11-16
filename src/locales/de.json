@@ -6699,6 +6699,10 @@
       "hint": "Es wird automatisch gewechselt, wenn überwachte Modellgruppen den Schwellenwert erreichen; bei aktivierter Credits-Überwachung auch dann, wenn die verbleibenden Credits unter den Schwellenwert fallen.",
       "creditsEnable": "Credits überwachen",
       "creditsThreshold": "Credits-Schwelle",
+      "windowThresholdsEnable": "Getrennte Schwellen für 5 Std. und Woche",
+      "fiveHourThreshold": "5-Stunden-Schwelle",
+      "weeklyThreshold": "Wochenschwelle",
+      "windowThresholdsHint": "Beim Erreichen einer Schwelle wechselt das Konto. Die allgemeine Schwelle gilt weiter für Modellkontingente.",
       "creditsThresholdDesc": "Auch automatisch wechseln, wenn die verbleibenden Credits diesen Wert oder weniger erreichen",
       "triggerModel": "Auslösemodell",
       "scopeAnyGroup": "Beliebige Modellgruppe",
@@ -7846,6 +7850,9 @@
       "timeRangeError": "Die Startzeit darf nicht nach der Endzeit liegen"
     },
     "modelProbe": {
+      "scopeAll": "Alle ({{count}})",
+      "scopeSelected": "Ausgewählt ({{count}})",
+      "scopeCurrent": "Aktuelles Konto",
       "title": "Modelltest",
       "hint": "Sendet eine kurze Nachricht und liest die Antwort. Dies verbraucht etwas Kontingent. Die Testunterhaltung wird standardmäßig gelöscht.",
       "account": "Konto",
@@ -7876,6 +7883,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "Melde dich im MiniMax Code-Client an und versuche es erneut.",
+      "authorizeAgain": "Autorisiere das MiniMax Code-Konto erneut oder importiere es nach der Anmeldung aus dem Client.",
+      "credentialsChanged": "Die Zugangsdaten für MiniMax Code haben sich geändert. Versuche es erneut.",
+      "missingAccessToken": "MiniMax Code hat bei der Erneuerung kein Zugriffstoken zurückgegeben."
+    },
     "title": "MiniMax Code-Kontenverwaltung",
     "noAccounts": "Keine MiniMax Code-Konten",
     "addAccount": "MiniMax Code-Konto hinzufügen",

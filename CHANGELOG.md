@@ -10,6 +10,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Codex provider quotas**: Read 5-hour, weekly and monthly quota from OpenCode Go and daily and weekly budgets from compatible codex-proxy-rs servers. [#1938](https://github.com/jlcodes99/cockpit-tools/pull/1938) · [#3019](https://github.com/jlcodes99/cockpit-tools/pull/3019)
+- **Provider presets**: Add UberLLM for Codex and Runcrate for Codex, Claude Code and Claude Desktop. [#3075](https://github.com/jlcodes99/cockpit-tools/pull/3075) · [#2952](https://github.com/jlcodes99/cockpit-tools/pull/2952)
+- **MiniMax presets**: Offer MiniMax-M3.1-Flash in Codex, Claude Code and Claude Desktop. [#2865](https://github.com/jlcodes99/cockpit-tools/pull/2865)
+- **Antigravity automatic account switching**: Set separate 5-hour and weekly quota thresholds in General Settings or the platform quick settings. [#3101](https://github.com/jlcodes99/cockpit-tools/pull/3101)
+- **Model probes**: Run an account-by-model probe matrix from WorkBuddy and CodeBuddy CN, view individual results, and open a probe from a specific account card. [#3096](https://github.com/jlcodes99/cockpit-tools/pull/3096) · [#3064](https://github.com/jlcodes99/cockpit-tools/pull/3064)
+
+### Fixed
+
+- **Codex API Service on Windows**: Child processes no longer keep the service port occupied after the native gateway stops. [#2850](https://github.com/jlcodes99/cockpit-tools/pull/2850)
+- **Codex API Service**: Apply the selected theme to the active usage range tab. [#2115](https://github.com/jlcodes99/cockpit-tools/pull/2115)
+- **Antigravity account authorization**: Recreate a missing account file when adding or authorizing the same account, preserving its account ID. [#2854](https://github.com/jlcodes99/cockpit-tools/pull/2854)
+- **Codex API Service**: Rank expired OAuth subscriptions as Free for plan-based routing. [#2174](https://github.com/jlcodes99/cockpit-tools/pull/2174)
+- **Codex API keys**: Preserve provider protocol and WebSocket support when saving a key. [#1980](https://github.com/jlcodes99/cockpit-tools/pull/1980)
+- **Classic sidebar**: Keep navigation icons centered and prevent them from shrinking next to long labels. [#2384](https://github.com/jlcodes99/cockpit-tools/pull/2384)
+- **Codex API Service**: Keep OpenCode requests in the same conversation when OpenCode sends a session label and the request has no explicit identity or continuation. [#3046](https://github.com/jlcodes99/cockpit-tools/pull/3046)
+- **Codex API Service**: Detect stalled network connections and reconnect so subsequent requests can continue. [#3106](https://github.com/jlcodes99/cockpit-tools/pull/3106)
+- **Codex SSH**: Restore the selected account’s automatic connection preferences and refresh the matched remote session after switching. [#3097](https://github.com/jlcodes99/cockpit-tools/pull/3097)
+- **Claude**: Preserve Pro and Max plan classification and display quota from the matching usage scopes. [#3031](https://github.com/jlcodes99/cockpit-tools/pull/3031)
+- **CodeBuddy CN**: Show remaining credits and grant expiry information in the account summary. [#3023](https://github.com/jlcodes99/cockpit-tools/pull/3023)
+- **Codex provider profiles**: Keep an explicitly configured context window and compaction threshold when a provider template supplies its own defaults. [#3091](https://github.com/jlcodes99/cockpit-tools/pull/3091)
+- **Codex API Service**: Send repeated inline images without zstd compression on the affected Codex route, preserving the full request. [#3084](https://github.com/jlcodes99/cockpit-tools/pull/3084)
+- **Codex provider switching**: Press Escape to close the quick-switch dialog when it is the topmost dialog and no switch is in progress. [#2111](https://github.com/jlcodes99/cockpit-tools/pull/2111)
+- **Zhipu Coding Plan**: Read quota windows from both the new credit limit and legacy token limit responses. [#3126](https://github.com/jlcodes99/cockpit-tools/pull/3126)
+- **Codex API Service**: The menu bar and tray pool totals exclude 5-hour quota from accounts whose weekly allowance is exhausted. [#3112](https://github.com/jlcodes99/cockpit-tools/pull/3112)
+- **MiniMax Code**: Preserve the desktop client's login by adopting refreshed shared credentials and leaving refresh-token rotation to the client for shared accounts. [#3092](https://github.com/jlcodes99/cockpit-tools/pull/3092)
+- **Codex session usage**: Include compressed session logs in usage totals, checkpoints and per-session Token counts. [#3079](https://github.com/jlcodes99/cockpit-tools/pull/3079)
+
+### Documentation
+
+- Add a Korean README and update the list of supported platforms in the Brazilian Portuguese README. [#2681](https://github.com/jlcodes99/cockpit-tools/pull/2681) · [#2610](https://github.com/jlcodes99/cockpit-tools/pull/2610)
+
 ## [1.3.84] - 2026-11-14
 
 ### Fixed

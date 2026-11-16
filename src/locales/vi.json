@@ -6699,6 +6699,10 @@
       "hint": "Tự động chuyển khi các nhóm mô hình đang theo dõi chạm ngưỡng; nếu bật theo dõi credits, nó cũng sẽ kích hoạt khi credits còn lại thấp hơn ngưỡng.",
       "creditsEnable": "Theo dõi credits",
       "creditsThreshold": "Ngưỡng credits",
+      "windowThresholdsEnable": "Tách ngưỡng 5 giờ và hằng tuần",
+      "fiveHourThreshold": "Ngưỡng 5 giờ",
+      "weeklyThreshold": "Ngưỡng hằng tuần",
+      "windowThresholdsHint": "Tài khoản sẽ đổi khi một hạn mức chạm ngưỡng. Ngưỡng chung vẫn áp dụng cho hạn mức của mô hình.",
       "creditsThresholdDesc": "Cũng tự động chuyển khi credits còn lại nhỏ hơn hoặc bằng giá trị này",
       "triggerModel": "Mô hình kích hoạt",
       "scopeAnyGroup": "Bất kỳ nhóm mô hình nào",
@@ -7846,6 +7850,9 @@
       "timeRangeError": "Thời gian bắt đầu không thể sau thời gian kết thúc"
     },
     "modelProbe": {
+      "scopeAll": "Tất cả ({{count}})",
+      "scopeSelected": "Đã chọn ({{count}})",
+      "scopeCurrent": "Tài khoản hiện tại",
       "title": "Thử mô hình",
       "hint": "Gửi tin nhắn ngắn và đọc phản hồi. Thao tác dùng một ít hạn mức. Cuộc trò chuyện thử sẽ được xóa mặc định.",
       "account": "Tài khoản",
@@ -7876,6 +7883,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "Đăng nhập vào ứng dụng MiniMax Code rồi thử lại.",
+      "authorizeAgain": "Cấp quyền lại cho tài khoản MiniMax Code hoặc nhập lại sau khi đăng nhập vào ứng dụng.",
+      "credentialsChanged": "Thông tin đăng nhập MiniMax Code đã thay đổi. Hãy thử lại.",
+      "missingAccessToken": "MiniMax Code không trả về mã truy cập khi gia hạn."
+    },
     "title": "Quản lý tài khoản MiniMax Code",
     "noAccounts": "Chưa có tài khoản MiniMax Code",
     "addAccount": "Thêm tài khoản MiniMax Code",

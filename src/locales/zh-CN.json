@@ -7055,6 +7055,10 @@
       "thresholdDesc": "命中监控的模型分组阈值时触发自动切号",
       "creditsEnable": "监控 Credits",
       "creditsThreshold": "Credits 阈值",
+      "windowThresholdsEnable": "分设 5 小时和周额度阈值",
+      "fiveHourThreshold": "5 小时切号阈值",
+      "weeklyThreshold": "周额度切号阈值",
+      "windowThresholdsHint": "任一额度达到切号阈值时自动切号。通用阈值仍用于模型额度。",
       "creditsThresholdDesc": "剩余 Credits 小于等于此值时也会触发自动切号",
       "triggerModel": "触发模型",
       "scopeAnyGroup": "任一模型分组",
@@ -8215,6 +8219,9 @@
       }
     },
     "modelProbe": {
+      "scopeAll": "全部（{{count}}）",
+      "scopeSelected": "已勾选（{{count}}）",
+      "scopeCurrent": "当前账号",
       "title": "模型探测",
       "hint": "发送一条简短消息并读取实际回复，会消耗少量额度。默认删除测试会话。",
       "account": "账号",
@@ -8245,6 +8252,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "请登录 MiniMax Code 客户端后重试。",
+      "authorizeAgain": "请重新授权 MiniMax Code 账号，或在客户端登录后重新导入。",
+      "credentialsChanged": "MiniMax Code 凭据已更新，请重试。",
+      "missingAccessToken": "MiniMax Code 续期未返回访问令牌。"
+    },
     "title": "MiniMax Code 账号管理",
     "noAccounts": "暂无 MiniMax Code 账号",
     "addAccount": "添加 MiniMax Code 账号",

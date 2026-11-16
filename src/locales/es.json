@@ -6699,6 +6699,10 @@
       "hint": "Cambia automáticamente cuando los grupos de modelos monitorizados alcanzan el umbral; si la supervisión de créditos está activada, también se activa cuando los créditos restantes caen por debajo del umbral.",
       "creditsEnable": "Supervisar créditos",
       "creditsThreshold": "Umbral de créditos",
+      "windowThresholdsEnable": "Umbrales distintos de 5 h y semanal",
+      "fiveHourThreshold": "Umbral de 5 h",
+      "weeklyThreshold": "Umbral semanal",
+      "windowThresholdsHint": "La cuenta cambia al alcanzar cualquiera de los umbrales. El umbral general se aplica a las cuotas de los modelos.",
       "creditsThresholdDesc": "También cambiar automáticamente cuando los créditos restantes sean iguales o inferiores a este valor",
       "triggerModel": "Modelo de activación",
       "scopeAnyGroup": "Cualquier grupo de modelos",
@@ -7846,6 +7850,9 @@
       "timeRangeError": "La hora de inicio no puede ser posterior a la hora de finalización"
     },
     "modelProbe": {
+      "scopeAll": "Todos ({{count}})",
+      "scopeSelected": "Seleccionados ({{count}})",
+      "scopeCurrent": "Cuenta actual",
       "title": "Prueba de modelo",
       "hint": "Envía un mensaje corto y lee la respuesta. Consume una pequeña cuota. La conversación de prueba se elimina por defecto.",
       "account": "Cuenta",
@@ -7876,6 +7883,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "Inicia sesión en el cliente de MiniMax Code y vuelve a intentarlo.",
+      "authorizeAgain": "Vuelve a autorizar la cuenta de MiniMax Code o impórtala tras iniciar sesión en el cliente.",
+      "credentialsChanged": "Las credenciales de MiniMax Code han cambiado. Vuelve a intentarlo.",
+      "missingAccessToken": "MiniMax Code no devolvió un token de acceso al renovar."
+    },
     "title": "Gestión de cuentas de MiniMax Code",
     "noAccounts": "No hay cuentas de MiniMax Code",
     "addAccount": "Agregar cuenta de MiniMax Code",

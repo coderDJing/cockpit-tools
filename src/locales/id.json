@@ -6861,6 +6861,10 @@
       "thresholdDesc": "Ganti otomatis saat grup model yang dipantau mencapai persentase ambang ini",
       "creditsEnable": "Pantau kredit",
       "creditsThreshold": "Ambang kredit",
+      "windowThresholdsEnable": "Ambang 5 jam dan mingguan terpisah",
+      "fiveHourThreshold": "Ambang 5 jam",
+      "weeklyThreshold": "Ambang mingguan",
+      "windowThresholdsHint": "Akun berganti saat salah satu kuota mencapai ambangnya. Ambang umum tetap berlaku untuk kuota model.",
       "creditsThresholdDesc": "Juga ganti otomatis saat kredit tersisa berada pada atau di bawah nilai ini",
       "triggerModel": "Trigger Model​",
       "scopeAnyGroup": "Any model group​",
@@ -8021,6 +8025,9 @@
       "timeRangeError": "Waktu mulai tidak boleh lebih lambat dari waktu selesai"
     },
     "modelProbe": {
+      "scopeAll": "Semua ({{count}})",
+      "scopeSelected": "Dipilih ({{count}})",
+      "scopeCurrent": "Akun saat ini",
       "title": "Uji model",
       "hint": "Mengirim pesan singkat dan membaca balasan. Menggunakan sedikit kuota. Percakapan uji dihapus secara bawaan.",
       "account": "Akun",
@@ -8051,6 +8058,12 @@
     }
   },
   "minimaxCode": {
+    "credentialRefresh": {
+      "signInClient": "Masuk ke klien MiniMax Code, lalu coba lagi.",
+      "authorizeAgain": "Otorisasi ulang akun MiniMax Code atau impor kembali setelah masuk ke klien.",
+      "credentialsChanged": "Kredensial MiniMax Code berubah. Silakan coba lagi.",
+      "missingAccessToken": "MiniMax Code tidak mengembalikan token akses saat pembaruan."
+    },
     "title": "Akun MiniMax Code",
     "noAccounts": "Tidak ada akun MiniMax Code",
     "addAccount": "Tambah Akun MiniMax Code",
