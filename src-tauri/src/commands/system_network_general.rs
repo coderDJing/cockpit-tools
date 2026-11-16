@@ -483,6 +483,8 @@ pub fn get_general_config(app: tauri::AppHandle) -> Result<GeneralConfig, String
         codebuddy_cn_quota_alert_threshold: user_config.codebuddy_cn_quota_alert_threshold,
         qoder_quota_alert_enabled: user_config.qoder_quota_alert_enabled,
         qoder_quota_alert_threshold: user_config.qoder_quota_alert_threshold,
+        qoder_cn_quota_alert_enabled: user_config.qoder_cn_quota_alert_enabled,
+        qoder_cn_quota_alert_threshold: user_config.qoder_cn_quota_alert_threshold,
         trae_quota_alert_enabled: user_config.trae_quota_alert_enabled,
         trae_quota_alert_threshold: user_config.trae_quota_alert_threshold,
         trae_solo_quota_alert_enabled: user_config.trae_solo_quota_alert_enabled,

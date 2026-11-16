@@ -54,6 +54,7 @@ import { useCodebuddyAccountStore } from './stores/useCodebuddyAccountStore';
 import { useCodebuddyCnAccountStore } from './stores/useCodebuddyCnAccountStore';
 import { formatQoderError } from './utils/qoderErrors';
 import { useQoderAccountStore } from './stores/useQoderAccountStore';
+import { useQoderCnAccountStore } from './stores/useQoderCnAccountStore';
 import { useTraeAccountStore } from './stores/useTraeAccountStore';
 import { useWorkbuddyAccountStore } from './stores/useWorkbuddyAccountStore';
 import { useMinimaxCodeAccountStore } from './stores/useMinimaxCodeAccountStore';
@@ -532,6 +533,7 @@ type QuotaAlertPlatform =
   | 'codebuddy'
   | 'codebuddy_cn'
   | 'qoder'
+  | 'qoder_cn'
   | 'trae'
   | 'workbuddy'
   | 'minimaxcode'
@@ -606,6 +608,8 @@ function normalizeQuotaAlertPlatform(platform: string | undefined): QuotaAlertPl
       return 'codebuddy_cn';
     case 'qoder':
       return 'qoder';
+    case 'qoder_cn':
+      return 'qoder_cn';
     case 'trae':
     case 'trae-solo':
     case 'trae_solo':
@@ -648,6 +652,8 @@ function getQuotaAlertPlatformLabel(
       return t('nav.codebuddyCn', 'CodeBuddy CN');
     case 'qoder':
       return t('nav.qoder', 'Qoder');
+    case 'qoder_cn':
+      return t('nav.qoderCn', 'Qoder CN');
     case 'trae':
       return t('nav.trae', 'Trae');
     case 'minimaxcode':
@@ -681,6 +687,8 @@ function getQuotaAlertTargetPage(platform: QuotaAlertPlatform): Page {
       return 'codebuddy-cn';
     case 'qoder':
       return 'qoder';
+    case 'qoder_cn':
+      return 'qoder-cn';
     case 'trae':
       return 'trae';
     case 'workbuddy':
@@ -694,7 +702,7 @@ function getQuotaAlertTargetPage(platform: QuotaAlertPlatform): Page {
   }
 }
 
-function getQuotaAlertQuickSettingsType(platform: QuotaAlertPlatform): QuickSettingsType {
+function getQuotaAlertQuickSettingsType(platform: QuotaAlertPlatform): QuickSettingsType | 'qoder_cn' {
   switch (platform) {
     case 'codex':
       return 'codex';
@@ -716,6 +724,8 @@ function getQuotaAlertQuickSettingsType(platform: QuotaAlertPlatform): QuickSett
       return 'codebuddy_cn';
     case 'qoder':
       return 'qoder';
+    case 'qoder_cn':
+      return 'qoder_cn';
     case 'trae':
       return 'trae';
     case 'workbuddy':
@@ -2800,6 +2810,9 @@ function MainApp() {
                     } else if (platform === 'qoder') {
                       await useQoderAccountStore.getState().switchAccount(targetAccountId);
                       setPage('qoder');
+                    } else if (platform === 'qoder_cn') {
+                      await useQoderCnAccountStore.getState().switchAccount(targetAccountId);
+                      setPage('qoder-cn');
                     } else if (platform === 'trae') {
                       await useTraeAccountStore.getState().switchAccount(targetAccountId);
                       setPage('trae');

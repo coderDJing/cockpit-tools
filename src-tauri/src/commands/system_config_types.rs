@@ -354,6 +354,10 @@ pub struct GeneralConfig {
     pub qoder_quota_alert_enabled: bool,
     /// Qoder 配额预警阈值（百分比）
     pub qoder_quota_alert_threshold: i32,
+    /// 是否启用 Qoder CN 配额预警通知
+    pub qoder_cn_quota_alert_enabled: bool,
+    /// Qoder CN 配额预警阈值（百分比）
+    pub qoder_cn_quota_alert_threshold: i32,
     /// 是否启用 Trae 配额预警通知
     pub trae_quota_alert_enabled: bool,
     /// Trae 配额预警阈值（百分比）
@@ -1357,6 +1361,8 @@ fn is_general_config_patch_field(key: &str) -> bool {
             | "codebuddy_cn_quota_alert_threshold"
             | "qoder_quota_alert_enabled"
             | "qoder_quota_alert_threshold"
+            | "qoder_cn_quota_alert_enabled"
+            | "qoder_cn_quota_alert_threshold"
             | "trae_quota_alert_enabled"
             | "trae_quota_alert_threshold"
             | "trae_solo_quota_alert_enabled"

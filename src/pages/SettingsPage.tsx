@@ -230,6 +230,8 @@ interface GeneralConfig {
   codebuddy_cn_quota_alert_threshold: number;
   qoder_quota_alert_enabled: boolean;
   qoder_quota_alert_threshold: number;
+  qoder_cn_quota_alert_enabled: boolean;
+  qoder_cn_quota_alert_threshold: number;
   trae_quota_alert_enabled: boolean;
   trae_quota_alert_threshold: number;
   trae_solo_quota_alert_enabled: boolean;
@@ -657,6 +659,8 @@ export function useSettingsPageController() {
   const [codebuddyCnQuotaAlertThreshold, setCodebuddyCnQuotaAlertThreshold] = useState('20');
   const [qoderQuotaAlertEnabled, setQoderQuotaAlertEnabled] = useState(false);
   const [qoderQuotaAlertThreshold, setQoderQuotaAlertThreshold] = useState('20');
+  const [qoderCnQuotaAlertEnabled, setQoderCnQuotaAlertEnabled] = useState(false);
+  const [qoderCnQuotaAlertThreshold, setQoderCnQuotaAlertThreshold] = useState('20');
   const [traeQuotaAlertEnabled, setTraeQuotaAlertEnabled] = useState(false);
   const [traeQuotaAlertThreshold, setTraeQuotaAlertThreshold] = useState('20');
   const [traeSoloQuotaAlertEnabled, setTraeSoloQuotaAlertEnabled] = useState(false);
@@ -680,6 +684,7 @@ export function useSettingsPageController() {
   const [qoderCnAutoRefreshCustomMode, setQoderCnAutoRefreshCustomMode] = useState(false);
   const [zcodeAutoRefreshCustomMode, setZcodeAutoRefreshCustomMode] = useState(false);
   const [qoderQuotaAlertThresholdCustomMode, setQoderQuotaAlertThresholdCustomMode] = useState(false);
+  const [qoderCnQuotaAlertThresholdCustomMode, setQoderCnQuotaAlertThresholdCustomMode] = useState(false);
   const [traeAutoRefreshCustomMode, setTraeAutoRefreshCustomMode] = useState(false);
   const [traeQuotaAlertThresholdCustomMode, setTraeQuotaAlertThresholdCustomMode] = useState(false);
   const [traeSoloAutoRefreshCustomMode, setTraeSoloAutoRefreshCustomMode] = useState(false);
@@ -1107,6 +1112,7 @@ export function useSettingsPageController() {
     const parsedWorkbuddyQuotaAlertThreshold = Number.parseInt(workbuddyQuotaAlertThreshold, 10);
     const parsedMinimaxCodeQuotaAlertThreshold = Number.parseInt(minimaxCodeQuotaAlertThreshold, 10);
     const parsedQoderQuotaAlertThreshold = Number.parseInt(qoderQuotaAlertThreshold, 10);
+    const parsedQoderCnQuotaAlertThreshold = Number.parseInt(qoderCnQuotaAlertThreshold, 10);
     const parsedTraeQuotaAlertThreshold = Number.parseInt(traeQuotaAlertThreshold, 10);
     const parsedTraeSoloQuotaAlertThreshold = Number.parseInt(traeSoloQuotaAlertThreshold, 10);
     const parsedTraeCnQuotaAlertThreshold = Number.parseInt(traeCnQuotaAlertThreshold, 10);
@@ -1275,6 +1281,10 @@ export function useSettingsPageController() {
       qoder_quota_alert_threshold: Number.isNaN(parsedQoderQuotaAlertThreshold)
         ? 20
         : parsedQoderQuotaAlertThreshold,
+      qoder_cn_quota_alert_enabled: qoderCnQuotaAlertEnabled,
+      qoder_cn_quota_alert_threshold: Number.isNaN(parsedQoderCnQuotaAlertThreshold)
+        ? 20
+        : parsedQoderCnQuotaAlertThreshold,
       trae_quota_alert_enabled: traeQuotaAlertEnabled,
       trae_quota_alert_threshold: Number.isNaN(parsedTraeQuotaAlertThreshold)
         ? 20
@@ -1494,6 +1504,8 @@ export function useSettingsPageController() {
     minimaxCodeQuotaAlertThreshold,
     qoderQuotaAlertEnabled,
     qoderQuotaAlertThreshold,
+    qoderCnQuotaAlertEnabled,
+    qoderCnQuotaAlertThreshold,
     traeQuotaAlertEnabled,
     traeQuotaAlertThreshold,
     traeSoloQuotaAlertEnabled,
@@ -1793,6 +1805,8 @@ export function useSettingsPageController() {
       setMinimaxCodeQuotaAlertThreshold(String(config.minimax_code_quota_alert_threshold ?? 20));
       setQoderQuotaAlertEnabled(config.qoder_quota_alert_enabled ?? false);
       setQoderQuotaAlertThreshold(String(config.qoder_quota_alert_threshold ?? 20));
+      setQoderCnQuotaAlertEnabled(config.qoder_cn_quota_alert_enabled ?? false);
+      setQoderCnQuotaAlertThreshold(String(config.qoder_cn_quota_alert_threshold ?? 20));
       setTraeQuotaAlertEnabled(config.trae_quota_alert_enabled ?? false);
       setTraeQuotaAlertThreshold(String(config.trae_quota_alert_threshold ?? 20));
       setTraeSoloQuotaAlertEnabled(config.trae_solo_quota_alert_enabled ?? false);
@@ -3146,6 +3160,7 @@ export function useSettingsPageController() {
   const workbuddyQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(workbuddyQuotaAlertThreshold);
   const minimaxCodeQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(minimaxCodeQuotaAlertThreshold);
   const qoderQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(qoderQuotaAlertThreshold);
+  const qoderCnQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(qoderCnQuotaAlertThreshold);
   const traeQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(traeQuotaAlertThreshold);
   const traeSoloQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(traeSoloQuotaAlertThreshold);
   const traeCnQuotaAlertThresholdIsPreset = THRESHOLD_PRESET_VALUES.includes(traeCnQuotaAlertThreshold);
@@ -3488,6 +3503,10 @@ export function useSettingsPageController() {
     qoderQuotaAlertThreshold,
     qoderQuotaAlertThresholdCustomMode,
     qoderQuotaAlertThresholdIsPreset,
+    qoderCnQuotaAlertEnabled,
+    qoderCnQuotaAlertThreshold,
+    qoderCnQuotaAlertThresholdCustomMode,
+    qoderCnQuotaAlertThresholdIsPreset,
     quotaAlertEnabled,
     quotaAlertThreshold,
     quotaAlertThresholdCustomMode,
@@ -3637,6 +3656,9 @@ export function useSettingsPageController() {
     setQoderQuotaAlertEnabled,
     setQoderQuotaAlertThreshold,
     setQoderQuotaAlertThresholdCustomMode,
+    setQoderCnQuotaAlertEnabled,
+    setQoderCnQuotaAlertThreshold,
+    setQoderCnQuotaAlertThresholdCustomMode,
     setQuotaAlertEnabled,
     setQuotaAlertThreshold,
     setQuotaAlertThresholdCustomMode,

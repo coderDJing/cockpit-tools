@@ -574,6 +574,12 @@ pub struct UserConfig {
     /// Qoder 配额预警阈值（百分比）
     #[serde(default = "default_qoder_quota_alert_threshold")]
     pub qoder_quota_alert_threshold: i32,
+    /// 是否启用 Qoder CN 配额预警通知
+    #[serde(default = "default_qoder_cn_quota_alert_enabled")]
+    pub qoder_cn_quota_alert_enabled: bool,
+    /// Qoder CN 配额预警阈值（百分比）
+    #[serde(default = "default_qoder_cn_quota_alert_threshold")]
+    pub qoder_cn_quota_alert_threshold: i32,
     /// 是否启用 Trae 配额预警通知
     #[serde(default = "default_trae_quota_alert_enabled")]
     pub trae_quota_alert_enabled: bool,
@@ -1236,6 +1242,12 @@ fn default_qoder_quota_alert_enabled() -> bool {
 fn default_qoder_quota_alert_threshold() -> i32 {
     20
 }
+fn default_qoder_cn_quota_alert_enabled() -> bool {
+    false
+}
+fn default_qoder_cn_quota_alert_threshold() -> i32 {
+    20
+}
 fn default_trae_quota_alert_enabled() -> bool {
     false
 }
@@ -1449,6 +1461,8 @@ impl Default for UserConfig {
             codebuddy_cn_quota_alert_threshold: default_codebuddy_cn_quota_alert_threshold(),
             qoder_quota_alert_enabled: default_qoder_quota_alert_enabled(),
             qoder_quota_alert_threshold: default_qoder_quota_alert_threshold(),
+            qoder_cn_quota_alert_enabled: default_qoder_cn_quota_alert_enabled(),
+            qoder_cn_quota_alert_threshold: default_qoder_cn_quota_alert_threshold(),
             trae_quota_alert_enabled: default_trae_quota_alert_enabled(),
             trae_quota_alert_threshold: default_trae_quota_alert_threshold(),
             trae_solo_quota_alert_enabled: default_trae_quota_alert_enabled(),
@@ -2353,6 +2367,18 @@ pub fn load_user_config() -> Result<UserConfig, String> {
             obj.insert(
                 "qoder_quota_alert_threshold".to_string(),
                 json!(legacy_threshold),
+            );
+        }
+        if !obj.contains_key("qoder_cn_quota_alert_enabled") {
+            obj.insert(
+                "qoder_cn_quota_alert_enabled".to_string(),
+                json!(default_qoder_cn_quota_alert_enabled()),
+            );
+        }
+        if !obj.contains_key("qoder_cn_quota_alert_threshold") {
+            obj.insert(
+                "qoder_cn_quota_alert_threshold".to_string(),
+                json!(default_qoder_cn_quota_alert_threshold()),
             );
         }
         if !obj.contains_key("trae_quota_alert_enabled") {

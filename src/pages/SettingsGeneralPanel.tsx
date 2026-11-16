@@ -155,6 +155,10 @@ export function SettingsGeneralPanel(props: SettingsPageViewProps) {
     qoderQuotaAlertThreshold,
     qoderQuotaAlertThresholdCustomMode,
     qoderQuotaAlertThresholdIsPreset,
+    qoderCnQuotaAlertEnabled,
+    qoderCnQuotaAlertThreshold,
+    qoderCnQuotaAlertThresholdCustomMode,
+    qoderCnQuotaAlertThresholdIsPreset,
     quotaAlertEnabled,
     quotaAlertThreshold,
     quotaAlertThresholdCustomMode,
@@ -251,6 +255,9 @@ export function SettingsGeneralPanel(props: SettingsPageViewProps) {
     setQoderQuotaAlertEnabled,
     setQoderQuotaAlertThreshold,
     setQoderQuotaAlertThresholdCustomMode,
+    setQoderCnQuotaAlertEnabled,
+    setQoderCnQuotaAlertThreshold,
+    setQoderCnQuotaAlertThresholdCustomMode,
     setQuotaAlertEnabled,
     setQuotaAlertThreshold,
     setQuotaAlertThresholdCustomMode,
@@ -2881,6 +2888,86 @@ export function SettingsGeneralPanel(props: SettingsPageViewProps) {
                   })}
                   {renderCurrentAccountRefreshRow('qoder_cn')}
                   {renderAccountLevelRefreshConfig('qoder_cn')}
+
+                  <div className="settings-row">
+                    <div className="row-label">
+                      <div className="row-title">{t('quickSettings.quotaAlert.enable', '超额预警')}</div>
+                      <div className="row-desc">{t('quickSettings.quotaAlert.hint', '当当前账号任意模型配额低于阈值时，发送原生通知并在页面提示快捷切号。')}</div>
+                    </div>
+                    <div className="row-control">
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          checked={qoderCnQuotaAlertEnabled}
+                          onChange={(e) => setQoderCnQuotaAlertEnabled(e.target.checked)}
+                        />
+                        <span className="slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                  {qoderCnQuotaAlertEnabled && (
+                    <div className="settings-row" style={{ animation: 'fadeUp 0.3s ease both' }}>
+                      <div className="row-label">
+                        <div className="row-title">{t('quickSettings.quotaAlert.threshold', '预警阈值')}</div>
+                        <div className="row-desc">{t('quickSettings.quotaAlert.thresholdDesc', '任意模型配额低于此百分比时触发预警')}</div>
+                      </div>
+                      <div className="row-control">
+                        {qoderCnQuotaAlertThresholdCustomMode ? (
+                          <div className="settings-inline-input">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              className="settings-select settings-select--input-mode settings-select--with-unit"
+                              value={qoderCnQuotaAlertThreshold}
+                              placeholder={t('quickSettings.inputPercent', '输入百分比')}
+                              onChange={(e) => setQoderCnQuotaAlertThreshold(sanitizeNumberInput(e.target.value))}
+                              onBlur={() => {
+                                const normalized = normalizeNumberInput(qoderCnQuotaAlertThreshold, 0, 100);
+                                if (THRESHOLD_PRESET_VALUES.includes(normalized)) {
+                                  setQoderCnQuotaAlertThresholdCustomMode(false);
+                                }
+                                setQoderCnQuotaAlertThreshold(normalized);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const normalized = normalizeNumberInput(qoderCnQuotaAlertThreshold, 0, 100);
+                                  setQoderCnQuotaAlertThresholdCustomMode(false);
+                                  setQoderCnQuotaAlertThreshold(normalized);
+                                }
+                              }}
+                            />
+                            <span className="settings-input-unit">%</span>
+                          </div>
+                        ) : (
+                          <select
+                            className="settings-select"
+                            value={qoderCnQuotaAlertThreshold}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === 'custom') {
+                                setQoderCnQuotaAlertThresholdCustomMode(true);
+                                setQoderCnQuotaAlertThreshold(qoderCnQuotaAlertThreshold || '20');
+                                return;
+                              }
+                              setQoderCnQuotaAlertThresholdCustomMode(false);
+                              setQoderCnQuotaAlertThreshold(val);
+                            }}
+                          >
+                            {!qoderCnQuotaAlertThresholdIsPreset && (
+                              <option value={qoderCnQuotaAlertThreshold}>{qoderCnQuotaAlertThreshold}%</option>
+                            )}
+                            <option value="0">0%</option>
+                            <option value="20">20%</option>
+                            <option value="40">40%</option>
+                            <option value="60">60%</option>
+                            <option value="custom">{t('settings.general.autoRefreshCustom')}</option>
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {isWindows && (
                     <div className="settings-row">
                       <div className="row-label">

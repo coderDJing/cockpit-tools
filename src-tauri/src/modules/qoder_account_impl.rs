@@ -1184,6 +1184,132 @@ pub(crate) fn resolve_current_account_id(accounts: &[QoderAccount]) -> Option<St
     )
 }
 
+const QODER_QUOTA_ALERT_COOLDOWN_SECONDS: i64 = 300;
+
+static QODER_QUOTA_ALERT_LAST_SENT: std::sync::LazyLock<
+    Mutex<std::collections::HashMap<String, i64>>,
+> = std::sync::LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
+
+fn normalize_quota_alert_threshold(raw: i32) -> i32 {
+    raw.clamp(0, 100)
+}
+
+fn quota_alert_settings() -> (bool, i32) {
+    let config = crate::modules::config::get_user_config();
+    match STORE_REGION {
+        crate::modules::qoder_region::QoderRegion::Cn => (
+            config.qoder_cn_quota_alert_enabled,
+            config.qoder_cn_quota_alert_threshold,
+        ),
+        crate::modules::qoder_region::QoderRegion::Global => (
+            config.qoder_quota_alert_enabled,
+            config.qoder_quota_alert_threshold,
+        ),
+    }
+}
+
+fn remaining_quota_percent(account: &QoderAccount) -> Option<f64> {
+    if let (Some(remaining), Some(total)) = (account.credits_remaining, account.credits_total) {
+        if total > 0.0 {
+            return Some(((remaining / total) * 100.0).clamp(0.0, 100.0));
+        }
+    }
+    account
+        .credits_usage_percent
+        .filter(|value| value.is_finite())
+        .map(|used| (100.0 - used).clamp(0.0, 100.0))
+}
+
+fn pick_quota_alert_recommendation<'a>(
+    accounts: &'a [QoderAccount],
+    current_id: &str,
+) -> Option<&'a QoderAccount> {
+    accounts
+        .iter()
+        .filter(|account| account.id != current_id)
+        .filter(|account| account.quota_query_last_error.is_none())
+        .filter_map(|account| {
+            remaining_quota_percent(account).map(|percent| (account, percent))
+        })
+        .max_by(|(a, a_percent), (b, b_percent)| {
+            a_percent
+                .partial_cmp(b_percent)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| a.last_used.cmp(&b.last_used))
+        })
+        .map(|(account, _)| account)
+}
+
+fn build_quota_alert_cooldown_key(account_id: &str, threshold: i32) -> String {
+    format!("{}:{}:{}", STORE_KIND, account_id, threshold)
+}
+
+fn should_emit_quota_alert(cooldown_key: &str, now: i64) -> bool {
+    let Ok(mut state) = QODER_QUOTA_ALERT_LAST_SENT.lock() else {
+        return true;
+    };
+    if let Some(last_sent) = state.get(cooldown_key) {
+        if now - *last_sent < QODER_QUOTA_ALERT_COOLDOWN_SECONDS {
+            return false;
+        }
+    }
+    state.insert(cooldown_key.to_string(), now);
+    true
+}
+
+fn clear_quota_alert_cooldown(account_id: &str, threshold: i32) {
+    if let Ok(mut state) = QODER_QUOTA_ALERT_LAST_SENT.lock() {
+        state.remove(&build_quota_alert_cooldown_key(account_id, threshold));
+    }
+}
+
+pub fn run_quota_alert_if_needed() -> Result<Option<account::QuotaAlertPayload>, String> {
+    let (enabled, raw_threshold) = quota_alert_settings();
+    if !enabled {
+        return Ok(None);
+    }
+    let threshold = normalize_quota_alert_threshold(raw_threshold);
+    let accounts = list_accounts_checked()?;
+    let Some(current_id) = resolve_current_account_id(&accounts) else {
+        return Ok(None);
+    };
+    let Some(current) = accounts.iter().find(|account| account.id == current_id) else {
+        return Ok(None);
+    };
+    if current.quota_query_last_error.is_some() {
+        return Ok(None);
+    }
+    let Some(remaining) = remaining_quota_percent(current) else {
+        return Ok(None);
+    };
+    if remaining > threshold as f64 {
+        clear_quota_alert_cooldown(&current_id, threshold);
+        return Ok(None);
+    }
+
+    let now = now_ts();
+    let cooldown_key = build_quota_alert_cooldown_key(&current_id, threshold);
+    if !should_emit_quota_alert(&cooldown_key, now) {
+        return Ok(None);
+    }
+
+    let recommendation = pick_quota_alert_recommendation(&accounts, &current_id);
+    let payload = account::QuotaAlertPayload {
+        platform: STORE_KIND.to_string(),
+        current_account_id: current_id,
+        current_email: current.email.clone(),
+        threshold,
+        threshold_display: None,
+        lowest_percentage: remaining.round().clamp(0.0, 100.0) as i32,
+        low_models: vec!["Credits".to_string()],
+        recommended_account_id: recommendation.map(|account| account.id.clone()),
+        recommended_email: recommendation.map(|account| account.email.clone()),
+        triggered_at: now,
+    };
+    account::dispatch_quota_alert(&payload);
+    Ok(Some(payload))
+}
+
 fn serialize_raw_or_fallback(raw: &Option<Value>, fallback: Value) -> Result<String, String> {
     let value = raw.clone().unwrap_or(fallback);
     serde_json::to_string(&value).map_err(|e| format!("序列化 Qoder 注入数据失败: {}", e))
@@ -1487,4 +1613,59 @@ pub fn export_accounts(account_ids: &[String]) -> Result<String, String> {
     };
 
     serde_json::to_string_pretty(&selected).map_err(|e| format!("序列化导出 JSON 失败: {}", e))
+}
+
+#[cfg(test)]
+mod quota_alert_tests {
+    use super::*;
+
+    fn account(
+        id: &str,
+        usage_percent: Option<f64>,
+        remaining: Option<f64>,
+        total: Option<f64>,
+        quota_error: Option<&str>,
+    ) -> QoderAccount {
+        serde_json::from_value(serde_json::json!({
+            "id": id,
+            "email": format!("{id}@example.com"),
+            "credits_usage_percent": usage_percent,
+            "credits_remaining": remaining,
+            "credits_total": total,
+            "quota_query_last_error": quota_error,
+            "created_at": 0,
+            "last_used": 0,
+        }))
+        .expect("test account should deserialize")
+    }
+
+    #[test]
+    fn remaining_quota_prefers_bucket_values_over_usage_percent() {
+        let usage_only = account("usage", Some(85.0), None, None, None);
+        assert_eq!(remaining_quota_percent(&usage_only), Some(15.0));
+
+        let bucket = account("bucket", Some(99.0), Some(5.0), Some(20.0), None);
+        assert_eq!(remaining_quota_percent(&bucket), Some(25.0));
+    }
+
+    #[test]
+    fn recommendation_picks_highest_remaining_healthy_account() {
+        let current = account("current", Some(90.0), None, None, None);
+        let healthy = account("healthy", Some(20.0), None, None, None);
+        let stale = account("stale", Some(5.0), None, None, Some("QUOTA_ERROR"));
+        let accounts = vec![current, healthy, stale];
+
+        let recommended = pick_quota_alert_recommendation(&accounts, "current")
+            .expect("a healthy account should be recommended");
+        assert_eq!(recommended.id, "healthy");
+    }
+
+    #[test]
+    fn recommendation_returns_none_without_alternative_quota() {
+        let current = account("current", Some(90.0), None, None, None);
+        let unknown = account("unknown", None, None, None, None);
+        let accounts = vec![current, unknown];
+
+        assert!(pick_quota_alert_recommendation(&accounts, "current").is_none());
+    }
 }
