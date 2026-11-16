@@ -56,7 +56,15 @@ import { useQoderAccountStore } from '../stores/useQoderAccountStore';
 import * as qoderService from '../services/qoderService';
 import * as qoderCnService from '../services/qoderCnService';
 import { useQoderCnAccountStore } from '../stores/useQoderCnAccountStore';
-import { getQoderRegion, qoderRegionLabel, type QoderRegion, type QoderClient } from '../utils/qoderRegion';
+import { usePlatformRuntimeSupport } from '../hooks/usePlatformRuntimeSupport';
+import {
+  defaultQoderClient,
+  getQoderRegion,
+  isQoderClientAvailable,
+  qoderRegionLabel,
+  type QoderRegion,
+  type QoderClient,
+} from '../utils/qoderRegion';
 import { formatQoderError } from '../utils/qoderErrors';
 import {
   QoderAccount,
@@ -236,7 +244,8 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const service = region === 'cn' ? qoderCnService : qoderService;
   const platformId = region === 'cn' ? 'qoder_cn' : 'qoder';
   const persistenceScope = region === 'cn' ? normalizeAccountsOverviewScope('qoder_cn') : QODER_FILTER_PERSISTENCE_SCOPE;
-  const [clientTarget, setClientTarget] = useState<QoderClient>(region === 'cn' ? 'desktop' : 'ide');
+  const isWindows = usePlatformRuntimeSupport('windows-only');
+  const [clientTarget, setClientTarget] = useState<QoderClient>(() => defaultQoderClient(region, isWindows));
   const initialFilterPersistenceEnabled =
     readAccountsOverviewFilterPersistenceEnabled(persistenceScope);
   const importFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1810,7 +1819,10 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
       <PlatformOverviewTabsHeader platform={platformId} active={activeTab} onTabChange={setActiveTab} tabs={region === 'cn' ? ['overview'] : undefined} />
       <div className="toolbar" style={{ marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
         <label>{t('qoder.clientTarget.label', '切换／本机导入目标')} <select aria-label={t('qoder.clientTarget.ariaLabel', 'Qoder 客户端')} value={clientTarget} disabled={showAddModal || !!injecting} onChange={(event) => setClientTarget(event.target.value as QoderClient)}>
-          <option value="desktop">{region === 'cn' ? t('qoder.clientTarget.desktopCn', 'Qoder CN 桌面端') : t('qoder.clientTarget.desktop', 'Qoder 桌面端')}</option>
+          <option value="desktop" disabled={!isQoderClientAvailable(region, 'desktop', isWindows)}>
+            {region === 'cn' ? t('qoder.clientTarget.desktopCn', 'Qoder CN 桌面端') : t('qoder.clientTarget.desktop', 'Qoder 桌面端')}
+            {!isWindows && t('qoder.clientTarget.windowsOnly', '（仅 Windows）')}
+          </option>
           <option value="cli">{region === 'cn' ? t('qoder.clientTarget.cliCn', 'Qoder CN CLI') : t('qoder.clientTarget.cli', 'Qoder CLI')}</option>
           {region === 'global' && <option value="ide">{t('qoder.clientTarget.ide', 'Qoder IDE')}</option>}
         </select></label>
