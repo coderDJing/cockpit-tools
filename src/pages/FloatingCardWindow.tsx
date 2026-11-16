@@ -1,3 +1,5 @@
+import { readMissingLaunchPathApp } from '../utils/appLaunchPath';
+import { getMissingAntigravityPathTarget } from '../utils/antigravityRuntimeTarget';
 import { useCodexRelayBalanceDisabled } from '../hooks/useCodexRelayBalanceDisabled';
 import { isCodexNewApiAccount } from '../types/codex';
 import { type CSSProperties, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -62,6 +64,7 @@ import { useQoderCnAccountStore } from '../stores/useQoderCnAccountStore';
 import { useZcodeAccountStore } from '../stores/useZcodeAccountStore';
 import { useTraeAccountStore } from '../stores/useTraeAccountStore';
 import { useWindsurfAccountStore } from '../stores/useWindsurfAccountStore';
+import { useWorkbuddyAiAccountStore } from '../stores/useWorkbuddyAiAccountStore';
 import { useWorkbuddyAccountStore } from '../stores/useWorkbuddyAccountStore';
 import { useMinimaxCodeAccountStore } from '../stores/useMinimaxCodeAccountStore';
 import { useZedAccountStore } from '../stores/useZedAccountStore';
@@ -111,6 +114,7 @@ import {
   resolveCurrentOrMostRecentAccount,
 } from '../utils/floatingCardSelectors';
 import { changeLanguage, normalizeLanguage } from '../i18n';
+import { SingleSelectDropdown } from '../components/SingleSelectDropdown';
 import { useFloatingCardAppearance } from '../hooks/useFloatingCardAppearance';
 import { useDurableUiSetting } from '../hooks/useDurableUiSetting';
 import { FLOATING_CARD_PLATFORM_STORAGE_KEY } from '../utils/durableUiSettings';
@@ -130,7 +134,7 @@ const FLOATING_CARD_WINDOW_LABEL = 'floating-card';
 const INSTANCE_FLOATING_CARD_WINDOW_LABEL_PREFIX = 'instance-floating-card-';
 const DEFAULT_INSTANCE_ID = '__default__';
 const FLOATING_CARD_NO_DRAG_SELECTOR =
-  'button, select, input, textarea, a, option, [role="button"], [data-floating-card-no-drag="true"]';
+  'button, select, input, textarea, a, option, [role="button"], [role="option"], [role="listbox"], .floating-card-platform-dropdown, [data-floating-card-no-drag="true"]';
 
 type FloatingCardGeneralConfig = {
   language: string;
@@ -197,6 +201,7 @@ function resolveInstanceStoreApi(platformId: PlatformId): FloatingCardInstanceSt
     case 'codex':
       return useCodexInstanceStore.getState();
     case 'codex_api_service':
+    case 'workbuddy_ai':
       return null;
     case 'claude_manager':
       return useClaudeInstanceStore.getState();
@@ -310,6 +315,7 @@ export function FloatingCardWindow() {
     accounts: workbuddyAccounts,
     currentAccountId: workbuddyCurrentId,
   } = useWorkbuddyAccountStore();
+  const { accounts: workbuddyAiAccounts, currentAccountId: workbuddyAiCurrentId } = useWorkbuddyAiAccountStore();
   const {
     accounts: minimaxCodeAccounts,
     currentAccountId: minimaxCodeCurrentId,
@@ -532,6 +538,9 @@ export function FloatingCardWindow() {
         case 'trae_cn':
         case 'trae_solo_cn':
           await useTraeAccountStore.getState().fetchAccounts();
+          break;
+        case 'workbuddy_ai':
+          await useWorkbuddyAiAccountStore.getState().fetchAccounts();
           break;
         case 'workbuddy':
           await useWorkbuddyAccountStore.getState().fetchAccounts();
@@ -920,6 +929,11 @@ export function FloatingCardWindow() {
           accounts: traeAccounts,
           actualCurrentAccount: traeCurrent,
         };
+      case 'workbuddy_ai':
+        return {
+          accounts: workbuddyAiAccounts,
+          actualCurrentAccount: workbuddyAiAccounts.find((account) => account.id === workbuddyAiCurrentId) ?? null,
+        };
       case 'workbuddy':
         return {
           accounts: workbuddyAccounts,
@@ -975,6 +989,8 @@ export function FloatingCardWindow() {
     traeCurrent,
     windsurfAccounts,
     windsurfCurrent,
+    workbuddyAiAccounts,
+    workbuddyAiCurrentId,
     workbuddyAccounts,
     workbuddyCurrent,
     minimaxCodeAccounts,
@@ -1032,6 +1048,8 @@ export function FloatingCardWindow() {
       case 'trae_cn':
       case 'trae_solo_cn':
         return getRecommendedTraeAccount(traeAccounts, effectiveCurrentId);
+      case 'workbuddy_ai':
+        return getRecommendedWorkbuddyAccount(workbuddyAiAccounts, effectiveCurrentId);
       case 'workbuddy':
         return getRecommendedWorkbuddyAccount(workbuddyAccounts, effectiveCurrentId);
       case 'minimaxcode':
@@ -1059,6 +1077,7 @@ export function FloatingCardWindow() {
     selectedPlatform,
     traeAccounts,
     windsurfAccounts,
+    workbuddyAiAccounts,
     workbuddyAccounts,
     zedAccounts,
     zcodeAccounts,
@@ -1135,8 +1154,9 @@ export function FloatingCardWindow() {
       case 'trae_cn':
       case 'trae_solo_cn':
         return buildTraeAccountPresentation(viewedAccount as typeof traeAccounts[number], t);
+      case 'workbuddy_ai':
       case 'workbuddy':
-        return buildWorkbuddyAccountPresentation(viewedAccount as typeof workbuddyAccounts[number], t, true);
+        return buildWorkbuddyAccountPresentation(viewedAccount as typeof workbuddyAccounts[number], t, true, selectedPlatform === 'workbuddy_ai');
       case 'minimaxcode':
         return buildMiniMaxCodeAccountPresentation(viewedAccount as typeof minimaxCodeAccounts[number], t);
       case 'zed':
@@ -1166,6 +1186,8 @@ export function FloatingCardWindow() {
     traeAccounts,
     viewedAccount,
     windsurfAccounts,
+    workbuddyAiAccounts,
+    workbuddyAiCurrentId,
     workbuddyAccounts,
     zedAccounts,
     zcodeAccounts,
@@ -1259,6 +1281,9 @@ export function FloatingCardWindow() {
           case 'trae_cn':
           case 'trae_solo_cn':
             await useTraeAccountStore.getState().refreshToken(viewedAccount.id);
+            break;
+          case 'workbuddy_ai':
+            await useWorkbuddyAiAccountStore.getState().refreshToken(viewedAccount.id);
             break;
           case 'workbuddy':
             await useWorkbuddyAccountStore.getState().refreshToken(viewedAccount.id);
@@ -1399,6 +1424,9 @@ export function FloatingCardWindow() {
               await useTraeAccountStore.getState().fetchAccounts();
             }
             break;
+          case 'workbuddy_ai':
+            await useWorkbuddyAiAccountStore.getState().switchAccount(viewedAccount.id);
+            break;
           case 'workbuddy':
             await useWorkbuddyAccountStore.getState().switchAccount(viewedAccount.id);
             break;
@@ -1414,13 +1442,18 @@ export function FloatingCardWindow() {
     } catch (error) {
       const rawError = String(error).replace(/^Error:\s*/, '').trim();
       if (selectedPlatform === 'codex' && isCodexLaunchCancelled(error)) return;
-      if (rawError.startsWith('APP_PATH_NOT_FOUND:claude')) {
-        const detail = {
-          app: 'claude',
-          retry: { kind: 'switchAccount', accountId: viewedAccount.id },
-        };
-        await showMainWindowAndNavigate('claude');
-        await emit('app:path_missing', detail);
+      const antigravityTarget = getMissingAntigravityPathTarget(error);
+      const missingApp = antigravityTarget ? 'antigravity' : readMissingLaunchPathApp(error);
+      if (missingApp) {
+        const runtimeTarget = selectedPlatform === 'antigravity' || selectedPlatform === 'antigravity_ide'
+          ? selectedPlatform : undefined;
+        const retry = rawError.startsWith('APP_PATH_MISSING_AFTER_SWITCH:')
+          ? { kind: 'launchOnly', runtimeTarget: antigravityTarget, instanceId: instanceContext?.instanceId }
+          : instanceContext
+            ? { kind: 'instance', instanceId: instanceContext.instanceId, runtimeTarget }
+            : { kind: 'switchAccount', accountId: viewedAccount.id, runtimeTarget };
+        await showMainWindowAndNavigate(PLATFORM_PAGE_MAP[selectedPlatform]);
+        await emit('app:path_missing', { app: missingApp, pathRuntimeTarget: antigravityTarget, retry });
         return;
       }
       const displayError =
@@ -1651,22 +1684,22 @@ export function FloatingCardWindow() {
                   {platformLabel}
                 </div>
               ) : (
-                <select
-                  className="floating-card-platform-select"
+                <SingleSelectDropdown
+                  className="floating-card-platform-dropdown"
+                  menuMaxHeight={200}
+                  menuWidth={168}
                   value={selectedPlatform}
-                  onChange={(event) => {
-                    const platformId = event.target.value as PlatformId;
+                  ariaLabel={t('floatingCard.selectPlatform', '切换平台')}
+                  options={platformOrder.map((platformId) => ({
+                    value: platformId,
+                    label: getPlatformLabel(platformId, t),
+                  }))}
+                  onChange={(value) => {
+                    const platformId = value as PlatformId;
                     setSelectedPlatform(platformId);
                     persistFloatingCardPlatform(platformId);
                   }}
-                  aria-label={t('floatingCard.selectPlatform', '切换平台')}
-                >
-                  {platformOrder.map((platformId) => (
-                    <option key={platformId} value={platformId}>
-                      {getPlatformLabel(platformId, t)}
-                    </option>
-                  ))}
-                </select>
+                />
               )}
             </div>
 
@@ -1711,7 +1744,10 @@ export function FloatingCardWindow() {
             <div className="floating-card-account">
               <div className="floating-card-account-head">
                 <div className="floating-card-account-title">
-                  <div className="floating-card-account-name">
+                  <div
+                    className="floating-card-account-name"
+                    title={maskAccountText(presentation.displayName)}
+                  >
                     {maskAccountText(presentation.displayName)}
                   </div>
                   {presentation.cycleText ? (

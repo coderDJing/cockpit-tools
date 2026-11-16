@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PlatformLayoutModal } from '../../src/components/PlatformLayoutModal';
 import { usePlatformLayoutStore } from '../../src/stores/usePlatformLayoutStore';
-import { installAppScrollbars } from '../../src/utils/appScrollbars';
 import '../../src/App.css';
-import '../../src/styles/scrollbars.css';
 const snapshot = { values: {}, revisions: {} };
 let writes = 0, closed = 0;
 window.__TAURI_INTERNALS__ = {
@@ -24,7 +22,7 @@ window.__TAURI_INTERNALS__ = {
 };
 usePlatformLayoutStore.getState().upsertPlatformGroup({
   id: 'fixture-sort-group', name: 'Fixture group',
-  platformIds: ['qoder', 'qoder_cn', 'codebuddy_cn'], defaultPlatformId: 'qoder',
+  platformIds: ['qoder', 'codebuddy', 'codebuddy_cn'], defaultPlatformId: 'qoder',
   iconKind: 'platform', iconPlatformId: 'qoder',
 });
 window.fixture = {
@@ -37,5 +35,4 @@ function Fixture() {
   const [open, setOpen] = useState(true);
   return <PlatformLayoutModal open={open} onClose={() => { closed++; setOpen(false); }} />;
 }
-installAppScrollbars();
 createRoot(document.getElementById('root')!).render(<React.StrictMode><Fixture /></React.StrictMode>);

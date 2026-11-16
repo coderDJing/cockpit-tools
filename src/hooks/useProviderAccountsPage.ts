@@ -1,3 +1,4 @@
+import { readMissingLaunchPathApp } from '../utils/appLaunchPath';
 import { containsWithScrollbar } from '../utils/scrollbarContainment';
 import { useDurableUiBooleanSetting } from './useDurableUiSetting';
 import type { FlowNoticeSettingKey } from '../utils/durableUiSettings';
@@ -1177,6 +1178,12 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
         }
         await fetchAccounts();
       } catch (e: unknown) {
+        const missingApp = readMissingLaunchPathApp(e);
+        if (missingApp === 'workbuddy_ai' || missingApp === 'minimaxcode' || missingApp === 'zcode' || missingApp === 'qoder') {
+          setInjecting(null);
+          if (String(e).startsWith('APP_PATH_MISSING_AFTER_SWITCH:')) await fetchAccounts();
+          return;
+        }
         const retrySwitch = async () => {
           await injectFn(accountId);
           let resolvedCurrentAccountId: string | null = accountId;
@@ -1392,12 +1399,13 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
 
   const openAddModal = useCallback(
     (tab: string) => {
+      if (showAddModalRef.current && addTabRef.current === tab && oauthTabKeys.includes(tab)) return;
       cancelPendingOauthLogin();
       setAddTab(tab);
       setShowAddModal(true);
       resetAddModalState();
     },
-    [cancelPendingOauthLogin, resetAddModalState],
+    [cancelPendingOauthLogin, oauthTabKeys, resetAddModalState],
   );
 
   const closeAddModal = useCallback(() => {
@@ -2087,9 +2095,9 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
       typeof oauthAutoPrepareConfig === 'function'
         ? oauthAutoPrepareConfig(addTab)
         : oauthAutoPrepareConfig !== false;
-    if (!showAddModal || !oauthTabKeys.includes(addTab) || oauthUrl || !shouldAutoPrepare) return;
+    if (!showAddModal || !oauthTabKeys.includes(addTab) || oauthUrl || oauthPrepareError || !shouldAutoPrepare) return;
     prepareOauthUrl();
-  }, [showAddModal, addTab, oauthUrl, prepareOauthUrl, oauthTabKeys, oauthAutoPrepareConfig]);
+  }, [showAddModal, addTab, oauthUrl, oauthPrepareError, prepareOauthUrl, oauthTabKeys, oauthAutoPrepareConfig]);
 
   // Cancel OAuth when modal closes or tab changes
   useEffect(() => {
@@ -2290,7 +2298,6 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
 
   const handleOpenOauthUrlWithMode = useCallback(async (incognito: boolean) => {
     if (!oauthUrl) return;
-    setOauthCompleteError(null);
     oauthLog('用户点击打开授权链接', {
       loginId: oauthLoginIdRef.current,
       authUrl: oauthUrl,

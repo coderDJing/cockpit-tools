@@ -54,6 +54,7 @@ export type PlatformOverviewHeaderId =
   | 'trae_cn'
   | 'trae_solo_cn'
   | 'workbuddy'
+  | 'workbuddy_ai'
   | 'minimaxcode';
 
 interface PlatformOverviewTabsHeaderProps<T extends string> {
@@ -147,6 +148,10 @@ const CONFIGS: Record<PlatformOverviewHeaderId, PlatformOverviewConfig> = {
   },
   workbuddy: {
     platformLabel: 'WorkBuddy',
+    overviewIcon: <WorkbuddyIcon className="tab-icon" />,
+  },
+  workbuddy_ai: {
+    platformLabel: 'WorkBuddy AI',
     overviewIcon: <WorkbuddyIcon className="tab-icon" />,
   },
   minimaxcode: {

@@ -5,16 +5,16 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { isReducedMotionEnabled } from '../utils/reducedMotion';
 import './SortableLayoutList.css';
 
 const verticalOnly: Modifier = ({ transform }) => ({ ...transform, x: 0 });
-const collisionDetection: CollisionDetection = (args) => {
-  const hits = pointerWithin(args);
-  return hits.length ? hits : closestCenter(args);
-};
+const collisionDetection: CollisionDetection = (args) => (
+  args.pointerCoordinates ? pointerWithin(args) : closestCenter(args)
+);
 
 // A visual snapshot keeps expanded groups and custom icons identical to the
 // source without mounting a second set of sortable controls or React effects.
@@ -38,11 +38,12 @@ interface ListProps {
   items: string[];
   className?: string;
   children: ReactNode;
-  onReorder: (from: number, to: number) => void;
+  onReorder: (activeId: string, overId: string) => void;
   onSortingChange: (sorting: boolean) => void;
 }
 
 export function SortableLayoutList({ items, className = '', children, onReorder, onSortingChange }: ListProps) {
+  const { t } = useTranslation();
   const list = useRef<HTMLDivElement>(null);
   const [source, setSource] = useState<HTMLElement | null>(null);
   const sorting = useRef(false);
@@ -65,11 +66,30 @@ export function SortableLayoutList({ items, className = '', children, onReorder,
     document.addEventListener('keydown', consumeEscape, true);
     return () => document.removeEventListener('keydown', consumeEscape, true);
   }, []);
+  const announcePosition = (id: string | number) => {
+    const index = items.indexOf(String(id));
+    return index < 0 ? undefined : t('platformLayout.sortPosition', { position: index + 1, total: items.length });
+  };
   const finish = () => { sorting.current = false; setSource(null); onSortingChange(false); };
 
   return (
     <DndContext
       sensors={sensors}
+      accessibility={{
+        screenReaderInstructions: { draggable: t('platformLayout.sortKeyboardInstructions') },
+        announcements: {
+          onDragStart: ({ active }) => announcePosition(active.id),
+          onDragOver: ({ over }) => over ? announcePosition(over.id) : undefined,
+          onDragEnd: ({ active, over }) => {
+            const index = over ? items.indexOf(String(over.id)) : -1;
+            if (index < 0) return t('platformLayout.sortCancelled');
+            return active.id === over?.id
+              ? announcePosition(active.id)
+              : t('platformLayout.sortPlaced', { position: index + 1 });
+          },
+          onDragCancel: () => t('platformLayout.sortCancelled'),
+        },
+      }}
       collisionDetection={collisionDetection}
       modifiers={[verticalOnly]}
       autoScroll={{ threshold: { x: 0.1, y: 0.18 }, acceleration: 8 }}
@@ -85,9 +105,9 @@ export function SortableLayoutList({ items, className = '', children, onReorder,
       onDragEnd={({ active, over }) => {
         finish();
         if (!over || active.id === over.id) return;
-        const from = items.indexOf(String(active.id));
-        const to = items.indexOf(String(over.id));
-        if (from >= 0 && to >= 0) onReorder(from, to);
+        const activeId = String(active.id);
+        const overId = String(over.id);
+        if (items.includes(activeId) && items.includes(overId)) onReorder(activeId, overId);
       }}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>

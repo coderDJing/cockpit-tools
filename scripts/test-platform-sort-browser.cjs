@@ -1,15 +1,35 @@
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os'), { spawn } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const base = fs.mkdtempSync(path.join(os.tmpdir(), 'cockpit-sortable-'));
-const port = 19337;
+const net = require('node:net');
+const browserPaths = [process.env.PLATFORM_SORT_BROWSER,
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome',
+].filter(Boolean);
+const browserPath = browserPaths.find(candidate => fs.existsSync(candidate));
+let browserProcess;
 require('esbuild').buildSync({ entryPoints: [path.join(root, 'tests/platform-sort/fixture.tsx')], bundle: true, outfile: path.join(base, 'platform-sort-fixture.js'), format: 'iife', loader: { '.css': 'css', '.png': 'dataurl', '.svg': 'dataurl' } });
 fs.copyFileSync(path.join(root, 'tests/platform-sort/fixture.html'), path.join(base, 'platform-sort-fixture.html'));
-const edge = spawn(process.env.SCROLLBARS_BROWSER || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', ['--headless=new', '--window-size=1280,800', '--disable-gpu', '--no-first-run', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=' + port, '--user-data-dir=' + base + '/edge-platform-sort-fixture', 'file:///' + base.replaceAll('\\', '/') + '/platform-sort-fixture.html'], { windowsHide: true, stdio: 'ignore' });
+
 let launchError;
-edge.on('error', error => { launchError = error; });
+
 const wait = ms => new Promise(r => setTimeout(r, ms));
 let socket;
 (async () => {
+    if (!browserPath) throw Error('Set PLATFORM_SORT_BROWSER to an installed Chromium browser executable.');
+    const port = await new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.on('error', reject);
+        server.listen(0, '127.0.0.1', () => {
+            const port = server.address().port;
+            server.close(error => error ? reject(error) : resolve(port));
+        });
+    });
+    browserProcess = spawn(browserPath, ['--headless=new', '--window-size=1280,800', '--disable-gpu', '--no-first-run', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=' + port, '--user-data-dir=' + base + '/edge-platform-sort-fixture', 'file:///' + base.replaceAll('\\', '/') + '/platform-sort-fixture.html'], { windowsHide: true, stdio: 'ignore' });
+    browserProcess.on('error', error => { launchError = error; });
     let pages;
     for (let i = 0; i < 50; i++) {
         try {
@@ -23,7 +43,7 @@ let socket;
     if (launchError)
         throw launchError;
     if (!pages?.length)
-        throw Error('Browser did not expose a debug page. Set SCROLLBARS_BROWSER to a Chromium executable.');
+        throw Error('Browser did not expose a debug page. Set PLATFORM_SORT_BROWSER to a Chromium executable.');
     const page = pages.find(t => t.type === 'page'), ws = new WebSocket(page.webSocketDebuggerUrl), pending = new Map();
     let id = 0;
     socket = ws;
@@ -62,6 +82,17 @@ let socket;
  const cancelTarget=await rect(roots+':nth-child(3) .platform-layout-row');await mouse('mouseMoved',cancelTarget,{button:'left',buttons:1});await wait(100);
  await key('Escape','Escape',27);await end(cancelTarget);
  check(JSON.stringify((await state()).order)===JSON.stringify(cancelBefore.order)&&(await state()).writes===cancelBefore.writes&&(await state()).closed===0,'Escape changed order or closed modal');result.escape={cancelled:true,modalStayedOpen:true};
+ const outsideBefore = await state();
+ await start(roots+':nth-child(1) .platform-layout-drag-trigger');
+ await mouse('mouseMoved',cancelTarget,{button:'left',buttons:1});
+ await wait(100);
+ const outside = {x: 1, y: cancelTarget.y};
+ await mouse('mouseMoved',outside,{button:'left',buttons:1});
+ await wait(100);
+ await end(outside);
+ const outsideAfter = await state();
+ check(JSON.stringify(outsideAfter.order)===JSON.stringify(outsideBefore.order)&&outsideAfter.writes===outsideBefore.writes,'Outside drop saved a different order');
+ result.outsideDropCancelled = true;
  await ev(`document.querySelector('.platform-layout-list > [data-sortable-id] .platform-layout-drag-trigger').focus()`);
  const keyboardBefore=await state();await key(' ','Space',32);await wait(100);await key('ArrowDown','ArrowDown',40);await wait(180);await key(' ','Space',32);await wait(250);
  check((await state()).order[1]===keyboardBefore.order[0],'Keyboard reorder failed');result.keyboard=true;
@@ -86,13 +117,13 @@ let socket;
  await mouse('mouseMoved',above,{button:'left',buttons:1});await wait(120);await end(above);
  const expandedAfter=await state();check(expandedAfter.order[groupIndex-1]==='group:fixture-sort-group','Expanded group did not move as one block');result.expandedGroup=true;
  check(await ev(`document.querySelectorAll('.sortable-layout-preview').length===0`),'Preview not cleaned up');
- if(process.env.SORTABLES_REPORT)fs.writeFileSync(process.env.SORTABLES_REPORT,JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
+ if(process.env.PLATFORM_SORT_REPORT)fs.writeFileSync(process.env.PLATFORM_SORT_REPORT,JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
     ws.send(JSON.stringify({ id: ++id, method: 'Browser.close' }));
 })().catch(e => { console.error(e); process.exitCode = 1; }).finally(async () => {
     if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({id:1000000,method:'Browser.close'}));
     socket?.close();
     await wait(300);
-    edge.kill();
+    browserProcess?.kill();
     // Only remove the unique scratch directory created by this test.
     if (path.dirname(path.resolve(base)) === path.resolve(os.tmpdir())
         && path.basename(base).startsWith('cockpit-sortable-')) {
@@ -104,6 +135,3 @@ let socket;
         }
     }
 });
-
-
-

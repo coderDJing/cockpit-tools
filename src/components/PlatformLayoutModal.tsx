@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { SortableLayoutItem, SortableLayoutList } from './SortableLayoutList';
+import { SingleSelectDropdown } from './SingleSelectDropdown';
 import { useTranslation } from 'react-i18next';
 import {
   Check,
@@ -446,6 +447,11 @@ export function PlatformLayoutModal({
   const [childDraftIconCustomDataUrl, setChildDraftIconCustomDataUrl] = useState('');
   const [childDraftSetDefault, setChildDraftSetDefault] = useState(false);
   const [childDraftError, setChildDraftError] = useState('');
+  const [confirmAction, setConfirmAction] = useState<
+    | { kind: 'reset' }
+    | { kind: 'deleteGroup'; groupId: string; groupName: string }
+    | null
+  >(null);
 
   const hiddenSet = useMemo(() => new Set(hiddenEntryIds), [hiddenEntryIds]);
   const sidebarSet = useMemo(() => new Set(sidebarEntryIds), [sidebarEntryIds]);
@@ -941,8 +947,23 @@ export function PlatformLayoutModal({
     if (!editingGroupId) {
       return;
     }
-    removePlatformGroup(editingGroupId);
-    closeGroupEditor();
+    const existingGroup = platformGroups.find((item) => item.id === editingGroupId);
+    setConfirmAction({
+      kind: 'deleteGroup',
+      groupId: editingGroupId,
+      groupName: existingGroup?.name || groupDraftName.trim() || editingGroupId,
+    });
+  };
+
+  const handleConfirmAction = () => {
+    if (!confirmAction) return;
+    if (confirmAction.kind === 'reset') {
+      resetPlatformLayout();
+    } else if (confirmAction.kind === 'deleteGroup') {
+      removePlatformGroup(confirmAction.groupId);
+      closeGroupEditor();
+    }
+    setConfirmAction(null);
   };
 
   const handleSaveChild = () => {
@@ -1103,7 +1124,7 @@ export function PlatformLayoutModal({
                 <Plus size={14} />
                 <span>{t('platformLayout.addGroup', '新建分组')}</span>
               </button>
-              <button className="btn btn-secondary" onClick={resetPlatformLayout}>
+              <button className="btn btn-secondary" onClick={() => setConfirmAction({ kind: 'reset' })}>
                 {t('platformLayout.reset', '恢复默认')}
               </button>
             </div>
@@ -1180,10 +1201,14 @@ export function PlatformLayoutModal({
           </div>
 
           <SortableLayoutList
-            items={layoutEntryOrderIds}
+            items={entries.map(({ id }) => id)}
             className="platform-layout-list"
             onSortingChange={setSorting}
-            onReorder={(from, to) => commitLayoutEntryOrder(arrayMove(layoutEntryOrderIds, from, to))}
+            onReorder={(activeId, overId) => {
+              const from = layoutEntryOrderIds.findIndex((id) => id === activeId);
+              const to = layoutEntryOrderIds.findIndex((id) => id === overId);
+              if (from >= 0 && to >= 0) commitLayoutEntryOrder(arrayMove(layoutEntryOrderIds, from, to));
+            }}
           >
             {entries.map((entry) => {
               const isApiRelayEntry = entry.type === 'api-relay';
@@ -1487,7 +1512,12 @@ export function PlatformLayoutModal({
                         items={entry.platformIds}
                         className="platform-layout-child-sortables"
                         onSortingChange={setSorting}
-                        onReorder={(from, to) => reorderGroupPlatforms(entry.group!.id, from, to)}
+                        onReorder={(activeId, overId) => {
+                          const group = entry.group!;
+                          const from = group.platformIds.findIndex((id) => id === activeId);
+                          const to = group.platformIds.findIndex((id) => id === overId);
+                          if (from >= 0 && to >= 0) reorderGroupPlatforms(group.id, from, to);
+                        }}
                       >
                       {entry.platformIds.map((platformId) => {
                         const isDefault = entry.group?.defaultPlatformId === platformId;
@@ -1686,20 +1716,20 @@ export function PlatformLayoutModal({
                   </div>
                 </div>
 
-                <label className="platform-layout-group-field">
+                <div className="platform-layout-group-field">
                   <span>{t('platformLayout.groupDefault', '默认平台')}</span>
-                  <select
+                  <SingleSelectDropdown
                     value={groupDraftDefaultPlatformId}
-                    onChange={(event) => setGroupDraftDefaultPlatformId(event.target.value as PlatformId)}
+                    options={groupDraftPlatformIds.map((platformId) => ({
+                      value: platformId,
+                      label: getPlatformLabel(platformId, t),
+                    }))}
+                    onChange={(nextValue) => setGroupDraftDefaultPlatformId(nextValue as PlatformId)}
                     disabled={groupDraftPlatformIds.length === 0}
-                  >
-                    {groupDraftPlatformIds.map((platformId) => (
-                      <option key={`group-default-${platformId}`} value={platformId}>
-                        {getPlatformLabel(platformId, t)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    ariaLabel={t('platformLayout.groupDefault', '默认平台')}
+                    menuMaxHeight={240}
+                  />
+                </div>
               </div>
 
               {groupDraftError && <div className="platform-layout-group-error">{groupDraftError}</div>}
@@ -1808,6 +1838,47 @@ export function PlatformLayoutModal({
                   </button>
                   <button type="button" className="btn btn-primary" onClick={handleSaveChild}>
                     {t('common.save', '保存')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {confirmAction && (
+          <div className="platform-layout-group-editor-overlay">
+            <div className="platform-layout-group-editor-modal platform-layout-confirm-modal" onClick={(event) => event.stopPropagation()}>
+              <div className="platform-layout-group-editor-header">
+                <span>
+                  {confirmAction.kind === 'reset'
+                    ? t('platformLayout.reset', '恢复默认')
+                    : t('platformLayout.deleteGroup', '删除分组')}
+                </span>
+                <button
+                  type="button"
+                  className="platform-layout-group-editor-close"
+                  onClick={() => setConfirmAction(null)}
+                  aria-label={t('common.close', '关闭')}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <p className="platform-layout-confirm-desc">
+                {confirmAction.kind === 'reset'
+                  ? t('platformLayout.confirmResetDesc', '恢复默认将清空自定义分组与排序设置，确定继续吗？')
+                  : t('platformLayout.confirmDeleteGroupDesc', '确定删除分组「{{name}}」？组内平台将恢复为独立显示。', {
+                      name: confirmAction.groupName,
+                    })}
+              </p>
+              <div className="platform-layout-group-editor-actions">
+                <div className="platform-layout-group-editor-actions-right">
+                  <button type="button" className="btn btn-secondary" onClick={() => setConfirmAction(null)}>
+                    {t('common.cancel', '取消')}
+                  </button>
+                  <button type="button" className="btn btn-danger" onClick={handleConfirmAction}>
+                    {confirmAction.kind === 'reset'
+                      ? t('platformLayout.reset', '恢复默认')
+                      : t('platformLayout.deleteGroup', '删除分组')}
                   </button>
                 </div>
               </div>
