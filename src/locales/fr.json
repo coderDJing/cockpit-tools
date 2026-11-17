@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "Chemin TraeWork CN",
       "title": "Paramètres TraeWork CN"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Saisissez un nombre entier entre 1 et 999, ou -1 pour désactiver l’actualisation automatique.",
+      "quotaAlertThresholdInvalid": "Saisissez un nombre entier entre 0 et 100."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "{{count}} comptes actualisés sur {{total}}.",
       "launchUnconfirmed": "Impossible de confirmer le démarrage de Qoder IDE.",
       "workerFailed": "L’opération Qoder en arrière-plan a échoué. {{detail}}",
-      "qoderCnPathMissing": "Qoder CN Desktop est introuvable. Définissez son chemin de lancement dans les paramètres ou installez-le, puis réessayez."
+      "qoderCnPathMissing": "Qoder CN Desktop est introuvable. Définissez son chemin de lancement dans les paramètres ou installez-le, puis réessayez.",
+      "platformMismatch": "Ce compte appartient à une version d’une autre région et ne peut pas être écrit dans le client actuel.",
+      "cnRelaunchFailed": "Le compte a été changé, mais le client Qoder CN n’a pas pu démarrer. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop n’est pris en charge que sous Windows. Utilisez la CLI sur ce système.",
+      "clientInvalid": "Le type de client est invalide. Sélectionnez à nouveau la cible du changement.",
+      "nativeTokenMissing": "Ce compte ne possède aucun identifiant de connexion inscriptible. Réautorisez-le ou réimportez-le.",
+      "nativeWriteVerifyFailed": "La vérification des identifiants écrits a échoué et un retour à l’état d’origine a été tenté. Fermez le client et réessayez.",
+      "nativeKeyUnreadable": "Impossible de lire la clé d’identifiants locale. Vérifiez que Cockpit et Qoder utilisent le même compte système.",
+      "nativeImportInvalid": "Les identifiants importés ne contiennent pas d’informations de compte ; impossible d’identifier le compte.",
+      "nativeImportFailed": "Impossible d’importer la connexion Qoder locale. Connectez-vous d’abord dans le client, puis réessayez.",
+      "nativeProcessProbeFailed": "Impossible de détecter l’état du processus Qoder. Réessayez plus tard.",
+      "regionUnsupported": "Impossible d’identifier la version régionale du compte. Réautorisez-le."
     },
     "title": "Gestion des comptes Qoder",
     "comingSoon": {

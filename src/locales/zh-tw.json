@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "TraeWork CN 路徑",
       "title": "TraeWork CN 設定"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "重新整理間隔需填寫 1-999 的整數，或填 -1 關閉自動重新整理。",
+      "quotaAlertThresholdInvalid": "預警閾值需填寫 0-100 的整數。"
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "已重新整理 {{count}}／{{total}} 個帳號。",
       "launchUnconfirmed": "未確認 Qoder IDE 已啟動。",
       "workerFailed": "Qoder 背景作業失敗。{{detail}}",
-      "qoderCnPathMissing": "未找到 Qoder CN 桌面端。請在設定中填寫啟動路徑，或安裝後重試。"
+      "qoderCnPathMissing": "未找到 Qoder CN 桌面端。請在設定中填寫啟動路徑，或安裝後重試。",
+      "platformMismatch": "此帳號屬於其他區域版本，無法寫入目前用戶端。",
+      "cnRelaunchFailed": "帳號已切換，但 Qoder CN 用戶端啟動失敗。{{detail}}",
+      "cnDesktopUnsupported": "Qoder CN 桌面端僅支援 Windows；目前系統請使用 CLI。",
+      "clientInvalid": "用戶端類型無效，請重新選擇切換目標。",
+      "nativeTokenMissing": "此帳號缺少可寫入的登入憑證，請重新授權或重新匯入。",
+      "nativeWriteVerifyFailed": "憑證寫入後驗證失敗，已嘗試還原到原始狀態。請關閉用戶端後重試。",
+      "nativeKeyUnreadable": "無法讀取本機憑證金鑰。請確認 Cockpit 與 Qoder 使用同一個系統帳號。",
+      "nativeImportInvalid": "匯入的憑證缺少帳號資訊，無法辨識是哪一個帳號。",
+      "nativeImportFailed": "匯入本機 Qoder 登入資訊失敗。請先在用戶端登入後重試。",
+      "nativeProcessProbeFailed": "無法偵測 Qoder 處理程序狀態，請稍後重試。",
+      "regionUnsupported": "無法辨識此帳號所屬的區域版本，請重新授權。"
     },
     "title": "Qoder 帳號管理",
     "comingSoon": {

@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "Cesta TraeWork CN",
       "title": "Nastavení TraeWork CN"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Zadejte celé číslo od 1 do 999 nebo -1 pro vypnutí automatické aktualizace.",
+      "quotaAlertThresholdInvalid": "Zadejte celé číslo od 0 do 100."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "Obnoveno {{count}} z {{total}} účtů.",
       "launchUnconfirmed": "Spuštění Qoder IDE se nepodařilo potvrdit.",
       "workerFailed": "Operace Qoder na pozadí selhala. {{detail}}",
-      "qoderCnPathMissing": "Qoder CN Desktop nebyl nalezen. Nastavte cestu spuštění v nastavení nebo jej nainstalujte a zkuste to znovu."
+      "qoderCnPathMissing": "Qoder CN Desktop nebyl nalezen. Nastavte cestu spuštění v nastavení nebo jej nainstalujte a zkuste to znovu.",
+      "platformMismatch": "Tento účet patří sestavení jiného regionu a nelze jej zapsat do aktuálního klienta.",
+      "cnRelaunchFailed": "Účet byl přepnut, ale klienta Qoder CN se nepodařilo spustit. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop je podporován pouze ve Windows. V tomto systému použijte CLI.",
+      "clientInvalid": "Neplatný typ klienta. Znovu vyberte cíl přepnutí.",
+      "nativeTokenMissing": "Tomuto účtu chybí zapisovatelné přihlašovací údaje. Znovu jej autorizujte nebo importujte.",
+      "nativeWriteVerifyFailed": "Ověření zapsaných přihlašovacích údajů selhalo a bylo provedeno vrácení do původního stavu. Zavřete klienta a zkuste to znovu.",
+      "nativeKeyUnreadable": "Nepodařilo se načíst místní klíč přihlašovacích údajů. Ověřte, že Cockpit a Qoder běží pod stejným systémovým účtem.",
+      "nativeImportInvalid": "Importované přihlašovací údaje neobsahují informace o účtu, takže jej nelze identifikovat.",
+      "nativeImportFailed": "Import místního přihlášení Qoder selhal. Nejprve se přihlaste v klientovi a zkuste to znovu.",
+      "nativeProcessProbeFailed": "Nepodařilo se zjistit stav procesu Qoder. Zkuste to později.",
+      "regionUnsupported": "Nepodařilo se určit regionální sestavení účtu. Znovu jej autorizujte."
     },
     "title": "Správa účtů Qoder",
     "comingSoon": {

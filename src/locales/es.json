@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "Ruta de TraeWork CN",
       "title": "Configuración de TraeWork CN"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Introduce un número entero entre 1 y 999, o -1 para desactivar la actualización automática.",
+      "quotaAlertThresholdInvalid": "Introduce un número entero entre 0 y 100."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "Se actualizaron {{count}} de {{total}} cuentas.",
       "launchUnconfirmed": "No se pudo confirmar el inicio de Qoder IDE.",
       "workerFailed": "Falló la operación en segundo plano de Qoder. {{detail}}",
-      "qoderCnPathMissing": "No se encontró Qoder CN Desktop. Define su ruta de inicio en Ajustes o instálalo y vuelve a intentarlo."
+      "qoderCnPathMissing": "No se encontró Qoder CN Desktop. Define su ruta de inicio en Ajustes o instálalo y vuelve a intentarlo.",
+      "platformMismatch": "Esta cuenta pertenece a una versión de otra región y no se puede escribir en el cliente actual.",
+      "cnRelaunchFailed": "La cuenta se cambió, pero el cliente Qoder CN no pudo iniciarse. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop solo es compatible con Windows. En este sistema, usa la CLI.",
+      "clientInvalid": "El tipo de cliente no es válido. Vuelve a seleccionar el destino del cambio.",
+      "nativeTokenMissing": "Esta cuenta no tiene credenciales de inicio de sesión que se puedan escribir. Vuelve a autorizarla o a importarla.",
+      "nativeWriteVerifyFailed": "La verificación de las credenciales escritas falló y se intentó restaurar el estado original. Cierra el cliente y vuelve a intentarlo.",
+      "nativeKeyUnreadable": "No se pudo leer la clave de credenciales local. Comprueba que Cockpit y Qoder usen la misma cuenta del sistema.",
+      "nativeImportInvalid": "Las credenciales importadas no incluyen información de la cuenta, así que no se puede identificar.",
+      "nativeImportFailed": "No se pudo importar el inicio de sesión local de Qoder. Inicia sesión primero en el cliente y vuelve a intentarlo.",
+      "nativeProcessProbeFailed": "No se pudo detectar el estado del proceso de Qoder. Vuelve a intentarlo más tarde.",
+      "regionUnsupported": "No se pudo identificar la versión regional de la cuenta. Vuelve a autorizarla."
     },
     "title": "Gestión de cuentas de Qoder",
     "comingSoon": {

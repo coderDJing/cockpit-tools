@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "TraeWork CN 경로",
       "title": "TraeWork CN 설정"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "새로고침 간격은 1~999 사이의 정수를 입력하거나 -1을 입력해 자동 새로고침을 끄세요.",
+      "quotaAlertThresholdInvalid": "경고 임계값은 0~100 사이의 정수를 입력하세요."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "계정 {{total}}개 중 {{count}}개를 갱신했습니다.",
       "launchUnconfirmed": "Qoder IDE 실행을 확인하지 못했습니다.",
       "workerFailed": "Qoder 백그라운드 작업에 실패했습니다. {{detail}}",
-      "qoderCnPathMissing": "Qoder CN 데스크톱을 찾을 수 없습니다. 설정에서 실행 경로를 지정하거나 설치한 후 다시 시도하세요."
+      "qoderCnPathMissing": "Qoder CN 데스크톱을 찾을 수 없습니다. 설정에서 실행 경로를 지정하거나 설치한 후 다시 시도하세요.",
+      "platformMismatch": "이 계정은 다른 지역 빌드에 속해 있어 현재 클라이언트에 기록할 수 없습니다.",
+      "cnRelaunchFailed": "계정은 전환되었지만 Qoder CN 클라이언트를 시작하지 못했습니다. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN 데스크톱은 Windows만 지원합니다. 이 시스템에서는 CLI를 사용하세요.",
+      "clientInvalid": "클라이언트 유형이 올바르지 않습니다. 전환 대상을 다시 선택하세요.",
+      "nativeTokenMissing": "이 계정에는 기록할 수 있는 로그인 자격 증명이 없습니다. 다시 인증하거나 다시 가져오세요.",
+      "nativeWriteVerifyFailed": "자격 증명을 기록한 뒤 검증에 실패하여 원래 상태로 복원을 시도했습니다. 클라이언트를 종료한 후 다시 시도하세요.",
+      "nativeKeyUnreadable": "로컬 자격 증명 키를 읽을 수 없습니다. Cockpit과 Qoder가 동일한 시스템 계정으로 실행되는지 확인하세요.",
+      "nativeImportInvalid": "가져온 자격 증명에 계정 정보가 없어 어떤 계정인지 식별할 수 없습니다.",
+      "nativeImportFailed": "로컬 Qoder 로그인 정보를 가져오지 못했습니다. 먼저 클라이언트에서 로그인한 후 다시 시도하세요.",
+      "nativeProcessProbeFailed": "Qoder 프로세스 상태를 감지할 수 없습니다. 나중에 다시 시도하세요.",
+      "regionUnsupported": "이 계정이 속한 지역 빌드를 식별할 수 없습니다. 다시 인증하세요."
     },
     "title": "Qoder 계정 관리",
     "comingSoon": {

@@ -7238,6 +7238,10 @@
     "traeSoloCn": {
       "title": "TraeWork CN Settings",
       "appPath": "TraeWork CN Path"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Enter a whole number between 1 and 999, or -1 to disable auto refresh.",
+      "quotaAlertThresholdInvalid": "Enter a whole number between 0 and 100."
     }
   },
   "quotaAlert": {
@@ -7841,7 +7845,18 @@
       "endpointUnavailable": "The service address for this Qoder session could not be verified. Check the sign-in and organization settings in the corresponding Qoder IDE.",
       "switchLaunchFailed": "The account was written, but Qoder IDE failed to start. {{detail}}",
       "qoderCnPathMissing": "Qoder CN Desktop was not found. Set its launch path in Settings or install it, then retry.",
-      "refreshCount": "Refreshed {{count}} of {{total}} accounts."
+      "refreshCount": "Refreshed {{count}} of {{total}} accounts.",
+      "platformMismatch": "This account belongs to another region's build and cannot be written to the current client.",
+      "cnRelaunchFailed": "The account was switched, but the Qoder CN client failed to start. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop is supported on Windows only. Use the CLI on this system.",
+      "clientInvalid": "The client type is invalid. Select the switch target again.",
+      "nativeTokenMissing": "This account has no writable sign-in credentials. Re-authorize or import it again.",
+      "nativeWriteVerifyFailed": "Verification after writing the credentials failed, and a rollback was attempted. Close the client and retry.",
+      "nativeKeyUnreadable": "Could not read the local credential key. Make sure Cockpit and Qoder run under the same system account.",
+      "nativeImportInvalid": "The imported credentials contain no account information, so the account cannot be identified.",
+      "nativeImportFailed": "Failed to import the local Qoder sign-in. Sign in on the client first, then retry.",
+      "nativeProcessProbeFailed": "Could not detect the Qoder process state. Retry later.",
+      "regionUnsupported": "Could not determine the account's region build. Re-authorize it."
     },
     "title": "Qoder Account",
     "flowNotice": {

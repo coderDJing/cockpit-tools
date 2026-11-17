@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "TraeWork CN Yolu",
       "title": "TraeWork CN Ayarları"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "1-999 arasında bir tam sayı girin veya otomatik yenilemeyi kapatmak için -1 girin.",
+      "quotaAlertThresholdInvalid": "0-100 arasında bir tam sayı girin."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "{{total}} hesaptan {{count}} tanesi yenilendi.",
       "launchUnconfirmed": "Qoder IDE’nin başladığı doğrulanamadı.",
       "workerFailed": "Qoder arka plan işlemi başarısız oldu. {{detail}}",
-      "qoderCnPathMissing": "Qoder CN Masaüstü bulunamadı. Ayarlarda başlatma yolunu belirtin veya yükleyip yeniden deneyin."
+      "qoderCnPathMissing": "Qoder CN Masaüstü bulunamadı. Ayarlarda başlatma yolunu belirtin veya yükleyip yeniden deneyin.",
+      "platformMismatch": "Bu hesap başka bir bölgenin derlemesine ait ve geçerli istemciye yazılamaz.",
+      "cnRelaunchFailed": "Hesap değiştirildi ancak Qoder CN istemcisi başlatılamadı. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Masaüstü yalnızca Windows'ta desteklenir. Bu sistemde CLI kullanın.",
+      "clientInvalid": "İstemci türü geçersiz. Değiştirme hedefini yeniden seçin.",
+      "nativeTokenMissing": "Bu hesapta yazılabilir oturum açma kimlik bilgisi yok. Yeniden yetkilendirin veya yeniden içe aktarın.",
+      "nativeWriteVerifyFailed": "Yazılan kimlik bilgilerinin doğrulanması başarısız oldu ve özgün duruma geri dönüş denendi. İstemciyi kapatıp yeniden deneyin.",
+      "nativeKeyUnreadable": "Yerel kimlik bilgisi anahtarı okunamadı. Cockpit ile Qoder'ın aynı sistem hesabında çalıştığından emin olun.",
+      "nativeImportInvalid": "İçe aktarılan kimlik bilgilerinde hesap bilgisi yok, bu yüzden hesap tanımlanamıyor.",
+      "nativeImportFailed": "Yerel Qoder oturum bilgileri içe aktarılamadı. Önce istemcide oturum açın ve yeniden deneyin.",
+      "nativeProcessProbeFailed": "Qoder işlem durumu algılanamadı. Daha sonra yeniden deneyin.",
+      "regionUnsupported": "Hesabın bölge derlemesi belirlenemedi. Yeniden yetkilendirin."
     },
     "title": "Qoder Hesap Yönetimi",
     "comingSoon": {

@@ -7043,6 +7043,10 @@
     "traeSoloCn": {
       "appPath": "Path TraeWork CN",
       "title": "Pengaturan TraeWork CN"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Masukkan bilangan bulat antara 1 dan 999, atau -1 untuk menonaktifkan penyegaran otomatis.",
+      "quotaAlertThresholdInvalid": "Masukkan bilangan bulat antara 0 dan 100."
     }
   },
   "quotaAlert": {
@@ -7646,7 +7650,18 @@
       "refreshCount": "{{count}} dari {{total}} akun diperbarui.",
       "launchUnconfirmed": "Peluncuran Qoder IDE tidak dapat dikonfirmasi.",
       "workerFailed": "Operasi latar belakang Qoder gagal. {{detail}}",
-      "qoderCnPathMissing": "Qoder CN Desktop tidak ditemukan. Atur jalur peluncurannya di Pengaturan atau pasang aplikasinya, lalu coba lagi."
+      "qoderCnPathMissing": "Qoder CN Desktop tidak ditemukan. Atur jalur peluncurannya di Pengaturan atau pasang aplikasinya, lalu coba lagi.",
+      "platformMismatch": "Akun ini milik build wilayah lain dan tidak dapat ditulis ke klien saat ini.",
+      "cnRelaunchFailed": "Akun telah diganti, tetapi klien Qoder CN gagal dijalankan. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop hanya didukung di Windows. Di sistem ini, gunakan CLI.",
+      "clientInvalid": "Jenis klien tidak valid. Pilih ulang target penggantian.",
+      "nativeTokenMissing": "Akun ini tidak memiliki kredensial masuk yang dapat ditulis. Otorisasi ulang atau impor ulang.",
+      "nativeWriteVerifyFailed": "Verifikasi kredensial setelah ditulis gagal dan pemulihan ke keadaan semula telah dicoba. Tutup klien lalu coba lagi.",
+      "nativeKeyUnreadable": "Tidak dapat membaca kunci kredensial lokal. Pastikan Cockpit dan Qoder berjalan di akun sistem yang sama.",
+      "nativeImportInvalid": "Kredensial yang diimpor tidak berisi informasi akun, sehingga akun tidak dapat dikenali.",
+      "nativeImportFailed": "Gagal mengimpor info masuk Qoder lokal. Masuk di klien terlebih dahulu, lalu coba lagi.",
+      "nativeProcessProbeFailed": "Tidak dapat mendeteksi status proses Qoder. Coba lagi nanti.",
+      "regionUnsupported": "Tidak dapat menentukan build wilayah akun. Otorisasi ulang."
     },
     "title": "Akun Qoder",
     "flowNotice": {

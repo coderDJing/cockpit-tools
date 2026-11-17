@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "Ścieżka TraeWork CN",
       "title": "Ustawienia TraeWork CN"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Wpisz liczbę całkowitą od 1 do 999 lub -1, aby wyłączyć automatyczne odświeżanie.",
+      "quotaAlertThresholdInvalid": "Wpisz liczbę całkowitą od 0 do 100."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "Odświeżono {{count}} z {{total}} kont.",
       "launchUnconfirmed": "Nie udało się potwierdzić uruchomienia Qoder IDE.",
       "workerFailed": "Operacja Qoder w tle nie powiodła się. {{detail}}",
-      "qoderCnPathMissing": "Nie znaleziono Qoder CN Desktop. Ustaw ścieżkę uruchamiania w ustawieniach lub zainstaluj klienta i spróbuj ponownie."
+      "qoderCnPathMissing": "Nie znaleziono Qoder CN Desktop. Ustaw ścieżkę uruchamiania w ustawieniach lub zainstaluj klienta i spróbuj ponownie.",
+      "platformMismatch": "To konto należy do kompilacji innego regionu i nie można go zapisać w bieżącym kliencie.",
+      "cnRelaunchFailed": "Konto zostało przełączone, ale nie udało się uruchomić klienta Qoder CN. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop jest obsługiwany tylko w systemie Windows. W tym systemie użyj CLI.",
+      "clientInvalid": "Nieprawidłowy typ klienta. Wybierz ponownie cel przełączenia.",
+      "nativeTokenMissing": "Temu kontu brakuje zapisywalnych danych logowania. Autoryzuj je ponownie lub zaimportuj jeszcze raz.",
+      "nativeWriteVerifyFailed": "Weryfikacja zapisanych danych logowania nie powiodła się i podjęto próbę przywrócenia poprzedniego stanu. Zamknij klienta i spróbuj ponownie.",
+      "nativeKeyUnreadable": "Nie można odczytać lokalnego klucza danych logowania. Upewnij się, że Cockpit i Qoder działają na tym samym koncie systemowym.",
+      "nativeImportInvalid": "Zaimportowane dane logowania nie zawierają informacji o koncie, więc nie można go zidentyfikować.",
+      "nativeImportFailed": "Import lokalnych danych logowania Qoder nie powiódł się. Najpierw zaloguj się w kliencie i spróbuj ponownie.",
+      "nativeProcessProbeFailed": "Nie można wykryć stanu procesu Qoder. Spróbuj ponownie później.",
+      "regionUnsupported": "Nie można ustalić kompilacji regionalnej konta. Autoryzuj je ponownie."
     },
     "title": "Zarządzanie kontami Qoder",
     "comingSoon": {

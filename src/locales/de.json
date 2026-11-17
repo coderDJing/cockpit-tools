@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "TraeWork CN Pfad",
       "title": "TraeWork CN-Einstellungen"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "Geben Sie eine ganze Zahl zwischen 1 und 999 ein oder -1, um die automatische Aktualisierung zu deaktivieren.",
+      "quotaAlertThresholdInvalid": "Geben Sie eine ganze Zahl zwischen 0 und 100 ein."
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "{{count}} von {{total}} Konten aktualisiert.",
       "launchUnconfirmed": "Der Start von Qoder IDE konnte nicht bestätigt werden.",
       "workerFailed": "Der Qoder-Hintergrundvorgang ist fehlgeschlagen. {{detail}}",
-      "qoderCnPathMissing": "Qoder CN Desktop wurde nicht gefunden. Legen Sie den Startpfad in den Einstellungen fest oder installieren Sie die App und versuchen Sie es erneut."
+      "qoderCnPathMissing": "Qoder CN Desktop wurde nicht gefunden. Legen Sie den Startpfad in den Einstellungen fest oder installieren Sie die App und versuchen Sie es erneut.",
+      "platformMismatch": "Dieses Konto gehört zu einem Build einer anderen Region und kann nicht in den aktuellen Client geschrieben werden.",
+      "cnRelaunchFailed": "Das Konto wurde gewechselt, aber der Qoder CN-Client konnte nicht gestartet werden. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop wird nur unter Windows unterstützt. Verwenden Sie auf diesem System die CLI.",
+      "clientInvalid": "Der Clienttyp ist ungültig. Wählen Sie das Wechselziel erneut.",
+      "nativeTokenMissing": "Diesem Konto fehlen schreibbare Anmeldedaten. Autorisieren Sie es erneut oder importieren Sie es neu.",
+      "nativeWriteVerifyFailed": "Die Prüfung der geschriebenen Anmeldedaten ist fehlgeschlagen; eine Wiederherstellung des ursprünglichen Zustands wurde versucht. Schließen Sie den Client und versuchen Sie es erneut.",
+      "nativeKeyUnreadable": "Der lokale Anmeldedatenschlüssel konnte nicht gelesen werden. Stellen Sie sicher, dass Cockpit und Qoder unter demselben Systemkonto laufen.",
+      "nativeImportInvalid": "Den importierten Anmeldedaten fehlen Kontoinformationen, daher kann das Konto nicht zugeordnet werden.",
+      "nativeImportFailed": "Die lokale Qoder-Anmeldung konnte nicht importiert werden. Melden Sie sich zuerst im Client an und versuchen Sie es erneut.",
+      "nativeProcessProbeFailed": "Der Qoder-Prozessstatus konnte nicht ermittelt werden. Versuchen Sie es später erneut.",
+      "regionUnsupported": "Der Regions-Build des Kontos konnte nicht ermittelt werden. Autorisieren Sie es erneut."
     },
     "title": "Qoder-Kontenverwaltung",
     "comingSoon": {

@@ -6880,6 +6880,10 @@
     "traeSoloCn": {
       "appPath": "TraeWork CN パス",
       "title": "TraeWork CN 設定"
+    },
+    "validation": {
+      "refreshIntervalInvalid": "更新間隔は 1〜999 の整数で入力するか、-1 で自動更新を無効にしてください。",
+      "quotaAlertThresholdInvalid": "警告しきい値は 0〜100 の整数で入力してください。"
     }
   },
   "quotaAlert": {
@@ -7599,7 +7603,18 @@
       "refreshCount": "{{total}} 件中 {{count}} 件を更新しました。",
       "launchUnconfirmed": "Qoder IDE の起動を確認できませんでした。",
       "workerFailed": "Qoder のバックグラウンド処理に失敗しました。{{detail}}",
-      "qoderCnPathMissing": "Qoder CN デスクトップが見つかりません。設定で起動パスを指定するか、インストールしてから再試行してください。"
+      "qoderCnPathMissing": "Qoder CN デスクトップが見つかりません。設定で起動パスを指定するか、インストールしてから再試行してください。",
+      "platformMismatch": "このアカウントは別リージョンのビルドに属しているため、現在のクライアントには書き込めません。",
+      "cnRelaunchFailed": "アカウントは切り替わりましたが、Qoder CN クライアントを起動できませんでした。{{detail}}",
+      "cnDesktopUnsupported": "Qoder CN デスクトップは Windows のみ対応です。このシステムでは CLI を使用してください。",
+      "clientInvalid": "クライアント種別が無効です。切り替え先を選び直してください。",
+      "nativeTokenMissing": "このアカウントには書き込み可能なログイン資格情報がありません。再認証するか、再インポートしてください。",
+      "nativeWriteVerifyFailed": "資格情報の書き込み後に検証が失敗したため、元の状態への復元を試みました。クライアントを終了して再試行してください。",
+      "nativeKeyUnreadable": "ローカルの資格情報キーを読み取れません。Cockpit と Qoder が同じシステムアカウントで実行されていることを確認してください。",
+      "nativeImportInvalid": "インポートした資格情報にアカウント情報がないため、どのアカウントか特定できません。",
+      "nativeImportFailed": "ローカル Qoder のログイン情報をインポートできませんでした。先にクライアントでログインしてから再試行してください。",
+      "nativeProcessProbeFailed": "Qoder のプロセス状態を検出できません。しばらくしてから再試行してください。",
+      "regionUnsupported": "このアカウントのリージョンビルドを特定できません。再認証してください。"
     },
     "title": "Qoderアカウント管理",
     "comingSoon": {
