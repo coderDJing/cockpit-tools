@@ -243,6 +243,8 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const globalStore = useQoderAccountStore();
   const cnStore = useQoderCnAccountStore();
   const store = region === 'cn' ? cnStore : globalStore;
+  // store 是 hook 返回值（state），拿不到 getState；异步回调里读最新状态必须用 store API 本身。
+  const storeApi = region === 'cn' ? useQoderCnAccountStore : useQoderAccountStore;
   const service = region === 'cn' ? qoderCnService : qoderService;
   const platformId = region === 'cn' ? 'qoder_cn' : 'qoder';
   const persistenceScope = region === 'cn' ? normalizeAccountsOverviewScope('qoder_cn') : QODER_FILTER_PERSISTENCE_SCOPE;
@@ -312,6 +314,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const oauthSessionRef = useRef<string | null>(null);
   const oauthCompletingLoginIdRef = useRef<string | null>(null);
   const oauthAttemptSeqRef = useRef(0);
+  const oauthUrlCopiedTimerRef = useRef<number | null>(null);
   const handlePrepareOauthRef = useRef<(() => Promise<void>) | undefined>(undefined);
   const [message, setMessage] = useState<{ text: string; tone?: 'error' } | null>(null);
   const [refreshing, setRefreshing] = useState<string | null>(null);
@@ -392,7 +395,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const fetchAccounts = store.fetchAccounts;
 
   const exportModal = useExportJsonModal({
-    exportFilePrefix: 'qoder_accounts',
+    exportFilePrefix: region === 'cn' ? 'qoder_cn_accounts' : 'qoder_accounts',
     exportJsonByIds: service.exportQoderAccounts,
     onError: (error) =>
       setMessage({
@@ -422,19 +425,28 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     setOauthUrlCopied(false);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (oauthUrlCopiedTimerRef.current !== null) {
+        window.clearTimeout(oauthUrlCopiedTimerRef.current);
+        oauthUrlCopiedTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const openAddModal = useCallback((tab: 'oauth' | 'token' | 'import' = 'oauth') => {
     setAddTab(tab);
     setShowAddModal(true);
   }, []);
 
   const consumeExternalProviderImport = useCallback(() => {
-    const request = consumeQueuedExternalProviderImportForPlatform('qoder');
+    const request = consumeQueuedExternalProviderImportForPlatform(platformId);
     if (!request) return;
     openAddModal('token');
     setTokenInput(request.token);
     setAddStatus('idle');
     setAddMessage(null);
-  }, [openAddModal]);
+  }, [openAddModal, platformId]);
 
   useEffect(() => {
     const handleExternalImportEvent = () => {
@@ -682,7 +694,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const filteredIds = useMemo(() => filteredAccounts.map((item) => item.id), [filteredAccounts]);
   const pagination = usePagination({
     items: filteredAccounts,
-    storageKey: buildPaginationPageSizeStorageKey('Qoder'),
+    storageKey: buildPaginationPageSizeStorageKey(region === 'cn' ? 'Qoder CN' : 'Qoder'),
   });
   const paginatedAccounts = pagination.pageItems;
   const paginatedIds = useMemo(() => paginatedAccounts.map((item) => item.id), [paginatedAccounts]);
@@ -1034,7 +1046,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
             let listError: string | null = null;
             for (let attempt = 0; attempt < 3; attempt += 1) {
               await store.fetchAccounts();
-              const state = useQoderAccountStore.getState();
+              const state = storeApi.getState();
               listError = state.error;
               accountVisible = state.accounts.some(
                 (account) =>
@@ -1227,7 +1239,13 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     try {
       await navigator.clipboard.writeText(oauthUrl);
       setOauthUrlCopied(true);
-      window.setTimeout(() => setOauthUrlCopied(false), 1200);
+      if (oauthUrlCopiedTimerRef.current !== null) {
+        window.clearTimeout(oauthUrlCopiedTimerRef.current);
+      }
+      oauthUrlCopiedTimerRef.current = window.setTimeout(() => {
+        oauthUrlCopiedTimerRef.current = null;
+        setOauthUrlCopied(false);
+      }, 1200);
     } catch {
       // ignore
     }
