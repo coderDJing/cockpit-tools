@@ -766,7 +766,8 @@
       "failed": "Không thể hoàn tất thao tác. Trạng thái gần nhất được giữ lại. Vui lòng thử lại.",
       "loginAttempt": "Lần đăng nhập chưa xác định tài khoản",
       "removed": "Tài khoản cục bộ đã xóa"
-    }
+    },
+    "previewTruncated": "Để giữ mượt mà, bản xem trước chỉ hiển thị {{shown}} đầu tiên (tổng cộng khoảng {{total}}). Sao chép / tải xuống sẽ bao gồm toàn bộ nội dung."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

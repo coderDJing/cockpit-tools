@@ -766,7 +766,8 @@
       "failed": "No se pudo completar la operación. Se conserva el último estado. Vuelve a intentarlo.",
       "loginAttempt": "Inicio de sesión sin cuenta identificada",
       "removed": "Cuenta local eliminada"
-    }
+    },
+    "previewTruncated": "Para mantener la fluidez, la vista previa solo muestra los primeros {{shown}} (aprox. {{total}} en total). Copiar / descargar incluye el contenido completo."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

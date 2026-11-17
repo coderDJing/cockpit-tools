@@ -766,7 +766,8 @@
       "failed": "L’opération a échoué. Le dernier état connu est conservé. Réessayez.",
       "loginAttempt": "Connexion sans compte identifié",
       "removed": "Compte local supprimé"
-    }
+    },
+    "previewTruncated": "Pour rester fluide, l'aperçu n'affiche que les premiers {{shown}} (environ {{total}} au total). Copier / télécharger inclut le contenu complet."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

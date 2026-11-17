@@ -68,6 +68,20 @@ export function maskJsonPreviewContent(jsonContent: string): string {
   }
 }
 
+// 预览最多渲染该长度：几 MB 文本一次性挂载会让弹框明显卡顿。
+const PREVIEW_CHAR_LIMIT = 300 * 1024;
+
+function truncatePreview(content: string): string {
+  if (content.length <= PREVIEW_CHAR_LIMIT) return content;
+  const lineBreak = content.lastIndexOf('\n', PREVIEW_CHAR_LIMIT);
+  return content.slice(0, lineBreak > 0 ? lineBreak : PREVIEW_CHAR_LIMIT);
+}
+
+function formatPreviewSize(length: number): string {
+  if (length >= 1024 * 1024) return `${(length / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(length / 1024))} KB`;
+}
+
 export function ExportJsonModal(props: ExportJsonModalProps) {
   const {
     isOpen,
@@ -97,9 +111,10 @@ export function ExportJsonModal(props: ExportJsonModalProps) {
   useEscCloseTopmost(isOpen && active, onClose, dialog);
   useModalFocusTrap(dialog, isOpen, true, active);
 
-  const maskedContent = useMemo(() => {
-    return maskJsonPreviewContent(jsonContent);
-  }, [jsonContent]);
+  const maskedContent = useMemo(() => maskJsonPreviewContent(jsonContent), [jsonContent]);
+  const previewContent = hidden ? maskedContent : jsonContent;
+  const previewTruncated = previewContent.length > PREVIEW_CHAR_LIMIT;
+  const displayedContent = previewTruncated ? truncatePreview(previewContent) : previewContent;
 
   if (!isOpen) return null;
 
@@ -145,8 +160,17 @@ export function ExportJsonModal(props: ExportJsonModalProps) {
                 className="export-json-textarea"
                 readOnly
                 spellCheck={false}
-                value={hidden ? maskedContent : jsonContent}
+                value={displayedContent}
               />
+              {previewTruncated && (
+                <div className="export-json-preview-note">
+                  {t(
+                    'common.previewTruncated',
+                    '为保持流畅，预览仅显示前 {{shown}}（共约 {{total}}）。复制 / 下载将包含完整内容。',
+                    { shown: formatPreviewSize(displayedContent.length), total: formatPreviewSize(previewContent.length) },
+                  )}
+                </div>
+              )}
 
               {savedPath && (
                 <div className="export-json-path-box">

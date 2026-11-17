@@ -766,7 +766,8 @@
       "failed": "Não foi possível concluir a operação. O último estado foi preservado. Tente novamente.",
       "loginAttempt": "Login sem conta identificada",
       "removed": "Conta local removida"
-    }
+    },
+    "previewTruncated": "Para manter a fluidez, a prévia mostra apenas os primeiros {{shown}} (cerca de {{total}} no total). Copiar / baixar inclui o conteúdo completo."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

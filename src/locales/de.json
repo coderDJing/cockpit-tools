@@ -766,7 +766,8 @@
       "failed": "Vorgang fehlgeschlagen. Der letzte bekannte Zustand bleibt erhalten. Bitte erneut versuchen.",
       "loginAttempt": "Anmeldung ohne Kontozuordnung",
       "removed": "Entferntes lokales Konto"
-    }
+    },
+    "previewTruncated": "Zur besseren Performance zeigt die Vorschau nur die ersten {{shown}} (insgesamt ca. {{total}}). Kopieren / Herunterladen enthält den vollständigen Inhalt."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

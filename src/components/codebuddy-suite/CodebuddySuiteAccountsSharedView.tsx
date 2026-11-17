@@ -1828,7 +1828,11 @@ export function CodebuddySuiteAccountsSharedView<
                     ) : (
                       <textarea
                         className="token-input"
-                        value={tokenInput}
+                        // Keep the full payload in state, but release the native text
+                        // control during import: WebView2 can exhaust browser-process
+                        // memory when updating a multi-megabyte control alongside IPC.
+                        value={importing ? "" : tokenInput}
+                        readOnly={importing}
                         onChange={(e) => setTokenInput(e.target.value)}
                         placeholder={t(
                           platformConfig.tokenInputPlaceholderKey ||
@@ -1872,7 +1876,8 @@ export function CodebuddySuiteAccountsSharedView<
                     </p>
                     <textarea
                       className="token-input"
-                      value={tokenInput}
+                      value={importing ? "" : tokenInput}
+                      readOnly={importing}
                       onChange={(e) => setTokenInput(e.target.value)}
                       placeholder={t(
                         platformConfig.pasteJsonPlaceholderKey ||

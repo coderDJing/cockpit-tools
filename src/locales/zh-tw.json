@@ -766,7 +766,8 @@
       "failed": "操作未完成，已保留最近狀態，請重試。",
       "loginAttempt": "尚未確認帳號的登入",
       "removed": "已移除的本機帳號"
-    }
+    },
+    "previewTruncated": "為保持流暢，預覽僅顯示前 {{shown}}（共約 {{total}}）。複製 / 下載將包含完整內容。"
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

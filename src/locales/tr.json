@@ -766,7 +766,8 @@
       "failed": "İşlem tamamlanamadı. Son bilinen durum korundu. Yeniden deneyin.",
       "loginAttempt": "Hesabı belirlenemeyen giriş",
       "removed": "Silinmiş yerel hesap"
-    }
+    },
+    "previewTruncated": "Akıcılık için önizleme yalnızca ilk {{shown}} içeriği gösterir (toplamda yaklaşık {{total}}). Kopyalama / indirme tam içeriği içerir."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",
