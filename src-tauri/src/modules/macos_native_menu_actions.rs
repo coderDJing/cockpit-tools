@@ -398,7 +398,7 @@ fn spawn_switch_account(platform: PlatformId, account_id: String) {
 
     tauri::async_runtime::spawn(async move {
         let status_app = app.clone();
-        let _ = match platform {
+        let switch_result = match platform {
             PlatformId::Antigravity => commands::account::switch_account(app, account_id, None, None, None)
                 .await
                 .map(|_| ()),
@@ -473,6 +473,14 @@ fn spawn_switch_account(platform: PlatformId, account_id: String) {
                 .await
                 .map(|_| ()),
         };
+        // 菜单点击是“无界面”入口，吞掉错误会让用户以为没反应。
+        if let Err(error) = switch_result {
+            modules::logger::log_warn(&format!(
+                "[Native Menu] switch account failed: platform={}, account={}, error={error}",
+                platform.as_str(),
+                account_id
+            ));
+        }
         let _ = update_status_item(&status_app);
     });
 }

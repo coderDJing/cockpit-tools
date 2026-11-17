@@ -17,6 +17,42 @@ use std::{
 
 static SWITCH_LOCK: Mutex<()> = Mutex::new(());
 
+/// 每次切号都会在 `qoder-switch-backups` 下新建一份 UUID 目录并写入旧凭据，
+/// 只保留最近若干份，避免旧凭据密文无上限堆积。
+const SWITCH_BACKUP_KEEP: usize = 5;
+
+fn prune_switch_backups(root: &Path, keep: usize) -> usize {
+    let Ok(entries) = fs::read_dir(root) else {
+        return 0;
+    };
+    let mut backups: Vec<(std::time::SystemTime, PathBuf)> = entries
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let path = entry.path();
+            if !path.is_dir() {
+                return None;
+            }
+            let modified = entry.metadata().ok()?.modified().ok()?;
+            Some((modified, path))
+        })
+        .collect();
+    if backups.len() <= keep {
+        return 0;
+    }
+    backups.sort_by(|a, b| b.0.cmp(&a.0));
+    let mut removed = 0usize;
+    for (_, path) in backups.into_iter().skip(keep) {
+        match fs::remove_dir_all(&path) {
+            Ok(()) => removed += 1,
+            Err(error) => crate::modules::logger::log_warn(&format!(
+                "[Qoder Switch] prune backup failed: {} ({error})",
+                path.display()
+            )),
+        }
+    }
+    removed
+}
+
 pub fn self_test() -> Result<Value, String> {
     let sandbox = tempfile::tempdir().map_err(io_error)?;
     let profile = serde_json::json!({"uid":"fixture-user","access_token":"fixture-access","refresh_token":"fixture-refresh"});
@@ -51,6 +87,72 @@ pub enum NativeClient {
 }
 pub(crate) const CN_DESKTOP_PROCESS_NAMES: &[&str] =
     &["qoder cn.exe", "qoder cn", "qoder launcher.exe", "qoderlauncher.exe", "qoderlauncher"];
+
+/// CN 与国际版共用 `qoder launcher` / `qoderlauncher` 这组进程名，
+/// 只按名字匹配会误杀国际版客户端（Windows 上是 `taskkill /T /F`，连子进程一起杀），
+/// 也会让常驻的国际版 launcher 把 CN 切号挡在 `ensure_idle`。
+///
+/// 判定顺序：
+/// 1. 名字必须在 CN 名单内；
+/// 2. 能拿到 exe 路径且已知 CN 安装目录时，要求 exe 位于该目录下；
+/// 3. 拿不到路径时，只接受 CN 独有、不可能属于国际版的名字。
+pub(crate) fn is_qoder_cn_desktop_process(
+    name_lower: &str,
+    exe: Option<&Path>,
+    cn_install_dir: Option<&Path>,
+) -> bool {
+    if !CN_DESKTOP_PROCESS_NAMES.contains(&name_lower) {
+        return false;
+    }
+    let unambiguous = name_lower == "qoder cn.exe" || name_lower == "qoder cn";
+    if let (Some(exe), Some(dir)) = (exe, cn_install_dir) {
+        if exe.as_os_str().is_empty() {
+            return unambiguous;
+        }
+        return path_is_within(exe, dir);
+    }
+    unambiguous
+}
+
+fn normalize_path_key(path: &Path) -> String {
+    path.to_string_lossy()
+        .replace('/', "\\")
+        .to_ascii_lowercase()
+}
+
+fn path_is_within(path: &Path, dir: &Path) -> bool {
+    let target = normalize_path_key(path);
+    let mut root = normalize_path_key(dir);
+    if root.is_empty() || target.is_empty() {
+        return false;
+    }
+    if !root.ends_with('\\') {
+        root.push('\\');
+    }
+    target.starts_with(&root)
+}
+
+fn qoder_cn_install_dir() -> Option<PathBuf> {
+    crate::modules::process::resolve_qoder_cn_launch_path()
+        .ok()
+        .and_then(|path| path.parent().map(Path::to_path_buf))
+}
+
+pub(crate) fn qoder_cn_desktop_pids(system: &sysinfo::System) -> Vec<u32> {
+    let cn_dir = qoder_cn_install_dir();
+    let mut pids: Vec<u32> = system
+        .processes()
+        .values()
+        .filter(|process| {
+            let name = process.name().to_string_lossy().to_ascii_lowercase();
+            is_qoder_cn_desktop_process(&name, process.exe(), cn_dir.as_deref())
+        })
+        .map(|process| process.pid().as_u32())
+        .collect();
+    pids.sort_unstable();
+    pids.dedup();
+    pids
+}
 impl NativeClient {
     pub fn parse(value: &str) -> Result<Self, String> {
         match value {
@@ -197,6 +299,9 @@ fn encode(root: &Path, client: NativeClient, profile: &Value) -> Result<Vec<u8>,
     Ok(bytes)
 }
 pub fn import(region: QoderRegion, client: NativeClient) -> Result<QoderAccount, String> {
+    // 与 switch() 共用同一把进程内锁：避免导入时读到切号过程中的中间态，
+    // 把刚刚被切走、用户已不再使用的账号重新写回账号库。
+    let _guard = SWITCH_LOCK.lock().map_err(|_| "QODER_ACCOUNT_BUSY")?;
     let root = client.root(region)?;
     let profile = decode(
         &root,
@@ -262,6 +367,15 @@ fn ensure_idle(region: QoderRegion, client: NativeClient) -> Result<(), String> 
     if system.processes().is_empty() {
         return Err("QODER_NATIVE_PROCESS_PROBE_FAILED".into());
     }
+    if region == QoderRegion::Cn && client == NativeClient::Desktop {
+        // 仅按名字匹配会把国际版的同名 launcher 也算进来，CN 切号会被误挡。
+        if !qoder_cn_desktop_pids(&system).is_empty() {
+            return Err(
+                "请先关闭对应 Qoder 客户端或结束 CLI 任务，再切换账号；当前会话未被中断。".into(),
+            );
+        }
+        return Ok(());
+    }
     let names = match (region, client) {
         (QoderRegion::Cn, NativeClient::Desktop) => CN_DESKTOP_PROCESS_NAMES,
         (QoderRegion::Global, NativeClient::Desktop) => {
@@ -318,9 +432,9 @@ pub fn switch(region: QoderRegion, account_id: &str, client: NativeClient) -> Re
         Err(e) => return Err(io_error(e)),
     };
     let next = encode(&root, client, &profile)?;
-    let backup = crate::modules::account::get_data_dir()?
-        .join("qoder-switch-backups")
-        .join(uuid::Uuid::new_v4().to_string());
+    let backup_root = crate::modules::account::get_data_dir()?.join("qoder-switch-backups");
+    prune_switch_backups(&backup_root, SWITCH_BACKUP_KEEP.saturating_sub(1));
+    let backup = backup_root.join(uuid::Uuid::new_v4().to_string());
     fs::create_dir_all(&backup).map_err(io_error)?;
     if let Some(old) = &old {
         atomic_write::write_bytes_atomic(&backup.join(client.filename()), old)?;
@@ -347,10 +461,12 @@ pub fn switch(region: QoderRegion, account_id: &str, client: NativeClient) -> Re
         if fs::read(&path).ok() != old {
             return Err("QODER_SESSION_CHANGED".into());
         }
-        write_started = true;
         atomic_write::write_bytes_atomic(&path, &next)?;
+        // 写入落盘后才进入回滚保护。write_bytes_atomic 自身失败时原文件仍然完好，
+        // 若此时先行置位，回滚分支会去删除/重写一个未被修改的文件并误报 rollback incomplete。
+        write_started = true;
         for (target, _) in &paired {
-            fs::remove_file(target).map_err(io_error)?;
+            atomic_write::remove_file_locked(target)?;
         }
         if decode(&root, client, &fs::read(&path).map_err(io_error)?)? != profile {
             return Err("QODER_NATIVE_READBACK_FAILED".into());

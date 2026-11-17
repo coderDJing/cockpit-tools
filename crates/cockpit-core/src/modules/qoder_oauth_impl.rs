@@ -1068,9 +1068,7 @@ pub(crate) async fn prepare_account_for_switch(account_id: &str) -> Result<(), S
     let target = load_refresh_target(account_id).await?;
     let info = target.auth_user_info_raw.as_ref();
     access_token_from_info(info).ok_or(REAUTH_REQUIRED)?;
-    if !token_expiry(info, "expireTime")
-        .is_some_and(|expiry| expiry <= chrono::Utc::now().timestamp_millis())
-    {
+    if !needs_renewal(info) {
         return Ok(());
     }
     let lock = refresh_lock(account_id)?;
@@ -1078,13 +1076,23 @@ pub(crate) async fn prepare_account_for_switch(account_id: &str) -> Result<(), S
     let target = load_refresh_target(account_id).await?;
     let info = target.auth_user_info_raw.as_ref();
     access_token_from_info(info).ok_or(REAUTH_REQUIRED)?;
-    if token_expiry(info, "expireTime")
-        .is_some_and(|expiry| expiry <= chrono::Utc::now().timestamp_millis())
-    {
+    if needs_renewal(info) {
         let endpoint = account_endpoint(&target).await?;
         renew_device_token(&build_reqwest_client()?, &endpoint, &target).await?;
     }
     Ok(())
+}
+
+/// 是否需要续期。切号与刷新必须共用同一判定：只按“已过期”判断，
+/// 会让一个只剩几分钟有效期的 token 被原样写进客户端，用户切完就掉登录。
+fn needs_renewal(info: Option<&Value>) -> bool {
+    let now = chrono::Utc::now().timestamp_millis();
+    let expiry = token_expiry(info, "expireTime");
+    let refresh_expiry = token_expiry(info, "refreshTokenExpireTime");
+    expiry.is_some_and(|expiry| expiry <= now)
+        || (expiry.is_some_and(|expiry| expiry - now < RENEWAL_WINDOW_MS)
+            && qoder_identity::field(info, "refreshToken").is_some()
+            && refresh_expiry.is_none_or(|expiry| expiry - now >= RENEWAL_WINDOW_MS))
 }
 
 async fn refresh_account_from_openapi_once(
@@ -1105,14 +1113,8 @@ async fn refresh_account_from_openapi_once(
             .flatten()
     };
 
-    let now = chrono::Utc::now().timestamp_millis();
     let info = target.auth_user_info_raw.as_ref();
-    let expiry = token_expiry(info, "expireTime");
-    let refresh_expiry = token_expiry(info, "refreshTokenExpireTime");
-    let mut renewed = expiry.is_some_and(|expiry| expiry <= now)
-        || (expiry.is_some_and(|expiry| expiry - now < RENEWAL_WINDOW_MS)
-            && qoder_identity::field(info, "refreshToken").is_some()
-            && refresh_expiry.is_none_or(|expiry| expiry - now >= RENEWAL_WINDOW_MS));
+    let mut renewed = needs_renewal(info);
     if renewed {
         target = renew_device_token(&client, &endpoint, &target).await?;
     }

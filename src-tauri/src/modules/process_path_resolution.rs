@@ -2905,6 +2905,12 @@ pub(crate) fn resolve_qoder_cn_launch_path() -> Result<std::path::PathBuf, Strin
     if let Some(detected) = detect_qoder_cn_exec_path() {
         let detected_str = detected.to_string_lossy();
         if let Some(exec) = resolve_qoder_macos_exec_path(&detected_str) {
+            // 探测结果落盘，避免每次切号都重跑一遍 PowerShell 注册表/快捷方式扫描。
+            update_app_path_in_config(
+                "qoder_cn",
+                &exec,
+                &config::get_user_config().qoder_cn_app_path,
+            );
             return Ok(exec);
         }
         #[cfg(target_os = "macos")]
@@ -2913,6 +2919,11 @@ pub(crate) fn resolve_qoder_cn_launch_path() -> Result<std::path::PathBuf, Strin
         }
         #[cfg(not(target_os = "macos"))]
         if detected.exists() {
+            update_app_path_in_config(
+                "qoder_cn",
+                &detected,
+                &config::get_user_config().qoder_cn_app_path,
+            );
             return Ok(detected);
         }
     }

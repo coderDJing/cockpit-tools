@@ -662,6 +662,11 @@ fn parse_windows_exec_candidates(
         let Some(path) = normalize_windows_candidate_path(line) else {
             continue;
         };
+        // CLI 运行时目录下的辅助进程也会命中 "qoder-cn" 关键字，必须先排除，
+        // 否则会被当成桌面端启动路径（resolve_qoder_cn_launch_path 走的就是这条链路）。
+        if is_qoder_cn_signature(&exe_names_lower) && is_qoder_cn_cli_runtime_path(&path) {
+            continue;
+        }
         let dedupe_key = path.to_string_lossy().to_lowercase();
         if !seen.insert(dedupe_key) {
             continue;
@@ -985,6 +990,9 @@ fn push_app_launch_candidate(
         .map(|value| value.trim().to_lowercase())
         .filter(|value| !value.is_empty())
         .collect();
+    if is_qoder_cn_signature(&exe_names_lower) && is_qoder_cn_cli_runtime_path(path) {
+        return;
+    }
     if score_windows_candidate(path, &exe_names_lower, &keywords_lower).is_none() {
         return;
     }
@@ -1199,6 +1207,13 @@ fn is_qoder_cn_cli_runtime_path(path: &std::path::Path) -> bool {
         .replace('/', "\\")
         .to_ascii_lowercase();
     normalized.contains("\\.qoder-cn\\")
+}
+
+/// 只有 Qoder CN 的签名表里才有 `Qoder CN.exe`。
+/// exe 安装目录扫描（签名探测 / 设置页候选列表）拿不到 app key，用签名反推即可。
+#[cfg(target_os = "windows")]
+fn is_qoder_cn_signature(exe_names_lower: &HashSet<String>) -> bool {
+    exe_names_lower.contains("qoder cn.exe")
 }
 
 #[cfg(target_os = "windows")]

@@ -54,23 +54,36 @@ fn switch_qoder_cn(
     }
 
     let launch_path = crate::modules::process::resolve_qoder_cn_launch_path()?;
-    crate::modules::process::close_qoder_cn_desktop(20)?;
+    // 关闭失败同样要把客户端拉回来：否则客户端已被强杀，用户只看到“切换失败”却不会被重启。
+    if let Err(close_error) = crate::modules::process::close_qoder_cn_desktop(20) {
+        return Err(restore_after_failure(&launch_path, close_error));
+    }
     if let Err(error) = crate::modules::qoder_native::switch(
         crate::modules::qoder_region::QoderRegion::Cn,
         account_id,
         target,
     ) {
-        if let Err(relaunch_error) = crate::modules::process::start_qoder_cn_desktop(&launch_path) {
-            logger::log_warn(&format!(
-                "[Qoder CN Switch] restore launch failed after switch failure: {}",
-                relaunch_error
-            ));
-        }
-        return Err(error);
+        // 凭据已回滚、客户端已关闭，此时真实状态取决于能否重新拉起，不能只回报原始错误。
+        return Err(restore_after_failure(&launch_path, error));
     }
     crate::modules::process::start_qoder_cn_desktop(&launch_path)
         .map(|_| ())
         .map_err(|error| format!("QODER_CN_RELAUNCH_FAILED: {error}"))
+}
+
+/// 失败补救：把客户端重新拉起。拉起也失败时返回 `QODER_CN_RELAUNCH_FAILED`，
+/// 让前端能提示“客户端已关闭且未能重启”，而不是一条与实际状态无关的错误。
+#[cfg(target_os = "windows")]
+fn restore_after_failure(launch_path: &std::path::Path, cause: String) -> String {
+    match crate::modules::process::start_qoder_cn_desktop(launch_path) {
+        Ok(_) => cause,
+        Err(relaunch_error) => {
+            logger::log_warn(&format!(
+                "[Qoder CN Switch] restore launch failed after failure: cause={cause}, relaunch={relaunch_error}"
+            ));
+            format!("QODER_CN_RELAUNCH_FAILED: {relaunch_error} (cause: {cause})")
+        }
+    }
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -116,16 +129,24 @@ pub fn import_qoder_cn_from_json(
 }
 
 #[tauri::command]
-pub async fn import_qoder_cn_from_local() -> Result<Vec<QoderAccount>, String> {
-    tauri::async_runtime::spawn_blocking(|| {
-        crate::modules::qoder_native::import(
+pub async fn import_qoder_cn_from_local(app: AppHandle) -> Result<Vec<QoderAccount>, String> {
+    let found = tauri::async_runtime::spawn_blocking(|| {
+        let found = crate::modules::qoder_native::import_from_local(
             crate::modules::qoder_region::QoderRegion::Cn,
-            crate::modules::qoder_native::NativeClient::Desktop,
-        )
-        .map(|a| vec![a])
+        )?;
+        if found {
+            // 与国际版保持一致：导入后校正当前账号，避免索引与客户端实际状态不一致。
+            crate::modules::qoder_cn_account::reconcile_current_account()?;
+        }
+        Ok::<_, String>(found)
     })
     .await
-    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())?
+    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
+    if !found {
+        return Err("未找到本地 Qoder CN 登录信息".to_string());
+    }
+    let _ = crate::modules::tray::update_tray_menu(&app);
+    crate::modules::qoder_cn_account::list_accounts_checked()
 }
 
 #[tauri::command]
@@ -288,15 +309,36 @@ pub async fn claim_qoder_cn_checkin(
     qoder_cn_oauth::claim_qoder_checkin(&account_id).await
 }
 
+/// Qoder CN 桌面端只有 Windows 版；其它平台前端已把它禁掉，
+/// 但从托盘、macOS 菜单等入口进来时仍会走到这里，必须自己选对客户端，
+/// 否则 `desktop_key` 在非 Windows 上直接失败、界面毫无反应。
+fn default_cn_client() -> crate::modules::qoder_native::NativeClient {
+    if cfg!(target_os = "windows") {
+        crate::modules::qoder_native::NativeClient::Desktop
+    } else {
+        crate::modules::qoder_native::NativeClient::Cli
+    }
+}
+
 #[tauri::command]
-pub async fn inject_qoder_cn_account(account_id: String) -> Result<String, String> {
+pub async fn inject_qoder_cn_account(app: AppHandle, account_id: String) -> Result<String, String> {
     qoder_cn_oauth::prepare_account_for_switch(&account_id).await?;
     let id = account_id.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        switch_qoder_cn(&id, crate::modules::qoder_native::NativeClient::Desktop)
-    })
-    .await
-    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
+    let result = tauri::async_runtime::spawn_blocking(move || switch_qoder_cn(&id, default_cn_client()))
+        .await
+        .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())?;
+    if let Err(error) = result {
+        if error.contains("APP_PATH_NOT_FOUND:") {
+            let _ = app.emit(
+                "app:path_missing",
+                serde_json::json!({ "app": "qoder_cn", "retry": {
+                    "kind": "switchAccount", "accountId": account_id
+                } }),
+            );
+        }
+        return Err(error);
+    }
+    let _ = crate::modules::tray::update_tray_menu(&app);
     Ok(account_id)
 }
 

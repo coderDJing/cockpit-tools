@@ -211,17 +211,9 @@ pub fn close_qoder_cn_desktop(timeout_secs: u64) -> Result<(), String> {
     if system.processes().is_empty() {
         return Err("QODER_NATIVE_PROCESS_PROBE_FAILED".into());
     }
-    let names = crate::modules::qoder_native::CN_DESKTOP_PROCESS_NAMES;
-    let mut pids: Vec<u32> = system
-        .processes()
-        .values()
-        .filter(|process| {
-            names.contains(&process.name().to_string_lossy().to_ascii_lowercase().as_str())
-        })
-        .map(|process| process.pid().as_u32())
-        .collect();
-    pids.sort_unstable();
-    pids.dedup();
+    // CN 与国际版共用 launcher 进程名，这里必须按安装目录判定，
+    // 否则会在切 CN 号时强杀国际版客户端。
+    let pids = crate::modules::qoder_native::qoder_cn_desktop_pids(&system);
     if pids.is_empty() {
         crate::modules::logger::log_info("[Qoder CN Close] desktop client is not running");
         return Ok(());
