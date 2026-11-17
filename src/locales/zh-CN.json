@@ -7122,6 +7122,10 @@
     "refreshInterval": "配额自动刷新",
     "codexRefreshInterval": "配额自动刷新",
     "ghcpRefreshInterval": "配额自动刷新",
+    "validation": {
+      "refreshIntervalInvalid": "刷新间隔需填写 1-999 的整数，或填 -1 关闭自动刷新。",
+      "quotaAlertThresholdInvalid": "预警阈值需填写 0-100 的整数。"
+    },
     "autoSwitch": {
       "title": "自动切号",
       "enable": "自动切号",
@@ -7840,6 +7844,17 @@
       "endpointUnavailable": "无法确认该 Qoder 会话的服务地址。请在对应的 Qoder IDE 中检查登录及组织配置。",
       "switchLaunchFailed": "账号已写入，但 Qoder IDE 启动失败。{{detail}}",
       "qoderCnPathMissing": "未找到 Qoder CN 桌面端。请在设置中填写启动路径，或安装后重试。",
+      "platformMismatch": "该账号属于其他区域版本，无法写入当前客户端。",
+      "cnRelaunchFailed": "账号已切换，但 Qoder CN 客户端启动失败。{{detail}}",
+      "cnDesktopUnsupported": "Qoder CN 桌面端仅支持 Windows；当前系统请使用 CLI。",
+      "clientInvalid": "客户端类型无效，请重新选择切换目标。",
+      "nativeTokenMissing": "该账号缺少可写入的登录凭据，请重新授权或重新导入。",
+      "nativeWriteVerifyFailed": "凭据写入后校验失败，已尝试回滚到原状态。请关闭客户端后重试。",
+      "nativeKeyUnreadable": "无法读取本机凭据密钥。请确认 Cockpit 与 Qoder 使用同一系统账号。",
+      "nativeImportInvalid": "导入的凭据缺少账号信息，无法识别是哪个账号。",
+      "nativeImportFailed": "导入本地 Qoder 登录信息失败。请先在客户端登录后重试。",
+      "nativeProcessProbeFailed": "无法检测 Qoder 进程状态，请稍后重试。",
+      "regionUnsupported": "无法识别该账号所属的区域版本，请重新授权。",
       "refreshCount": "成功刷新 {{count}} / {{total}} 个账号。"
     },
     "title": "Qoder 账号管理",

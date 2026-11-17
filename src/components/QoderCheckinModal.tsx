@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Ban,
@@ -69,6 +69,9 @@ export function QoderCheckinModal({
   const [accountStates, setAccountStates] = useState<Record<string, AccountCheckinState>>({});
   const [checkAllLoading, setCheckAllLoading] = useState(false);
   const [refreshLoading, setRefreshLoading] = useState(false);
+  // 一键签到的预检阶段还没置 checkingIn，单账号按钮仍可点击；
+  // 用一个同步的 in-flight 集合兜住并发，避免同一账号被领取两次。
+  const inFlightRef = useRef<Set<string>>(new Set());
 
   const updateAccountState = useCallback(
     (accountId: string, update: Partial<AccountCheckinState>) => {
@@ -107,15 +110,20 @@ export function QoderCheckinModal({
     setRefreshLoading(false);
   }, [accounts, fetchStatus]);
 
+  const accountIdsKey = accounts.map((account) => account.id).join(',');
+
   useEffect(() => {
     if (accounts.length > 0) {
       void fetchAllStatus();
     }
+    // 账号集合变化（新增/删除）后必须重新拉状态，否则新增行会一直停在 loading。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [accountIdsKey]);
 
   const handleCheck = useCallback(
     async (accountId: string) => {
+      if (inFlightRef.current.has(accountId)) return;
+      inFlightRef.current.add(accountId);
       updateAccountState(accountId, { checkingIn: true, error: null });
       try {
         const result = await claimQoderCnCheckin(accountId);
@@ -142,11 +150,15 @@ export function QoderCheckinModal({
             error: uiState === 'claimed' ? null : errMsg,
           });
         } catch {
+          // 回查也失败时进入 error 态，让「重试」按钮可达
           updateAccountState(accountId, {
             checkingIn: false,
+            uiState: 'error',
             error: errMsg,
           });
         }
+      } finally {
+        inFlightRef.current.delete(accountId);
       }
     },
     [updateAccountState, onCheckinComplete],
@@ -157,6 +169,8 @@ export function QoderCheckinModal({
     const targetIds: string[] = [];
     await Promise.allSettled(
       accounts.map(async (account) => {
+        // 预检期间先置 checkingIn，避免单账号按钮在等待响应时仍可点击。
+        updateAccountState(account.id, { checkingIn: true });
         try {
           const status = await getQoderCnCheckinStatus(account.id);
           updateAccountState(account.id, {
@@ -166,9 +180,12 @@ export function QoderCheckinModal({
           });
           if (status.active && !status.checkedIn) {
             targetIds.push(account.id);
+          } else {
+            updateAccountState(account.id, { checkingIn: false });
           }
         } catch (err) {
           console.warn('[QoderCheckin] 一键领取预检失败:', account.id, err);
+          updateAccountState(account.id, { checkingIn: false });
         }
       }),
     );

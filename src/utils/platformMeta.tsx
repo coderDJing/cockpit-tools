@@ -46,7 +46,7 @@ export function getPlatformLabel(platformId: PlatformId, _t: TFunction): string 
     case 'codebuddy_cn':
       return _t('nav.codebuddyCn', 'CodeBuddy CN');
     case 'qoder_cn':
-      return 'Qoder CN';
+      return _t('nav.qoderCn', 'Qoder CN');
     case 'qoder':
       return _t('nav.qoder', 'Qoder');
     case 'zcode':

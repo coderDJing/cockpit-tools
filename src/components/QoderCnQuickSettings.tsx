@@ -54,8 +54,16 @@ export function QoderCnQuickSettings() {
   const save = async () => {
     const value = Number(minutes);
     const threshold = Number(alertThreshold);
-    if (!Number.isInteger(value) || (value !== -1 && (value < 1 || value > 999))) return;
-    if (!Number.isInteger(threshold) || threshold < 0 || threshold > 100) return;
+    if (!Number.isInteger(value) || (value !== -1 && (value < 1 || value > 999))) {
+      // 之前是静默 return：按钮没反应、也没有任何红字，用户无从得知原因。
+      setError(t('quickSettings.validation.refreshIntervalInvalid'));
+      return;
+    }
+    if (!Number.isInteger(threshold) || threshold < 0 || threshold > 100) {
+      setError(t('quickSettings.validation.quotaAlertThresholdInvalid'));
+      return;
+    }
+    setError('');
     setSaving(true);
     try {
       await invoke('patch_general_config', {

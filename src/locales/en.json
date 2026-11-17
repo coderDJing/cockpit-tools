@@ -7122,6 +7122,10 @@
     "refreshInterval": "Quota Auto Refresh",
     "codexRefreshInterval": "Quota Auto Refresh",
     "ghcpRefreshInterval": "Quota Auto Refresh",
+    "validation": {
+      "refreshIntervalInvalid": "Enter a whole number between 1 and 999, or -1 to disable auto refresh.",
+      "quotaAlertThresholdInvalid": "Enter a whole number between 0 and 100."
+    },
     "autoSwitch": {
       "title": "Auto Switch",
       "enable": "Enable Auto Switch",
@@ -7840,6 +7844,17 @@
       "endpointUnavailable": "The service address for this Qoder session could not be verified. Check the sign-in and organization settings in the corresponding Qoder IDE.",
       "switchLaunchFailed": "The account was written, but Qoder IDE failed to start. {{detail}}",
       "qoderCnPathMissing": "Qoder CN Desktop was not found. Set its launch path in Settings or install it, then retry.",
+      "platformMismatch": "This account belongs to the other regional build and cannot be written to the current client.",
+      "cnRelaunchFailed": "The account was switched, but Qoder CN failed to start. {{detail}}",
+      "cnDesktopUnsupported": "Qoder CN Desktop is only supported on Windows; use the CLI on this system.",
+      "clientInvalid": "Invalid client type. Choose the switch target again.",
+      "nativeTokenMissing": "This account has no credentials that can be written. Authorize or import it again.",
+      "nativeWriteVerifyFailed": "Credential verification failed after writing; the previous state was restored. Close the client and retry.",
+      "nativeKeyUnreadable": "Could not read the local credential key. Make sure Cockpit and Qoder run as the same system user.",
+      "nativeImportInvalid": "The imported credentials do not identify an account.",
+      "nativeImportFailed": "Could not import the local Qoder sign-in. Sign in to the client first, then retry.",
+      "nativeProcessProbeFailed": "Could not inspect Qoder processes. Try again shortly.",
+      "regionUnsupported": "Could not determine the regional build for this account. Authorize it again.",
       "refreshCount": "Refreshed {{count}} of {{total}} accounts."
     },
     "title": "Qoder Account",
