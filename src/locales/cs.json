@@ -786,7 +786,8 @@
       "failed": "Operaci nelze dokončit. Poslední známý stav byl zachován. Zkuste to znovu.",
       "loginAttempt": "Přihlášení bez určeného účtu",
       "removed": "Odstraněný místní účet"
-    }
+    },
+    "previewTruncated": "Pro plynulost zobrazuje náhled pouze prvních {{shown}} (celkem přibližně {{total}}). Kopírování / stažení obsahuje celý obsah."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

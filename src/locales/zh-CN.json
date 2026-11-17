@@ -786,7 +786,8 @@
       "failed": "操作未完成，已保留最近状态，请重试。",
       "loginAttempt": "尚未确认账号的登录",
       "removed": "已移除的本地账号"
-    }
+    },
+    "previewTruncated": "为保持流畅，预览仅显示前 {{shown}}（共约 {{total}}）。复制 / 下载将包含完整内容。"
   },
   "floatingCard": {
     "selectPlatform": "切换平台",

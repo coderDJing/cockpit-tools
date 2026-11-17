@@ -786,7 +786,8 @@
       "failed": "Could not complete the operation. The last known state is preserved; please retry.",
       "loginAttempt": "Unidentified login attempt",
       "removed": "Removed local account"
-    }
+    },
+    "previewTruncated": "For responsiveness, the preview shows only the first {{shown}} (about {{total}} total). Copy / download includes the full content."
   },
   "floatingCard": {
     "selectPlatform": "Switch platform",

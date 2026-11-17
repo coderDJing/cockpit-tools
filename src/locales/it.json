@@ -786,7 +786,8 @@
       "failed": "Operazione non completata. L’ultimo stato noto è conservato. Riprova.",
       "loginAttempt": "Accesso senza account identificato",
       "removed": "Account locale rimosso"
-    }
+    },
+    "previewTruncated": "Per mantenere la fluidità, l'anteprima mostra solo i primi {{shown}} (circa {{total}} in totale). Copia / download include il contenuto completo."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

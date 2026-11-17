@@ -786,7 +786,8 @@
       "failed": "Nie udało się ukończyć operacji. Zachowano ostatni stan. Spróbuj ponownie.",
       "loginAttempt": "Logowanie bez ustalonego konta",
       "removed": "Usunięte konto lokalne"
-    }
+    },
+    "previewTruncated": "Aby zachować płynność, podgląd pokazuje tylko pierwsze {{shown}} (łącznie ok. {{total}}). Kopiowanie / pobieranie obejmuje pełną zawartość."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",

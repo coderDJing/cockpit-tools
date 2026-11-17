@@ -35,9 +35,28 @@ export function installAppScrollbars(doc: Document = document): () => void {
     return !!hit && (hit === element || element.contains(hit));
   }
 
+  function isTextarea(element: HTMLElement): boolean {
+    return element.tagName === 'TEXTAREA';
+  }
+
+  function detach(element: HTMLElement): void {
+    const entry = entries.get(element);
+    if (!entry) return;
+    entry.instance.destroy();
+    entry.slot.remove();
+    entries.delete(element);
+  }
+
   function positionAll(): void {
     frame = 0;
+    // Textareas are never enhanced (see `enhance`); drop any stale instance that
+    // survived a hot reload so we never measure their content here.
+    let textareas: HTMLElement[] | null = null;
     for (const { element, slot, instance } of entries.values()) {
+      if (isTextarea(element)) {
+        (textareas ??= []).push(element);
+        continue;
+      }
       const rect = element.getBoundingClientRect();
       const style = win.getComputedStyle(element);
       const overflow = `${style.overflowX}/${style.overflowY}`;
@@ -89,11 +108,23 @@ export function installAppScrollbars(doc: Document = document): () => void {
       bars.scrollbarVertical.scrollbar.style.visibility = vertical ? '' : 'hidden';
       bars.scrollbarHorizontal.scrollbar.style.visibility = horizontal ? '' : 'hidden';
     }
+    if (textareas) for (const element of textareas) detach(element);
   }
 
-  const resize = new ResizeObserver(() => {
-    for (const element of candidates) pending.add(element);
-    scheduleScan();
+  const resize = new ResizeObserver(records => {
+    // Only rescan the element that actually resized. Rescanning every candidate
+    // subtree here turns a single layout change into a document-wide re-measure
+    // loop (getComputedStyle + scrollWidth forces layout), which can starve the
+    // main thread and blow up renderer memory on large content.
+    let added = false;
+    for (const record of records) {
+      const target = record.target;
+      if (target instanceof win.HTMLElement && !isOwned(target)) {
+        pending.add(target);
+        added = true;
+      }
+    }
+    if (added) scheduleScan();
     schedulePosition();
   });
 
@@ -101,6 +132,12 @@ export function installAppScrollbars(doc: Document = document): () => void {
     if ((element === doc.documentElement || element === doc.body)
       && element !== doc.scrollingElement) return;
     if (isOwned(element)) return;
+    // Textareas hold unbounded text (users paste multi-megabyte JSON) and every
+    // overlay-scrollbar measurement walks all of it. Keep their native scrollbar.
+    if (isTextarea(element)) {
+      detach(element);
+      return;
+    }
     const style = win.getComputedStyle(element);
     const scrollX = /^(auto|scroll)$/.test(style.overflowX);
     const scrollY = /^(auto|scroll)$/.test(style.overflowY);
@@ -116,8 +153,7 @@ export function installAppScrollbars(doc: Document = document): () => void {
     }
     if (!element.clientWidth || !element.clientHeight) return;
     if (!(scrollX && element.scrollWidth > element.clientWidth)
-      && !(scrollY && element.scrollHeight > element.clientHeight)
-      && element.tagName !== 'TEXTAREA') return;
+      && !(scrollY && element.scrollHeight > element.clientHeight)) return;
     const slot = doc.createElement('div');
     slot.className = 'app-scrollbar-slot';
     layer.append(slot);
@@ -185,6 +221,10 @@ export function installAppScrollbars(doc: Document = document): () => void {
   const rescan = () => { pending.add(doc.documentElement); scheduleScan(); };
   const input = (event: Event) => {
     if (event.target instanceof HTMLElement && !isOwned(event.target)) {
+      if (isTextarea(event.target)) {
+        detach(event.target);
+        return;
+      }
       entries.get(event.target)?.instance.update(true);
       pending.add(event.target);
       scheduleScan();

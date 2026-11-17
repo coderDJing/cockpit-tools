@@ -786,7 +786,8 @@
       "failed": "Operasi tidak dapat diselesaikan. Status terakhir disimpan. Coba lagi.",
       "loginAttempt": "Percobaan masuk tanpa akun teridentifikasi",
       "removed": "Akun lokal dihapus"
-    }
+    },
+    "previewTruncated": "Agar tetap lancar, pratinjau hanya menampilkan {{shown}} pertama (total sekitar {{total}}). Salin / unduh menyertakan konten lengkap."
   },
   "floatingCard": {
     "selectPlatform": "Ganti platform",

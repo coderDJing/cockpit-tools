@@ -786,7 +786,8 @@
       "failed": "작업을 완료하지 못했습니다. 마지막 상태를 유지합니다. 다시 시도하세요.",
       "loginAttempt": "계정 미확인 로그인",
       "removed": "삭제된 로컬 계정"
-    }
+    },
+    "previewTruncated": "원활한 표시를 위해 미리보기는 처음 {{shown}}만 표시합니다(전체 약 {{total}}). 복사 / 다운로드에는 전체 내용이 포함됩니다."
   },
   "nav": {
     "workbuddyAi": "WorkBuddy AI",
