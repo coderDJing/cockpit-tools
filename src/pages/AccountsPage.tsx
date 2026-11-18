@@ -2905,7 +2905,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
             </div>
           )}
 
-          <div className="card-quota-grid">
+          <div className="card-quota-grid antigravity-card-quota">
             {isForbidden ? (
               <div className="quota-forbidden" title={forbiddenTitle}>
                 <Lock size={14} />
@@ -2921,11 +2921,12 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
                 {renderCustomQuotaSection(account, false)}
               </>
             )}
-            <div className="quota-credits-field">
+            {availableCreditsDisplay !== '' && <div className="quota-credits-field">
               <span className="quota-credits-label">
                 {t('common.shared.credits.availableAiCredits', 'Available AI Credits')}: {availableCreditsDisplay}
               </span>
-            </div>
+            </div>}
+            <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} refreshAt={account.quota?.last_updated} createdAt={account.created_at} formatDate={formatDate} />
           </div>
 
           {accountTags.length > 0 && (
@@ -2939,7 +2940,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
             </div>
           )}
           <div className="card-footer antigravity-card-footer">
-            <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} createdAt={account.created_at} formatDate={formatDate} />
+            <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} refreshAt={account.quota?.last_updated} createdAt={account.created_at} formatDate={formatDate} />
             <div className="card-actions">
               {isPendingAntigravityAccount(account) && (
                 <button
@@ -3160,7 +3161,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
         return (
           <div
             key={account.id}
-            className={`${styles.card} ${isCurrent ? styles.cardCurrent : ''} ${isSelected ? styles.cardSelected : ''} ${isSwitching ? styles.cardSwitching : ''}`}
+            className={`${styles.card} ${styles.antigravityCard} ${isCurrent ? styles.cardCurrent : ''} ${isSelected ? styles.cardSelected : ''} ${isSwitching ? styles.cardSwitching : ''}`}
             onClick={() => {
               if (!switching) toggleSelect(account.id)
             }}
@@ -3191,7 +3192,6 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
             <span className={`tier-badge ${tierBadge.className}`}>
               {tierBadge.label}
             </span>
-            <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} createdAt={account.created_at} formatDate={formatDate} />
             <div className={styles.quotas}>
               {groupQuotas.length > 0 ? (
                 groupQuotas.map((gq) => (
@@ -3204,6 +3204,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
                       className={styles.dot}
                       style={{ background: gq.color }}
                     />
+                    <span className={styles.quotaGroupName}>{gq.name}</span>
                     {gq.percentage}%
                   </span>
                 ))
@@ -3249,6 +3250,9 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
             >
               <Play size={12} />
             </button>
+            <div className={styles.antigravityCardTime}>
+              <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} refreshAt={account.quota?.last_updated} createdAt={account.created_at} formatDate={formatDate} />
+            </div>
           </div>
         )
       })
@@ -3558,11 +3562,11 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
                   {renderCustomQuotaSection(account, true)}
                 </>
               )}
-              <div className="quota-credits-field">
+              {availableCreditsDisplay !== '' && <div className="quota-credits-field">
                 <span className="quota-credits-label">
                   {t('common.shared.credits.availableAiCredits', 'Available AI Credits')}: {availableCreditsDisplay}
                 </span>
-              </div>
+              </div>}
             </div>
           </td>
           <td>

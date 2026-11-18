@@ -217,9 +217,8 @@ function parseQuotaBucket(raw: unknown, fallback?: Partial<QoderQuotaBucket>): Q
           getNestedValue(raw, ['percentage']),
           getNestedValue(raw, ['usagePercent']),
           getNestedValue(raw, ['usage_percentage']),
-          fallback?.percentage,
         ),
-      ),
+      ) ?? fallback?.percentage ?? null,
   );
 
   return {
@@ -254,6 +253,7 @@ export function getQoderAccountDisplayEmail(account: QoderAccount): string {
   if (email && email.toLowerCase() !== 'unknown@qoder.local') return email;
   return firstNonEmptyString(
     account.display_name,
+    getNestedValue(account.auth_user_info_raw, ['nickname']),
     getNestedValue(account.auth_user_info_raw, ['name']),
     account.user_id,
     account.id,

@@ -210,7 +210,6 @@ interface CodebuddySuiteAccountsSharedViewProps<
   page: UseProviderAccountsPageReturn;
   platformConfig: CodebuddySuiteAccountsPlatformConfig<TAccount>;
   onRefreshAccounts: () => void;
-  /** 勾选变化时上报（用于批量操作，如批量探测） */
   onSelectionChange?: (ids: string[]) => void;
   onLaunchAccount?: (account: TAccount) => void;
 }
@@ -351,14 +350,16 @@ export function CodebuddySuiteAccountsSharedView<
     normalizeTag,
   } = page;
 
-  // 向上汇报勾选（批量探测需要），用排序后的 key 避免 Set 引用抖动
-  const selectedIdsKey = useMemo(
-    () => Array.from(selected).sort().join(","),
-    [selected],
-  );
+  // Keep the submitted text in state for IPC and error recovery, but keep the
+  // native text area empty until the successful import closes the dialog.
+  const hideWorkbuddyImportText = platformConfig.quickSettingsType === "workbuddy"
+    && (importing || addStatus === "success");
+
+  const selectedIdsKey = useMemo(() => Array.from(selected).sort().join(","), [selected]);
   useEffect(() => {
     onSelectionChange?.(selectedIdsKey ? selectedIdsKey.split(",") : []);
   }, [selectedIdsKey, onSelectionChange]);
+
   const quotaNumberFormatter = useMemo(
     () =>
       new Intl.NumberFormat(locale || undefined, { maximumFractionDigits: 2 }),
@@ -1831,8 +1832,8 @@ export function CodebuddySuiteAccountsSharedView<
                         // Keep the full payload in state, but release the native text
                         // control during import: WebView2 can exhaust browser-process
                         // memory when updating a multi-megabyte control alongside IPC.
-                        value={importing ? "" : tokenInput}
-                        readOnly={importing}
+                        value={hideWorkbuddyImportText ? "" : tokenInput}
+                        readOnly={hideWorkbuddyImportText}
                         onChange={(e) => setTokenInput(e.target.value)}
                         placeholder={t(
                           platformConfig.tokenInputPlaceholderKey ||
@@ -1847,6 +1848,7 @@ export function CodebuddySuiteAccountsSharedView<
                       onClick={handleTokenImport}
                       disabled={
                         importing ||
+                        hideWorkbuddyImportText ||
                         !tokenInput.trim() ||
                         platformConfig.tokenSubmitDisabled
                       }
@@ -1876,8 +1878,8 @@ export function CodebuddySuiteAccountsSharedView<
                     </p>
                     <textarea
                       className="token-input"
-                      value={importing ? "" : tokenInput}
-                      readOnly={importing}
+                      value={hideWorkbuddyImportText ? "" : tokenInput}
+                      readOnly={hideWorkbuddyImportText}
                       onChange={(e) => setTokenInput(e.target.value)}
                       placeholder={t(
                         platformConfig.pasteJsonPlaceholderKey ||
@@ -1889,7 +1891,7 @@ export function CodebuddySuiteAccountsSharedView<
                     <button
                       className="btn btn-primary btn-full"
                       onClick={handleTokenImport}
-                      disabled={importing || !tokenInput.trim()}
+                      disabled={importing || hideWorkbuddyImportText || !tokenInput.trim()}
                     >
                       {importing ? (
                         <RefreshCw size={16} className="loading-spinner" />
