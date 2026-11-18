@@ -402,6 +402,8 @@ fn spawn_switch_account(platform: PlatformId, account_id: String) {
 
     tauri::async_runtime::spawn(async move {
         let status_app = app.clone();
+        // 各分支会把 account_id 移交给切换命令，失败日志要用的副本先留好。
+        let log_account_id = account_id.clone();
         let switch_result = match platform {
             PlatformId::Antigravity => commands::account::switch_account(app, account_id, None, None, None)
                 .await
@@ -449,7 +451,7 @@ fn spawn_switch_account(platform: PlatformId, account_id: String) {
             PlatformId::Qoder => commands::qoder::inject_qoder_account(app, account_id)
                 .await
                 .map(|_| ()),
-            PlatformId::QoderCn => commands::qoder_cn::inject_qoder_cn_account(account_id)
+            PlatformId::QoderCn => commands::qoder_cn::inject_qoder_cn_account(app, account_id)
                 .await
                 .map(|_| ()),
             PlatformId::Zcode => commands::zcode::inject_zcode_account(app, account_id).map(|_| ()),
@@ -482,7 +484,7 @@ fn spawn_switch_account(platform: PlatformId, account_id: String) {
             modules::logger::log_warn(&format!(
                 "[Native Menu] switch account failed: platform={}, account={}, error={error}",
                 platform.as_str(),
-                account_id
+                log_account_id
             ));
         }
         let _ = update_status_item(&status_app);
