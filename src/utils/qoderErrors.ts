@@ -21,6 +21,8 @@ export function formatQoderError(error: unknown): string {
       return i18n.t('qoder.diagnostics.reauthRequired');
     case 'QODER_OPENAPI_UNAUTHORIZED':
       return i18n.t('qoder.diagnostics.apiUnauthorized');
+    case 'QODER_RENEWAL_PERSIST_FAILED':
+      return [i18n.t('qoder.diagnostics.renewalFailed'), detail].filter(Boolean).join(' ');
     case 'QODER_RENEWAL_FAILED':
       return i18n.t('qoder.diagnostics.renewalFailed');
     case 'QODER_SESSION_CHANGED':

@@ -169,6 +169,8 @@ mod qoder_identity;
 pub mod qoder_instance;
 #[path = "../../../crates/cockpit-core/src/modules/qoder_oauth.rs"]
 pub mod qoder_oauth;
+#[path = "../../../crates/cockpit-core/src/modules/qoder_token_renewal.rs"]
+mod qoder_token_renewal;
 #[path = "../../../crates/cockpit-core/src/modules/qoder_paths.rs"]
 pub(crate) mod qoder_paths;
 pub mod quota;

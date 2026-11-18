@@ -106,6 +106,15 @@ pub(crate) fn write_account_preserving_switch_time<T: Serialize>(
     kind: &str,
     account: &T,
 ) -> Result<(), String> {
+    write_account_preserving_switch_time_checked(path, kind, account, |_| Ok(()))
+}
+
+pub(super) fn write_account_preserving_switch_time_checked<T: Serialize>(
+    path: &Path,
+    kind: &str,
+    account: &T,
+    check_current: impl FnOnce(Option<&serde_json::Value>) -> Result<(), String>,
+) -> Result<(), String> {
     let _account_lock = lock_account_file_for_write(path)?;
     let mut next = serde_json::to_value(account).map_err(|error| error.to_string())?;
     crate::modules::atomic_write::update_string_atomic(path, |current| {
@@ -118,6 +127,7 @@ pub(crate) fn write_account_preserving_switch_time<T: Serialize>(
             } else {
                 envelope
             };
+            check_current(Some(&previous))?;
             if previous.get("id") == next.get("id") {
                 let timestamp = previous.get("last_switched_at").and_then(serde_json::Value::as_i64)
                     .max(next.get("last_switched_at").and_then(serde_json::Value::as_i64));
@@ -125,6 +135,8 @@ pub(crate) fn write_account_preserving_switch_time<T: Serialize>(
                     next["last_switched_at"] = timestamp.into();
                 }
             }
+        } else {
+            check_current(None)?;
         }
         serialize_account_file(kind, &next)
     })

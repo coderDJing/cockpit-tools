@@ -63,6 +63,7 @@ pub mod qoder_account;
 mod qoder_identity;
 pub mod qoder_instance;
 pub mod qoder_oauth;
+mod qoder_token_renewal;
 mod qoder_paths;
 pub mod qoder_usage;
 pub mod quota;
