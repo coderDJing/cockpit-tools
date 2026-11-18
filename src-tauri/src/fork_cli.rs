@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 
 fn status() -> Result<Value, String> {
     let summarize = |accounts: Vec<crate::models::qoder::QoderAccount>| {
-        accounts.into_iter().map(|a| json!({"id":a.id,"region":QoderRegion::from_info(a.auth_user_info_raw.as_ref()).ok(),"hasQuota":a.auth_credit_usage_raw.is_some(),"quotaError":a.quota_query_last_error})).collect::<Vec<_>>()
+        accounts.into_iter().map(|a| json!({"id":a.id,"region":QoderRegion::from_account(&a).ok(),"hasQuota":a.auth_credit_usage_raw.is_some(),"quotaError":a.quota_query_last_error})).collect::<Vec<_>>()
     };
     Ok(
         json!({"version":env!("CARGO_PKG_VERSION"),"qoder":summarize(qoder_account::list_accounts_checked()?),"qoder_cn":summarize(qoder_cn_account::list_accounts_checked()?)}),
@@ -18,7 +18,7 @@ fn status() -> Result<Value, String> {
 fn migrate_cn() -> Result<Value, String> {
     let mut migrated = Vec::new();
     for account in qoder_account::list_accounts_checked()? {
-        if QoderRegion::from_info(account.auth_user_info_raw.as_ref())? != QoderRegion::Cn {
+        if QoderRegion::from_account(&account)? != QoderRegion::Cn {
             continue;
         }
         let imported = qoder_cn_account::import_from_json(

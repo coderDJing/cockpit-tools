@@ -1,6 +1,6 @@
 //! Native credential schemas, adapted from coderDJing/workbuddy-switch-next
 //! (MIT, copyright 2026 wb-switch). See resources/licenses/WorkBuddy-Switch-Next.txt.
-use super::qoder_region::QoderRegion;
+use super::qoder_region::{QoderLoginSource, QoderRegion};
 use serde_json::{json, Map, Value};
 
 fn text(value: &Value, keys: &[&str]) -> Option<String> {
@@ -66,9 +66,10 @@ pub fn from_client(value: &Value, region: QoderRegion) -> Result<Value, String> 
             user.entry(to).or_insert_with(|| v.clone());
         }
     }
+    let source = import_source(value.get("user"), Some(value), region)?;
     let mut info = user.clone();
     info.insert("token".into(), json!(token));
-    info.insert("login_source".into(), json!(region.source()));
+    info.insert("login_source".into(), json!(source.name()));
     info.insert("cockpit_native_user".into(), Value::Object(user));
     if let Some(refresh) = text(value, &["refreshToken", "refresh_token"]) {
         info.insert("refreshToken".into(), json!(refresh));
@@ -183,26 +184,32 @@ pub fn prepare_import(value: &mut Value, region: QoderRegion) -> Result<(), Stri
         *value = json!({"userInfo":info});
         return Ok(());
     }
-    let info = if obj.contains_key("auth_user_info_raw") {
-        obj.get_mut("auth_user_info_raw").unwrap()
+    let info_key = if obj.contains_key("auth_user_info_raw") {
+        "auth_user_info_raw"
     } else {
-        obj.get_mut("userInfo").unwrap()
+        "userInfo"
     };
-    let info = info
-        .as_object_mut()
+    let plan = obj.get("auth_user_plan_raw").or_else(|| obj.get("userPlan"));
+    let source = import_source(obj.get(info_key), plan, region)?;
+    let info = obj
+        .get_mut(info_key)
+        .and_then(Value::as_object_mut)
         .ok_or("QODER_IMPORT_IDENTITY_MISSING")?;
-    if let Some(source) = info.get("login_source").and_then(Value::as_str) {
-        let matches = source == region.source()
-            || (source == "dedicated_qodercn" && region == QoderRegion::Global);
-        if !matches {
-            return Err(
-                "导入账号与当前平台不一致，请进入对应的 Qoder 或 Qoder CN 平台后重试。".into(),
-            );
-        }
-    } else {
-        info.insert("login_source".into(), json!(region.source()));
-    }
+    info.insert("login_source".into(), json!(source.name()));
     Ok(())
+}
+
+fn import_source(
+    info: Option<&Value>,
+    other: Option<&Value>,
+    region: QoderRegion,
+) -> Result<QoderLoginSource, String> {
+    let source = QoderLoginSource::resolve(info, other)?
+        .unwrap_or(QoderLoginSource::Public(region));
+    if source.region() != region {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
+    Ok(source)
 }
 
 #[cfg(test)]
@@ -230,6 +237,39 @@ mod tests {
         )
         .is_err());
     }
+    #[test]
+    fn import_preserves_plan_only_source_and_rejects_mixed_sources() {
+        let mut account = json!({
+            "auth_user_info_raw": { "id": "fixture-user" },
+            "auth_user_plan_raw": { "login_source": "qodercn" },
+        });
+        assert_eq!(
+            prepare_import(&mut account, QoderRegion::Global).unwrap_err(),
+            "QODER_PLATFORM_MISMATCH"
+        );
+        assert!(account["auth_user_info_raw"].get("login_source").is_none());
+        prepare_import(&mut account, QoderRegion::Cn).unwrap();
+        assert_eq!(account["auth_user_info_raw"]["login_source"], "qodercn");
+
+        account["auth_user_plan_raw"]["login_source"] = json!("qoder");
+        assert_eq!(
+            prepare_import(&mut account, QoderRegion::Cn).unwrap_err(),
+            "QODER_PLATFORM_MISMATCH"
+        );
+    }
+
+    #[test]
+    fn native_import_does_not_override_an_explicit_source() {
+        let profile = json!({
+            "token": "fixture", "user": { "id": "fixture-user", "login_source": "qodercn" },
+        });
+        assert_eq!(
+            from_client(&profile, QoderRegion::Global).unwrap_err(),
+            "QODER_PLATFORM_MISMATCH"
+        );
+        assert_eq!(from_client(&profile, QoderRegion::Cn).unwrap()["login_source"], "qodercn");
+    }
+
     #[test]
     fn import_rejects_cross_region_overrides() {
         let mut global = json!({"userInfo":{"id":"u","token":"test","login_source":"qoder"}});

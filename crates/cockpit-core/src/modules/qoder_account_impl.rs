@@ -173,9 +173,7 @@ pub fn load_account(account_id: &str) -> Option<QoderAccount> {
 }
 
 fn save_account_file(account: &QoderAccount) -> Result<(), String> {
-    if crate::modules::qoder_region::QoderRegion::from_info(account.auth_user_info_raw.as_ref())?
-        != STORE_REGION
-    {
+    if crate::modules::qoder_region::QoderRegion::from_account(account)? != STORE_REGION {
         return Err("QODER_PLATFORM_MISMATCH".into());
     }
     let path = resolve_account_file_path(account.id.as_str())?;
@@ -1170,6 +1168,9 @@ pub fn inject_to_qoder_for_user_data_dir(
 pub fn inject_to_qoder_at_path(db_path: &Path, account_id: &str) -> Result<(), String> {
     let account =
         load_account(account_id).ok_or_else(|| format!("Qoder 账号不存在: {}", account_id))?;
+    if crate::modules::qoder_region::QoderRegion::from_account(&account)? != STORE_REGION {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
     let access_token =
         crate::modules::qoder_oauth::access_token_from_info(account.auth_user_info_raw.as_ref())
             .ok_or("QODER_REAUTH_REQUIRED")?;
@@ -1394,6 +1395,30 @@ pub fn export_accounts(account_ids: &[String]) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn save_rejects_accounts_with_a_plan_only_source_from_the_other_region() {
+        use crate::modules::qoder_region::QoderRegion;
+
+        let other = match STORE_REGION {
+            QoderRegion::Global => QoderRegion::Cn,
+            QoderRegion::Cn => QoderRegion::Global,
+        };
+        let mut account = snapshot_to_account(
+            QoderSnapshot {
+                user_info_raw: Some(serde_json::json!({ "id": "fixture-user" })),
+                user_plan_raw: Some(serde_json::json!({ "login_source": other.source() })),
+                ..Default::default()
+            },
+            None,
+        );
+        // Prevent access to real storage even if the region check regresses.
+        account.id.clear();
+        assert_eq!(
+            save_account_file(&account),
+            Err("QODER_PLATFORM_MISMATCH".into())
+        );
+    }
 
     #[test]
     fn organization_switch_keeps_a_distinct_account_id_and_legacy_binding() {

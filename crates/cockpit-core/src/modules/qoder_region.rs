@@ -1,4 +1,5 @@
 //! Explicit Qoder realms. A credential is never probed against another realm.
+use crate::models::qoder::QoderAccount;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -70,15 +71,69 @@ impl QoderRegion {
             .append_pair("oauth_callback", callback.as_str());
         Ok(signin.to_string())
     }
-    pub fn from_info(info: Option<&Value>) -> Result<Self, String> {
-        match info
-            .and_then(|v| v.get("login_source"))
-            .and_then(Value::as_str)
-        {
-            // Keep upstream's dedicated deployment in its existing IDE platform.
-            None | Some("qoder") | Some("dedicated_qodercn") => Ok(Self::Global),
-            Some("qodercn") => Ok(Self::Cn),
+    pub fn from_account(account: &QoderAccount) -> Result<Self, String> {
+        QoderLoginSource::for_account(account).map(QoderLoginSource::region)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum QoderLoginSource {
+    Public(QoderRegion),
+    Dedicated,
+    LegacyLocal,
+}
+
+impl QoderLoginSource {
+    pub(crate) fn for_account(account: &QoderAccount) -> Result<Self, String> {
+        Ok(Self::recorded_for_account(account)?.unwrap_or(Self::Public(QoderRegion::Global)))
+    }
+
+    pub(crate) fn recorded_for_account(account: &QoderAccount) -> Result<Option<Self>, String> {
+        Self::resolve(
+            account.auth_user_info_raw.as_ref(),
+            account.auth_user_plan_raw.as_ref(),
+        )
+    }
+
+    pub(crate) fn resolve(info: Option<&Value>, plan: Option<&Value>) -> Result<Option<Self>, String> {
+        let info_source = Self::read(info)?;
+        let plan_source = Self::read(plan)?;
+        if matches!((info_source, plan_source), (Some(info), Some(plan)) if info != plan) {
+            return Err("QODER_PLATFORM_MISMATCH".into());
+        }
+        Ok(info_source.or(plan_source))
+    }
+
+    fn read(metadata: Option<&Value>) -> Result<Option<Self>, String> {
+        let Some(value) = metadata.and_then(|value| value.get("login_source")) else {
+            return Ok(None);
+        };
+        if value.is_null() {
+            return Ok(None);
+        }
+        match value.as_str().map(str::trim) {
+            Some("") => Ok(None),
+            Some("qoder") => Ok(Some(Self::Public(QoderRegion::Global))),
+            Some("qodercn") => Ok(Some(Self::Public(QoderRegion::Cn))),
+            Some("dedicated_qodercn") => Ok(Some(Self::Dedicated)),
+            Some("qodercn_legacy_local") => Ok(Some(Self::LegacyLocal)),
             _ => Err("QODER_REGION_UNSUPPORTED".into()),
+        }
+    }
+
+    pub(crate) fn region(self) -> QoderRegion {
+        match self {
+            Self::Public(region) => region,
+            // These clients use the existing Qoder IDE store and require local endpoint verification.
+            Self::Dedicated | Self::LegacyLocal => QoderRegion::Global,
+        }
+    }
+
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::Public(region) => region.source(),
+            Self::Dedicated => "dedicated_qodercn",
+            Self::LegacyLocal => "qodercn_legacy_local",
         }
     }
 }
@@ -95,14 +150,26 @@ mod tests {
         );
         assert_ne!(QoderRegion::Cn.cli_dir(), QoderRegion::Global.cli_dir());
         assert!(QoderRegion::parse(Some("https://other.invalid")).is_err());
+        let cn = serde_json::json!({ "login_source": "qodercn" });
         assert_eq!(
-            QoderRegion::from_info(Some(&serde_json::json!({"login_source":"qodercn"}))).unwrap(),
-            QoderRegion::Cn
+            QoderLoginSource::resolve(Some(&cn), None),
+            Ok(Some(QoderLoginSource::Public(QoderRegion::Cn)))
         );
-        assert!(
-            QoderRegion::from_info(Some(&serde_json::json!({"login_source":"unknown"}))).is_err()
+        let unknown = serde_json::json!({ "login_source": "unknown" });
+        assert_eq!(
+            QoderLoginSource::resolve(Some(&unknown), None),
+            Err("QODER_REGION_UNSUPPORTED".into())
         );
     }
+    #[test]
+    fn existing_ide_sources_keep_their_local_endpoint_policies() {
+        for source in [QoderLoginSource::Dedicated, QoderLoginSource::LegacyLocal] {
+            let plan = serde_json::json!({ "login_source": source.name() });
+            assert_eq!(QoderLoginSource::resolve(None, Some(&plan)), Ok(Some(source)));
+            assert_eq!(source.region(), QoderRegion::Global);
+        }
+    }
+
     #[test]
     fn cn_login_and_callback_never_point_at_global_service() {
         let login = QoderRegion::Cn

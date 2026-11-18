@@ -406,7 +406,7 @@ pub fn switch(region: QoderRegion, account_id: &str, client: NativeClient) -> Re
         .auth_user_info_raw
         .as_ref()
         .ok_or("QODER_NATIVE_TOKEN_MISSING")?;
-    if QoderRegion::from_info(Some(info))? != region {
+    if QoderRegion::from_account(&account)? != region {
         return Err("QODER_PLATFORM_MISMATCH".into());
     }
     ensure_idle(region, client)?;

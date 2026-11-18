@@ -13,7 +13,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::models::qoder::{QoderAccount, QoderOAuthStartResponse};
-use crate::modules::qoder_region::QoderRegion;
+use crate::modules::qoder_region::{QoderLoginSource, QoderRegion};
 use crate::modules::{logger, qoder_identity, qoder_instance};
 
 const REAUTH_REQUIRED: &str = "QODER_REAUTH_REQUIRED";
@@ -886,17 +886,13 @@ pub(crate) fn token_expiry(info: Option<&Value>, key: &str) -> Option<i64> {
 }
 
 fn session_endpoint(account: &QoderAccount) -> Result<String, String> {
-    if QoderRegion::from_info(account.auth_user_info_raw.as_ref())? != DEFAULT_REGION {
+    let source = QoderLoginSource::for_account(account)?;
+    if source.region() != DEFAULT_REGION {
         return Err("QODER_PLATFORM_MISMATCH".into());
     }
-    let (source, _) = qoder_identity::scope(
-        account.auth_user_info_raw.as_ref(),
-        account.auth_user_plan_raw.as_ref(),
-    );
     match source {
-        None | Some("qoder") => Ok(DEFAULT_OPENAPI_BASE_URL.to_string()),
-        Some("qodercn") => Ok(QoderRegion::Cn.api().to_string()),
-        Some("dedicated_qodercn") => {
+        QoderLoginSource::Public(region) => Ok(region.api().to_string()),
+        QoderLoginSource::Dedicated => {
             let root = qoder_instance::get_default_qoder_user_data_dir()?;
             if !qoder_account::local_session_matches(&root, account)? {
                 return Err(OPENAPI_UNAVAILABLE.into());
@@ -909,7 +905,7 @@ fn session_endpoint(account: &QoderAccount) -> Result<String, String> {
                 .ok_or(OPENAPI_UNAVAILABLE)?;
             dedicated_openapi_endpoint(configured).ok_or_else(|| OPENAPI_UNAVAILABLE.into())
         }
-        Some("qodercn_legacy_local") => {
+        QoderLoginSource::LegacyLocal => {
             let root = qoder_instance::get_default_qoder_user_data_dir()?;
             if !qoder_account::local_session_matches(&root, account)? {
                 return Err(OPENAPI_UNAVAILABLE.into());
@@ -934,8 +930,6 @@ fn session_endpoint(account: &QoderAccount) -> Result<String, String> {
             }
             Err(OPENAPI_UNAVAILABLE.into())
         }
-        // CN 1.0 sessions use Cosy rather than the device-token OpenAPI.
-        _ => Err(OPENAPI_UNAVAILABLE.into()),
     }
 }
 
@@ -1066,6 +1060,9 @@ async fn account_endpoint(account: &QoderAccount) -> Result<String, String> {
 
 pub(crate) async fn prepare_account_for_switch(account_id: &str) -> Result<(), String> {
     let target = load_refresh_target(account_id).await?;
+    if QoderRegion::from_account(&target)? != DEFAULT_REGION {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
     let info = target.auth_user_info_raw.as_ref();
     access_token_from_info(info).ok_or(REAUTH_REQUIRED)?;
     if !needs_renewal(info) {
@@ -1135,8 +1132,12 @@ async fn refresh_account_from_openapi_once(
         }
     };
     ensure_refresh_identity_consistent(&target, &user_status)?;
-    let user_info =
+    let mut user_info =
         build_refresh_user_info_raw(&target, &access, &user_status, data_policy.as_ref());
+    // Keep the recorded source if the refreshed plan omits a legacy marker.
+    if let Some(source) = QoderLoginSource::recorded_for_account(&target)? {
+        user_info["login_source"] = Value::String(source.name().into());
+    }
 
     let (plan, usage) = tokio::join!(
         fetch_qoder_user_plan(&client, &endpoint, &access, machine_info.as_ref()),
@@ -1145,6 +1146,12 @@ async fn refresh_account_from_openapi_once(
     let plan = plan
         .map_err(|error| logger::log_warn(&format!("[Qoder Refresh] 套餐查询失败: {error}")))
         .ok();
+    let source = QoderLoginSource::for_account(&target)?;
+    if QoderLoginSource::resolve(Some(&user_info), plan.as_ref())?
+        .is_some_and(|incoming| incoming != source)
+    {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
     let (usage, quota_error) = match usage {
         Ok(usage) => (Some(usage), None),
         Err(error) => (None, Some(error)),
@@ -2055,6 +2062,26 @@ mod tests {
         assert_eq!(session_endpoint(&account(DEFAULT_REGION)).unwrap(), DEFAULT_REGION.api());
         let other = if DEFAULT_REGION == QoderRegion::Cn { QoderRegion::Global } else { QoderRegion::Cn };
         assert_eq!(session_endpoint(&account(other)).unwrap_err(), "QODER_PLATFORM_MISMATCH");
+    }
+
+    #[test]
+    fn account_source_in_plan_is_used_for_routing_and_conflicts_are_rejected() {
+        let mut account = serde_json::from_value::<QoderAccount>(serde_json::json!({
+            "id": "fixture", "email": "fixture@example.invalid", "created_at": 1, "last_used": 1,
+            "auth_user_info_raw": { "id": "fixture-user" },
+            "auth_user_plan_raw": { "login_source": "qodercn" },
+        }))
+        .unwrap();
+        assert_eq!(QoderRegion::from_account(&account), Ok(QoderRegion::Cn));
+        let endpoint = session_endpoint(&account);
+        if DEFAULT_REGION == QoderRegion::Cn {
+            assert_eq!(endpoint.as_deref(), Ok(QoderRegion::Cn.api()));
+        } else {
+            assert_eq!(endpoint.unwrap_err(), "QODER_PLATFORM_MISMATCH");
+        }
+        account.auth_user_info_raw.as_mut().unwrap()["login_source"] =
+            serde_json::json!("qoder");
+        assert_eq!(session_endpoint(&account).unwrap_err(), "QODER_PLATFORM_MISMATCH");
     }
 
     #[test]
