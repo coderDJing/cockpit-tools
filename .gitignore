@@ -52,3 +52,8 @@ docs/plugin-architecture-proposal.md
 .qoder/
 
 sidecars/mihomo/bin/
+
+# Local acceptance scratch (build logs, exe backups, hand-over notes)
+.acceptance/
+# Workspace memory / agent state
+.workbuddy/
