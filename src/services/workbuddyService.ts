@@ -75,7 +75,10 @@ export async function importWorkbuddyFromJson(jsonContent: string): Promise<Work
   }
   const relativePath = `workbuddy-import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`;
   // 应用数据目录可能尚未创建（首次使用该导入路径时）。
-  await mkdir('.', { baseDir: BaseDirectory.AppData, recursive: true });
+  // 这里必须用空字符串而不是 "."：Rust 的 create_dir_all 递归时依赖 path.parent()，
+  // 而 Path::components() 会把末尾的 "." 归一化掉，导致 parent() 少回退一级，
+  // 目标目录那一层永远建不出来，最终报 os error 2。
+  await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true });
   try {
     await writeTextFile(relativePath, jsonContent, { baseDir: BaseDirectory.AppData });
     return await invoke('import_workbuddy_from_json_file', { relativePath });

@@ -41,6 +41,9 @@ test('large Unicode JSON writes the exact payload and sends only the temporary n
   const content = JSON.stringify({ quota_raw: '额度'.repeat(s.threshold), usage_raw: { keep: true } });
   assert.equal(await s.importJson(content), s.accounts);
   assert.deepEqual(s.calls.map(c => c.name), ['mkdir', 'write', 'invoke', 'remove']);
+  // The AppData dir is ensured with an empty relative path: "." would make Rust's
+  // create_dir_all skip a level and fail with os error 2 on a fresh install.
+  assert.deepEqual(s.calls[0].args, ['', { baseDir: 14, recursive: true }]);
   const filename = s.calls[1].args[0];
   assert.match(filename, /^workbuddy-import-[a-z0-9-]+\.json$/);
   assert.equal(s.calls[1].args[1], content);
