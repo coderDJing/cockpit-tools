@@ -190,6 +190,8 @@ pub(crate) mod qoder_native_profile;
 pub mod qoder_oauth;
 #[path = "../../../crates/cockpit-core/src/modules/qoder_paths.rs"]
 pub(crate) mod qoder_paths;
+#[path = "../../../crates/cockpit-core/src/modules/qoder_token_renewal.rs"]
+mod qoder_token_renewal;
 pub mod qoder_quota_alert;
 pub mod quota;
 pub mod quota_cache;

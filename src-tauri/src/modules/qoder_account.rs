@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use crate::models::qoder::{QoderAccount, QoderAccountIndex};
-use crate::modules::{account, logger, qoder_identity};
+use crate::modules::{account, logger, qoder_identity, qoder_token_renewal::TokenRenewal};
 
 const ACCOUNTS_INDEX_FILE: &str = "qoder_accounts.json";
 const ACCOUNTS_DIR: &str = "qoder_accounts";
@@ -194,7 +194,7 @@ fn delete_account_file(account_id: &str) -> Result<(), String> {
         crate::modules::atomic_write::remove_file_locked(&path)
             .map_err(|e| format!("删除账号文件失败: {}", e))?;
     }
-    Ok(())
+    TokenRenewal::discard(&path)
 }
 
 fn load_account_index() -> QoderAccountIndex {
@@ -945,6 +945,56 @@ fn merge_snapshot(mut snapshot: QoderSnapshot) -> Result<QoderAccount, String> {
     refresh_summary(&mut index, &account);
     save_account_index(&index)?;
     Ok(account)
+}
+
+fn save_recovered_credentials(
+    expected: &QoderAccount,
+    updated: &QoderAccount,
+) -> Result<(), String> {
+    let path = resolve_account_file_path(&expected.id)?;
+    let check_current = |value: Option<&Value>| TokenRenewal::check_current(expected, value);
+    crate::modules::secure_account_storage::write_at_checked(
+        &get_data_dir()?,
+        &path,
+        "qoder",
+        updated,
+        &[],
+        check_current,
+    )
+}
+
+pub(crate) fn open_token_renewal(account_id: &str) -> Result<TokenRenewal, String> {
+    let path = resolve_account_file_path(account_id)?;
+    TokenRenewal::open(get_data_dir()?, &path)
+}
+
+pub(crate) fn recover_token_renewal(
+    account_id: &str,
+    renewal: &TokenRenewal,
+) -> Result<QoderAccount, String> {
+    let _guard = QODER_ACCOUNT_INDEX_LOCK
+        .lock()
+        .map_err(|_| "QODER_ACCOUNT_BUSY")?;
+    let current = load_account(account_id).ok_or("QODER_SESSION_CHANGED")?;
+    renewal.recover(current, save_recovered_credentials)
+}
+
+pub(crate) fn save_rotated_token(
+    renewal: &TokenRenewal,
+    expected: &QoderAccount,
+    user_info: Value,
+    verified_origin: Option<String>,
+) -> Result<QoderAccount, String> {
+    let _guard = QODER_ACCOUNT_INDEX_LOCK
+        .lock()
+        .map_err(|_| "QODER_ACCOUNT_BUSY")?;
+    renewal.commit(
+        expected,
+        user_info,
+        verified_origin,
+        || load_account(&expected.id).ok_or_else(|| "QODER_SESSION_CHANGED".into()),
+        save_recovered_credentials,
+    )
 }
 
 pub(crate) fn save_refresh(
