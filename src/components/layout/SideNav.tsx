@@ -77,6 +77,7 @@ const PAGE_PLATFORM_MAP: Partial<Record<Page, PlatformId>> = {
   qoder: 'qoder',
   'qoder-cn': 'qoder_cn',
   zcode: 'zcode',
+  t3code: 't3code',
   trae: 'trae',
   'trae-solo': 'trae_solo',
   'trae-cn': 'trae_cn',

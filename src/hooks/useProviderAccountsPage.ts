@@ -1143,6 +1143,7 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
   const handleInjectToVSCode = useMemo(() => {
     if (!dataService.injectToVSCode) return null;
     const injectFn = dataService.injectToVSCode;
+    const resolveCurrent = platformKey === 'grok' || platformKey === 't3code';
     return async (accountId: string) => {
       setMessage(null);
       setInjecting(accountId);
@@ -1150,10 +1151,8 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
       const displayEmail = account ? config.getDisplayEmail(account) : accountId;
       try {
         await injectFn(accountId);
-        // Grok：以后端为准（关闭「切号同步官方登录」时不应有「当前账号」）。
-        // 其他平台仍乐观标记当前账号，避免 resolver 短暂为空导致标识闪烁。
         let resolvedCurrentAccountId: string | null = accountId;
-        if (platformKey === 'grok' && storeFetchCurrentAccountId) {
+        if (resolveCurrent && storeFetchCurrentAccountId) {
           resolvedCurrentAccountId = await storeFetchCurrentAccountId();
         } else {
           setCurrentAccountId(accountId);
@@ -1166,7 +1165,11 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
             reason: 'switch',
           });
         }
-        setMessage({ text: t('messages.switched', { email: maskAccountText(displayEmail) }) });
+        setMessage({
+          text: platformKey === 't3code' && resolvedCurrentAccountId !== accountId
+            ? t('t3code.pendingSyncIdentity')
+            : t('messages.switched', { email: maskAccountText(displayEmail) }),
+        });
         if (config.onInjectSuccess) {
           try {
             await config.onInjectSuccess({
@@ -1181,7 +1184,7 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
         await fetchAccounts();
       } catch (e: unknown) {
         const missingApp = readMissingLaunchPathApp(e);
-        if (missingApp === 'workbuddy_ai' || missingApp === 'minimaxcode' || missingApp === 'zcode' || missingApp === 'qoder') {
+        if (missingApp === 'workbuddy_ai' || missingApp === 'minimaxcode' || missingApp === 'zcode' || missingApp === 't3code' || missingApp === 'qoder') {
           setInjecting(null);
           if (String(e).startsWith('APP_PATH_MISSING_AFTER_SWITCH:')) await fetchAccounts();
           return;
@@ -1189,7 +1192,7 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
         const retrySwitch = async () => {
           await injectFn(accountId);
           let resolvedCurrentAccountId: string | null = accountId;
-          if (platformKey === 'grok' && storeFetchCurrentAccountId) {
+          if (resolveCurrent && storeFetchCurrentAccountId) {
             resolvedCurrentAccountId = await storeFetchCurrentAccountId();
           } else {
             setCurrentAccountId(accountId);
@@ -1202,7 +1205,11 @@ export function useProviderAccountsPage<TAccount extends ProviderAccountBase>(
               reason: 'switch',
             });
           }
-          setMessage({ text: t('messages.switched', { email: maskAccountText(displayEmail) }) });
+          setMessage({
+            text: platformKey === 't3code' && resolvedCurrentAccountId !== accountId
+              ? t('t3code.pendingSyncIdentity')
+              : t('messages.switched', { email: maskAccountText(displayEmail) }),
+          });
           await Promise.resolve(config.onInjectSuccess?.({
             accountId,
             account,
