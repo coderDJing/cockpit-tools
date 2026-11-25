@@ -37,6 +37,12 @@ fn main() {
     let target = std::env::var("TARGET").expect("TARGET is required");
     if target.ends_with("-windows-msvc") {
         println!("cargo:rustc-link-arg-bin=cockpit-tools=/STACK:8388608");
+        // The unit-test harness links every module of this crate into a single
+        // test binary. On Windows the MSVC linker still emits a PDB for that
+        // link and overflows its size limit, which aborts the run with
+        // LNK1318 before the first test executes. Dropping the PDB keeps the
+        // link bounded; the fork ships without debug symbols anyway.
+        println!("cargo:rustc-link-arg=/DEBUG:NONE");
     }
     build_frontend::verify_production_frontend(&target);
     println!("cargo:rustc-env=COCKPIT_RUST_TARGET={target}");

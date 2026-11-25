@@ -62,13 +62,6 @@ debug = "line-tables-only"
 # Keep macOS rebuilds from retaining a fresh set of .rcgu.o files (rust-lang/rust#161824).
 split-debuginfo = "packed"
 
-[profile.test]
-# `cargo test -p cockpit-tools --lib` links every module into one test binary.
-# On Windows MSVC even `line-tables-only` debug info overflows the PDB size
-# limit (error LNK1318) and the run dies before the first test executes.
-# Test builds keep no debug info so the linker never writes that PDB.
-debug = 0
-
 [profile.ci]
 inherits = "release"
 opt-level = 0
