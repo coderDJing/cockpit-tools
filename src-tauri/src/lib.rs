@@ -4,6 +4,7 @@
 
 mod commands;
 pub mod error;
+mod fork_cli;
 mod models;
 mod modules;
 mod utils;
@@ -14,6 +15,11 @@ mod dependency_tls_tests;
 #[cfg(target_os = "windows")]
 pub fn try_run_codex_package_launcher() -> Option<i32> {
     modules::process::codex_package_launcher::try_run()
+}
+
+/// Headless maintenance entry point; see `fork_cli` for the commands.
+pub fn try_run_fork_cli() -> Option<i32> {
+    fork_cli::try_run()
 }
 
 pub fn try_run_codebuddy_cli() -> Option<i32> {

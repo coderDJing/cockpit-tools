@@ -177,7 +177,7 @@ pub mod provider_current_state;
 pub mod provider_token_keeper;
 pub mod qoder_account;
 #[path = "../../../crates/cockpit-core/src/modules/qoder_channel.rs"]
-mod qoder_channel;
+pub(crate) mod qoder_channel;
 #[path = "../../../crates/cockpit-core/src/modules/qoder_cn_account.rs"]
 pub mod qoder_cn_account;
 #[path = "../../../crates/cockpit-core/src/modules/qoder_identity.rs"]
