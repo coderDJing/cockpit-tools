@@ -1586,7 +1586,6 @@ pub fn run() {
             commands::workbuddy::delete_workbuddy_account,
             commands::workbuddy::delete_workbuddy_accounts,
             commands::workbuddy::import_workbuddy_from_json,
-            commands::workbuddy::import_workbuddy_from_json_file,
             commands::workbuddy::import_workbuddy_from_local,
             commands::workbuddy::export_workbuddy_accounts,
             commands::workbuddy::refresh_workbuddy_token,

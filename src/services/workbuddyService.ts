@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/core';
-import { BaseDirectory, mkdir, remove, writeTextFile } from '@tauri-apps/plugin-fs';
 import type { WorkbuddyAccount } from '../types/workbuddy';
 import type { CheckinResponse, CheckinStatusResponse } from '../types/codebuddy';
 
@@ -63,29 +62,8 @@ export async function deleteWorkbuddyAccounts(accountIds: string[]): Promise<voi
   return await invoke('delete_workbuddy_accounts', { accountIds });
 }
 
-/**
- * 超过该长度的导入内容改走「写临时文件 + 传路径」，
- * 减少 JSON IPC 参数的序列化开销；调用方保留完整导入内容。
- */
-export const WORKBUDDY_IMPORT_VIA_FILE_THRESHOLD = 64 * 1024;
-
 export async function importWorkbuddyFromJson(jsonContent: string): Promise<WorkbuddyAccount[]> {
-  if (jsonContent.length < WORKBUDDY_IMPORT_VIA_FILE_THRESHOLD) {
-    return await invoke('import_workbuddy_from_json', { jsonContent });
-  }
-  const relativePath = `workbuddy-import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`;
-  // 应用数据目录可能尚未创建（首次使用该导入路径时）。
-  // 这里必须用空字符串而不是 "."：Rust 的 create_dir_all 递归时依赖 path.parent()，
-  // 而 Path::components() 会把末尾的 "." 归一化掉，导致 parent() 少回退一级，
-  // 目标目录那一层永远建不出来，最终报 os error 2。
-  await mkdir('', { baseDir: BaseDirectory.AppData, recursive: true });
-  try {
-    await writeTextFile(relativePath, jsonContent, { baseDir: BaseDirectory.AppData });
-    return await invoke('import_workbuddy_from_json_file', { relativePath });
-  } finally {
-    // The backend normally removes it. Also clean up a partial write or failed IPC.
-    await remove(relativePath, { baseDir: BaseDirectory.AppData }).catch(() => {});
-  }
+  return await invoke('import_workbuddy_from_json', { jsonContent });
 }
 
 export async function importWorkbuddyFromLocal(): Promise<WorkbuddyAccount[]> {
