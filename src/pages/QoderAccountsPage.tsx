@@ -1557,7 +1557,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
             {renderQuotaSection(account)}
 
             <div className="card-footer">
-              <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} createdAt={account.created_at} formatDate={formatDateTime} />
+              <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} refreshAt={account.usage_updated_at} createdAt={account.created_at} formatDate={formatDateTime} />
               <div className="card-actions">
                 <button
                   className="card-action-btn success"
@@ -1712,7 +1712,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
               </div>
             </td>
             <td>
-              <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} createdAt={account.created_at} formatDate={formatDateTime} />
+              <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} refreshAt={account.usage_updated_at} createdAt={account.created_at} formatDate={formatDateTime} />
             </td>
             <td className="sticky-action-cell table-action-cell">
               <div className="action-buttons">
