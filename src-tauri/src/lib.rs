@@ -1057,6 +1057,7 @@ pub fn run() {
             commands::system::schedule_apikey_fun_recovery_checkpoint,
             commands::system::restore_apikey_fun_vault,
             commands::system::export_legacy_apikey_fun_vault,
+            commands::system::apply_apikey_fun_gemini_cli_env,
             commands::system::delete_auto_backup_file,
             commands::system::cleanup_auto_backup_files,
             commands::system::open_auto_backup_dir,
@@ -1615,6 +1616,7 @@ pub fn run() {
             commands::workbuddy::run_workbuddy_auto_checkin_now,
             commands::workbuddy::probe_workbuddy_model,
             commands::workbuddy::fetch_workbuddy_cloud_models,
+            modules::workbuddy_log_limits::scan_workbuddy_log_limits,
             commands::workbuddy::probe_codebuddy_cn_model,
             commands::workbuddy::fetch_codebuddy_cn_cloud_models,
             // MiniMax Code Commands
@@ -1792,7 +1794,10 @@ pub fn run() {
             commands::t3code::get_t3code_accounts_index_path,
             commands::t3code::get_t3code_native_settings,
             commands::t3code::update_t3code_native_settings,
+            commands::t3code::get_t3code_privacy_settings,
+            commands::t3code::update_t3code_privacy_settings,
             commands::t3code::get_t3code_provider_workspace,
+            commands::t3code::get_t3code_api_service_quota,
             commands::t3code::t3code_sync_provider_launch_paths,
             commands::t3code::t3code_install_antigravity_runtime,
             commands::t3code::get_t3code_provider_runtime_status,
@@ -2015,6 +2020,7 @@ pub fn run() {
             commands::antigravity_token_usage::antigravity_get_conversation_token_detail,
             commands::antigravity_token_usage::antigravity_get_token_usage_settings,
             commands::antigravity_token_usage::antigravity_set_token_usage_data_dir,
+            commands::antigravity_token_usage::antigravity_set_rehydrate_enabled,
         ])
         .build(context)
         .expect("error while building tauri application");
