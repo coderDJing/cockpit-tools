@@ -67,53 +67,6 @@ pub fn import_workbuddy_from_json(json_content: String) -> Result<Vec<WorkbuddyA
     workbuddy_account::import_from_json(&json_content)
 }
 
-/// 从应用数据目录下的临时 JSON 文件导入。
-/// 供大体积导入使用：避免把数 MB 的 JSON 直接经 IPC 传给 Rust。
-#[tauri::command]
-pub async fn import_workbuddy_from_json_file(
-    app: AppHandle,
-    relative_path: String,
-) -> Result<Vec<WorkbuddyAccount>, String> {
-    // Only consume our own temporary files, never another AppData file or subpath.
-    let valid_name = relative_path
-        .strip_prefix("workbuddy-import-")
-        .and_then(|name| name.strip_suffix(".json"))
-        .is_some_and(|name| {
-            !name.is_empty() && name.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
-        });
-    if !valid_name {
-        return Err("导入文件路径非法".to_string());
-    }
-    let app_dir = tauri::Manager::path(&app)
-        .app_data_dir()
-        .map_err(|error| format!("获取应用数据目录失败: {}", error))?;
-    let path = app_dir.join(relative_path);
-    logger::log_info(&format!(
-        "[WorkBuddy Import] 收到文件导入请求: path={}",
-        path.display()
-    ));
-    tauri::async_runtime::spawn_blocking(move || {
-        let content = std::fs::read_to_string(&path);
-        let _ = std::fs::remove_file(&path);
-        let content = content.map_err(|error| format!("读取导入文件失败: {}", error))?;
-        logger::log_info(&format!(
-            "[WorkBuddy Import] 已读取文件: bytes={}",
-            content.len()
-        ));
-        let result = workbuddy_account::import_from_json(&content);
-        match &result {
-            Ok(accounts) => logger::log_info(&format!(
-                "[WorkBuddy Import] 导入完成: accounts={}",
-                accounts.len()
-            )),
-            Err(error) => logger::log_warn(&format!("[WorkBuddy Import] 导入失败: {}", error)),
-        }
-        result
-    })
-    .await
-    .map_err(|error| format!("WorkBuddy 文件导入后台任务失败: {}", error))?
-}
-
 #[tauri::command]
 pub async fn import_workbuddy_from_local(app: AppHandle) -> Result<Vec<WorkbuddyAccount>, String> {
     let local_payload =

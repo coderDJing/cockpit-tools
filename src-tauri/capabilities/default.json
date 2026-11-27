@@ -23,7 +23,6 @@
     "clipboard-manager:allow-write-text",
     "dialog:default",
     "fs:default",
-    "fs:allow-appdata-write",
     "notification:default",
     "updater:default",
     "process:default"
