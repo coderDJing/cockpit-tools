@@ -281,8 +281,8 @@ pub(crate) const CN_DESKTOP_PROCESS_NAMES: &[&str] = &[
     "qoderlauncher",
 ];
 const CN_CLI_PROCESS_NAMES: &[&str] = &["qoderclicn.exe", "qoderclicn"];
-/// Path fragments that only the CN installer produces.
-const CN_INSTALL_MARKERS: &[&str] = &["\\qoder cn\\", "\\qodercn\\", "/qoder cn/", "/qodercn/"];
+/// Directory names only the CN installer produces.
+const CN_INSTALL_DIR_NAMES: &[&str] = &["qoder cn", "qodercn"];
 
 fn normalize_path_key(path: &Path) -> String {
     path.to_string_lossy()
@@ -308,6 +308,27 @@ fn is_unambiguous_cn_name(name_lower: &str) -> bool {
     name_lower == "qoder cn.exe" || name_lower == "qoder cn"
 }
 
+/// Install root of one executable: its nearest ancestor directory that only the
+/// CN installer creates.
+///
+/// The root is derived per process instead of once for the whole system. Taking
+/// the parent of whichever CN process came first (the previous approach) returned
+/// a versioned payload directory such as `<root>\.qoder-versions\0.5.12` whenever
+/// that process happened to be enumerated first, and every executable above it
+/// then failed the `path_is_within` check — so a running client looked idle and
+/// the switch wrote credentials underneath it.
+fn cn_install_root_of(path: &Path) -> Option<PathBuf> {
+    path.ancestors()
+        .find(|dir| {
+            dir.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| {
+                    CN_INSTALL_DIR_NAMES.contains(&name.to_ascii_lowercase().as_str())
+                })
+        })
+        .map(Path::to_path_buf)
+}
+
 /// Whether a process is the CN desktop client. Without a known install
 /// directory only unambiguous names count, so the global client is never taken
 /// for the CN one.
@@ -328,31 +349,18 @@ pub(crate) fn is_qoder_cn_desktop_process(
     is_unambiguous_cn_name(name_lower)
 }
 
-/// The CN install directory, learned from a running client. Deliberately not
-/// read from config: a stale override must not redirect a kill at the global
-/// client.
-pub(crate) fn qoder_cn_install_dir(system: &sysinfo::System) -> Option<PathBuf> {
-    system
-        .processes()
-        .values()
-        .filter_map(|process| process.exe())
-        .map(PathBuf::from)
-        .find(|path| {
-            let key = normalize_path_key(path);
-            CN_INSTALL_MARKERS.iter().any(|marker| key.contains(marker))
-        })
-        .and_then(|path| path.parent().map(Path::to_path_buf))
+fn process_is_cn_desktop(process: &sysinfo::Process) -> bool {
+    let name = process.name().to_string_lossy().to_ascii_lowercase();
+    let exe = process.exe();
+    let install_root = exe.and_then(cn_install_root_of);
+    is_qoder_cn_desktop_process(&name, exe, install_root.as_deref())
 }
 
 pub(crate) fn qoder_cn_desktop_pids(system: &sysinfo::System) -> Vec<u32> {
-    let dir = qoder_cn_install_dir(system);
     let mut pids: Vec<u32> = system
         .processes()
         .values()
-        .filter(|process| {
-            let name = process.name().to_string_lossy().to_ascii_lowercase();
-            is_qoder_cn_desktop_process(&name, process.exe(), dir.as_deref())
-        })
+        .filter(|process| process_is_cn_desktop(process))
         .map(|process| process.pid().as_u32())
         .collect();
     pids.sort_unstable();
@@ -363,14 +371,10 @@ pub(crate) fn qoder_cn_desktop_pids(system: &sysinfo::System) -> Vec<u32> {
 /// Executable of the running CN desktop client, so a switch can reopen exactly
 /// the binary it closed instead of guessing an install path.
 pub(crate) fn qoder_cn_desktop_executable(system: &sysinfo::System) -> Option<PathBuf> {
-    let dir = qoder_cn_install_dir(system);
     system
         .processes()
         .values()
-        .filter(|process| {
-            let name = process.name().to_string_lossy().to_ascii_lowercase();
-            is_qoder_cn_desktop_process(&name, process.exe(), dir.as_deref())
-        })
+        .filter(|process| process_is_cn_desktop(process))
         .filter_map(|process| process.exe())
         .map(PathBuf::from)
         .find(|path| path.is_file())
@@ -741,6 +745,29 @@ mod tests {
         assert!(is_qoder_cn_desktop_process("qoder cn.exe", None, None));
         assert!(!is_qoder_cn_desktop_process("qoder launcher.exe", None, None));
         assert!(!is_qoder_cn_desktop_process("qoder.exe", None, None));
+    }
+
+    /// 版本化安装布局：`.qoder-versions/<版本>/` 下的 exe 必须解析到安装根，否则
+    /// 根目录的 launcher 不在 `path_is_within` 范围内，运行中的客户端会被当成没开。
+    #[test]
+    fn versioned_payload_resolves_to_the_install_root() {
+        let exe = Path::new("Programs/Qoder CN/.qoder-versions/0.5.12/Qoder CN.exe");
+        let root = cn_install_root_of(exe).expect("CN install root");
+        assert_eq!(root, Path::new("Programs/Qoder CN"));
+        // The launcher that shares its name with the global client has to match
+        // through that same root.
+        assert!(is_qoder_cn_desktop_process(
+            "qoder launcher.exe",
+            Some(&root.join("Qoder Launcher.exe")),
+            Some(&root),
+        ));
+    }
+
+    #[test]
+    fn an_install_outside_a_cn_directory_has_no_cn_root() {
+        assert!(cn_install_root_of(Path::new("Programs/Qoder/Qoder.exe")).is_none());
+        // A folder that merely starts with the name is not an install root.
+        assert!(cn_install_root_of(Path::new("Programs/Qoder CNTools/Qoder.exe")).is_none());
     }
 
     #[test]
