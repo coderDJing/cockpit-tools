@@ -852,7 +852,10 @@ export function UniversalGroupAccountPickerModal({
                       </span>
                       <div className="group-account-meta">
                         {platform === 'codex' ? <CodexAccountPlanBadge account={account as CodexAccount} /> : (
-                          <span className={`tier-badge ${badge.className} ${platform === 'antigravity' ? 'group-account-tier-badge' : 'account-picker-plan'}${preservePlanText ? ' raw-value' : ''}`}>
+                          <span
+                            className={`tier-badge ${badge.className} ${platform === 'antigravity' ? 'group-account-tier-badge' : 'account-picker-plan'}${preservePlanText ? ' raw-value' : ''}`}
+                            title={('rawTier' in badge && badge.rawTier) || badge.label}
+                          >
                             {badge.label}
                           </span>
                         )}

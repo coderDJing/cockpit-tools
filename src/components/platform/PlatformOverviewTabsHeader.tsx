@@ -1,7 +1,7 @@
-import { containsWithScrollbar } from '../../utils/scrollbarContainment';
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock3, FolderOpen, Github, Globe2, Layers, MoreHorizontal, PanelTop, Server } from 'lucide-react';
+import { Clock3, FolderOpen, Globe2, Layers, MoreHorizontal, PanelTop, Server } from 'lucide-react';
+import { CopilotIcon } from '../icons/CopilotIcon';
 import { CodexIcon } from '../icons/CodexIcon';
 import { ClaudeIcon } from '../icons/ClaudeIcon';
 import { WindsurfIcon } from '../icons/WindsurfIcon';
@@ -94,7 +94,7 @@ const CONFIGS: Record<PlatformOverviewHeaderId, PlatformOverviewConfig> = {
   },
   'github-copilot': {
     platformLabel: 'GitHub Copilot',
-    overviewIcon: <Github className="tab-icon" />,
+    overviewIcon: <CopilotIcon className="tab-icon" size={16} />,
   },
   windsurf: {
     platformLabel: 'Devin',
@@ -126,7 +126,7 @@ const CONFIGS: Record<PlatformOverviewHeaderId, PlatformOverviewConfig> = {
   },
   qoder_cn: {
     platformLabel: 'Qoder CN',
-    overviewIcon: <QoderIcon className="tab-icon" />,
+    overviewIcon: <QoderIcon className="tab-icon" region="cn" />,
   },
   zcode: {
     platformLabel: 'ZCode',
@@ -276,7 +276,7 @@ export function PlatformOverviewTabsHeader<T extends string = PlatformOverviewTa
     if (!moreOpen) return;
     const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node | null;
-      if (target && !containsWithScrollbar(moreRef.current, target)) {
+      if (target && !moreRef.current?.contains(target)) {
         setMoreOpen(false);
       }
     };

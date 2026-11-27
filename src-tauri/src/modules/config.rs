@@ -7,6 +7,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock, RwLock};
 
+#[path = "../../../crates/cockpit-core/src/modules/antigravity_launch_preferences.rs"]
+mod antigravity_launch_preferences;
+pub use antigravity_launch_preferences::{AntigravityDesktopLayout, AntigravityDesktopPermission};
+
 /// 默认 WebSocket 端口
 pub const DEFAULT_WS_PORT: u16 = 19528;
 /// 默认网页查询服务端口
@@ -398,9 +402,17 @@ pub struct UserConfig {
     /// Qoder 启动路径（为空则使用默认路径）
     #[serde(default = "default_qoder_app_path")]
     pub qoder_app_path: String,
+    #[serde(default)]
+    pub qoder_desktop_app_path: String,
     /// Qoder CN 启动路径（为空则使用自动探测）
     #[serde(default = "default_qoder_cn_app_path")]
     pub qoder_cn_app_path: String,
+    #[serde(default)]
+    pub qoder_cn_ide_path: String,
+    #[serde(default)]
+    pub qoder_cn_cli_path: String,
+    #[serde(default)]
+    pub qoder_cli_path: String,
     /// ZCode 启动路径（为空则使用默认路径）
     #[serde(default = "default_zcode_app_path")]
     pub zcode_app_path: String,
@@ -479,9 +491,15 @@ pub struct UserConfig {
     /// 启动时是否自动恢复 Codex 代理接管状态
     #[serde(default = "default_codex_auto_restore_takeover_on_launch")]
     pub codex_auto_restore_takeover_on_launch: bool,
-    /// 切换 Antigravity IDE 时是否自动启动/重启应用
+    /// 保留旧版 IDE 隐式切号偏好，账号弹框的显式选择优先。
     #[serde(default = "default_antigravity_launch_on_switch")]
     pub antigravity_launch_on_switch: bool,
+    #[serde(default)]
+    pub antigravity_desktop_chinese_enabled: bool,
+    #[serde(default)]
+    pub antigravity_desktop_layout: AntigravityDesktopLayout,
+    #[serde(default)]
+    pub antigravity_desktop_permission: AntigravityDesktopPermission,
     /// 切换 Codex 时是否自动重启指定应用
     #[serde(default = "default_codex_restart_specified_app_on_switch")]
     pub codex_restart_specified_app_on_switch: bool,
@@ -1471,7 +1489,11 @@ impl Default for UserConfig {
             codebuddy_cn_app_path: default_codebuddy_cn_app_path(),
             codebuddy_cn_share_sessions_on_switch: default_codebuddy_cn_share_sessions_on_switch(),
             qoder_app_path: default_qoder_app_path(),
+            qoder_desktop_app_path: String::new(),
             qoder_cn_app_path: default_qoder_cn_app_path(),
+            qoder_cn_ide_path: String::new(),
+            qoder_cn_cli_path: String::new(),
+            qoder_cli_path: String::new(),
             zcode_app_path: default_zcode_app_path(),
             t3code_app_path: default_t3code_app_path(),
             trae_app_path: default_trae_app_path(),
@@ -1505,6 +1527,9 @@ impl Default for UserConfig {
             codex_auto_restore_takeover_on_launch:
                 default_codex_auto_restore_takeover_on_launch(),
             antigravity_launch_on_switch: default_antigravity_launch_on_switch(),
+            antigravity_desktop_chinese_enabled: false,
+            antigravity_desktop_layout: AntigravityDesktopLayout::default(),
+            antigravity_desktop_permission: AntigravityDesktopPermission::default(),
             codex_restart_specified_app_on_switch: default_codex_restart_specified_app_on_switch(),
             codex_local_access_entry_visible: default_codex_local_access_entry_visible(),
             codex_hide_relay_quota: default_codex_hide_relay_quota(),

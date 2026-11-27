@@ -8,7 +8,6 @@ import {
   ArrowUp,
   CalendarCheck,
   ChevronDown,
-  ChevronLeft,
   CircleAlert,
   Copy,
   Database,
@@ -43,8 +42,10 @@ import { PaginationControls } from '../components/PaginationControls';
 import { AccountSelectionToolbar } from '../components/AccountSelectionToolbar';
 import { usePlatformAccountGroups } from '../hooks/usePlatformAccountGroups';
 import { QoderCheckinModal } from '../components/QoderCheckinModal';
+import { QoderClientLaunchDialog, type QoderCnLaunchOptions } from '../components/QoderCnLaunchDialog';
 import { QuickSettingsPopover } from '../components/QuickSettingsPopover';
 import { MultiSelectFilterDropdown, type MultiSelectFilterOption } from '../components/MultiSelectFilterDropdown';
+import { SingleSelectDropdown } from '../components/SingleSelectDropdown';
 import { SingleSelectFilterDropdown } from '../components/SingleSelectFilterDropdown';
 import { useEscClose } from '../hooks/useEscClose';
 import { useEnterConfirm } from '../hooks/useEnterConfirm';
@@ -66,7 +67,7 @@ import {
   type QoderRegion,
   type QoderClient,
 } from '../utils/qoderRegion';
-import { formatQoderError } from '../utils/qoderErrors';
+import { formatQoderError, isQoderInitializationRequired } from '../utils/qoderErrors';
 import {
   QoderAccount,
   getQoderAccountDisplayEmail,
@@ -248,7 +249,9 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   const platformId = region === 'cn' ? 'qoder_cn' : 'qoder';
   const persistenceScope = region === 'cn' ? normalizeAccountsOverviewScope('qoder_cn') : QODER_FILTER_PERSISTENCE_SCOPE;
   const isWindows = usePlatformRuntimeSupport('windows-only');
-  const [clientTarget, setClientTarget] = useState<QoderClient>(() => defaultQoderClient(region, isWindows));
+  const isMac = usePlatformRuntimeSupport('macos-only');
+  const [importClient, setImportClient] = useState<QoderClient>(() => defaultQoderClient(region, isWindows, isMac));
+  const [switchAccount, setSwitchAccount] = useState<QoderAccount | null>(null);
   const initialFilterPersistenceEnabled =
     readAccountsOverviewFilterPersistenceEnabled(persistenceScope);
   const importFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -303,6 +306,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   useEscClose(showAddModal, () => setShowAddModal(false));
   const [addStatus, setAddStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [addMessage, setAddMessage] = useState<string | null>(null);
+  const [importNeedsOpen, setImportNeedsOpen] = useState(false);
   const [tokenInput, setTokenInput] = useState('');
   const [oauthLoginId, setOauthLoginId] = useState<string | null>(null);
   const [oauthUrl, setOauthUrl] = useState<string | null>(null);
@@ -491,6 +495,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
       }
       setAddStatus('idle');
       setAddMessage(null);
+      setImportNeedsOpen(false);
       setAddTab('import');
       setTokenInput('');
       resetOauthState();
@@ -748,13 +753,13 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
       } catch (error) {
         setMessage({
           tone: 'error',
-          text: t('accounts.refreshFailed', '刷新失败：{{error}}', { error: formatQoderError(error) }),
+          text: t('accounts.refreshFailed', '刷新失败：{{error}}', { error: formatQoderError(error, region) }),
         });
       } finally {
         setRefreshing(null);
       }
     },
-    [refreshing, store, t],
+    [refreshing, region, store, t],
   );
 
   const handleRefreshAll = useCallback(async () => {
@@ -770,52 +775,43 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     } catch (error) {
       setMessage({
         tone: 'error',
-        text: t('accounts.refreshAllFailed', '批量刷新失败：{{error}}', { error: formatQoderError(error) }),
+        text: t('accounts.refreshAllFailed', '批量刷新失败：{{error}}', { error: formatQoderError(error, region) }),
       });
     } finally {
       setRefreshingAll(false);
     }
-  }, [accounts.length, refreshingAll, store, t]);
+  }, [accounts.length, refreshingAll, region, service, store, t]);
 
-  const handleSwitch = useCallback(
-    async (accountId: string) => {
-      if (injecting === accountId) return;
-      setInjecting(accountId);
-      // The backend closes a running client before writing, so report the
-      // restart only when it really happened.
-      let relaunched = false;
-      try {
-        if (clientTarget === 'ide') {
-          const account = accounts.find((item) => item.id === accountId);
-          if (account && getQoderRegion(account) === 'cn') throw new Error(t('qoder.cn.ideUnavailable', '国内账号请选择桌面端或 CLI；此处 IDE 适配器只用于国际版。'));
-          await store.switchAccount(accountId);
-        } else {
-          const outcome = await service.injectQoderNative(accountId, clientTarget);
-          relaunched = outcome.relaunched;
-          await store.fetchAccounts();
-        }
-        setMessage({
-          text: clientTarget === 'ide'
-            ? t('accounts.switchSuccess', '切换成功')
-            : relaunched
-              ? t('qoder.clientTarget.desktopSwitchSuccess', '账号已切换，Qoder CN 桌面端已重新启动。')
-              : t('qoder.clientTarget.switchSuccess', '账号已切换，请重新打开对应客户端。'),
-        });
-      } catch (error) {
-        const errorText = String(error);
-        if (errorText.startsWith('QODER_SWITCH_LAUNCH_FAILED:')) {
-          await store.fetchAccounts();
-        }
-        setMessage({
-          tone: 'error',
-          text: t('accounts.switchFailed', '切换失败：{{error}}', { error: formatQoderError(error) }),
-        });
-      } finally {
-        setInjecting(null);
+  const handleSwitch = useCallback((accountId: string) => {
+    setSwitchAccount(accounts.find((account) => account.id === accountId) ?? null);
+  }, [accounts]);
+
+  async function submitSwitch(client: QoderClient, options: QoderCnLaunchOptions) {
+    if (!switchAccount) return;
+    const id = switchAccount.id;
+    setInjecting(id);
+    try {
+      if (region === 'cn') {
+        await qoderCnService.injectQoderNative(id, client, options);
+        void cnStore.fetchAccounts();
+      } else {
+        await qoderService.injectQoderNative(id, client, options);
+        void globalStore.fetchAccounts();
       }
-    },
-    [injecting, store, t, clientTarget, accounts, region],
-  );
+      setMessage({
+        text: options.launch
+          ? t('accounts.switchSuccess', '切换成功')
+          : t('qoder.clientTarget.switchSuccess', '账号已切换，请重新打开对应客户端。'),
+      });
+    } catch (error) {
+      if (String(error).startsWith('QODER_CN_RELAUNCH_FAILED:') || String(error).startsWith('QODER_DESKTOP_RELAUNCH_FAILED:') || String(error).startsWith('QODER_SWITCH_LAUNCH_FAILED:')) {
+        void store.fetchAccounts();
+      }
+      throw error;
+    } finally {
+      setInjecting(null);
+    }
+  }
 
   const handleDeleteAccounts = useCallback(
     async (ids: string[]) => {
@@ -932,23 +928,45 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     if (addStatus === 'loading') return;
     setAddStatus('loading');
     setAddMessage(null);
+    setImportNeedsOpen(false);
     try {
-      if (clientTarget === 'ide') {
+      if (importClient === 'ide') {
         if (region === 'cn') throw new Error(t('qoder.cn.nativeOnly', '国内账号请选择桌面端或 CLI。'));
         await service.importQoderFromLocal();
       } else {
-        await service.importQoderNative(region, clientTarget);
+        await service.importQoderNative(region, importClient);
       }
       await store.fetchAccounts();
       await new Promise((resolve) => setTimeout(resolve, 180));
       await store.fetchAccounts();
       setAddStatus('success');
-      setAddMessage(t('qoder.import.localSuccess', '已从本机 Qoder 导入账号。'));
+      setAddMessage(
+        region === 'cn'
+          ? t('qoder.cn.importLocalSuccess', '已从本机 Qoder CN 导入账号。')
+          : t('qoder.import.localSuccess', '已从本机 Qoder 导入账号。'),
+      );
+    } catch (error) {
+      const needsInitialization = isQoderInitializationRequired(error);
+      setImportNeedsOpen(needsInitialization);
+      setAddStatus('error');
+      if (!needsInitialization) {
+        setAddMessage(t('qoder.import.localFailed', '本机导入失败：{{error}}', { error: formatQoderError(error, region) }));
+      }
+    }
+  }, [addStatus, store, service, t, region, importClient]);
+
+  async function openImportClient() {
+    if (addStatus === 'loading') return;
+    setAddStatus('loading');
+    setAddMessage(null);
+    try {
+      await qoderService.openQoderClient(region, importClient);
+      setAddStatus('idle');
     } catch (error) {
       setAddStatus('error');
-      setAddMessage(t('qoder.import.localFailed', '本机导入失败：{{error}}', { error: formatQoderError(error) }));
+      setAddMessage(t('messages.actionFailed', { action: t('common.open'), error: formatQoderError(error, region) }));
     }
-  }, [addStatus, store, t, region, clientTarget]);
+  }
 
   const handleImportJsonFile = useCallback(
     async (file: File) => {
@@ -1315,8 +1333,8 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
     const visibleIdSet = new Set(filteredIds);
     const selectedVisibleIds = Array.from(selected).filter((id) => visibleIdSet.has(id));
     const ids = selectedVisibleIds.length > 0 ? selectedVisibleIds : filteredIds;
-    await handleExportByIds(ids, 'qoder_accounts');
-  }, [filteredIds, handleExportByIds, selected]);
+    await handleExportByIds(ids, region === 'cn' ? 'qoder_cn_accounts' : 'qoder_accounts');
+  }, [filteredIds, handleExportByIds, region, selected]);
 
   const formatRelativeDuration = useCallback(
     (seconds: number) => {
@@ -1507,7 +1525,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
         const isRefreshing = refreshing === account.id;
         const isInjecting = injecting === account.id;
         const quotaError = account.quota_query_last_error?.trim();
-        const quotaErrorTitle = quotaError ? formatQoderError(quotaError) : undefined;
+        const quotaErrorTitle = quotaError ? formatQoderError(quotaError, region) : undefined;
         const needsReauthorization = quotaError === 'QODER_REAUTH_REQUIRED';
 
         return (
@@ -1526,7 +1544,6 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
               <span className="account-email" title={maskedEmail}>
                 {maskedEmail}
               </span>
-              <span className="status-pill">{qoderRegionLabel(getQoderRegion(account), t)}</span>
               {quotaError && (
                 <span className="status-pill warning" title={quotaErrorTitle}>
                   <CircleAlert size={12} />
@@ -1635,7 +1652,7 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
         const isRefreshing = refreshing === account.id;
         const isInjecting = injecting === account.id;
         const quotaError = account.quota_query_last_error?.trim();
-        const quotaErrorTitle = quotaError ? formatQoderError(quotaError) : undefined;
+        const quotaErrorTitle = quotaError ? formatQoderError(quotaError, region) : undefined;
         const needsReauthorization = quotaError === 'QODER_REAUTH_REQUIRED';
         const accountTags = (account.tags || []).map((tag) => tag.trim()).filter(Boolean);
         const visibleTags = accountTags.slice(0, 3);
@@ -1866,16 +1883,6 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
   return (
     <div className="ghcp-accounts-page qoder-accounts-page">
       <PlatformOverviewTabsHeader platform={platformId} active={activeTab} onTabChange={setActiveTab} tabs={region === 'cn' ? ['overview'] : undefined} />
-      <div className="toolbar" style={{ marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
-        <label>{t('qoder.clientTarget.label', '切换／本机导入目标')} <select aria-label={t('qoder.clientTarget.ariaLabel', 'Qoder 客户端')} value={clientTarget} disabled={showAddModal || !!injecting} onChange={(event) => setClientTarget(event.target.value as QoderClient)}>
-          <option value="desktop" disabled={!isQoderClientAvailable(region, 'desktop', isWindows)}>
-            {region === 'cn' ? t('qoder.clientTarget.desktopCn', 'Qoder CN 桌面端') : t('qoder.clientTarget.desktop', 'Qoder 桌面端')}
-            {!isWindows && t('qoder.clientTarget.windowsOnly', '（仅 Windows）')}
-          </option>
-          <option value="cli">{region === 'cn' ? t('qoder.clientTarget.cliCn', 'Qoder CN CLI') : t('qoder.clientTarget.cli', 'Qoder CLI')}</option>
-          {region === 'global' && <option value="ide">{t('qoder.clientTarget.ide', 'Qoder IDE')}</option>}
-        </select></label>
-      </div>
 
       {activeTab === 'instances' ? (
         region === 'global' ? <QoderInstancesContent accountsForSelect={filteredAccounts} /> : <div className="ghcp-flow-notice">{t('qoder.cn.instancesUnsupported', '国内版桌面端与 CLI 支持默认客户端账号切换，当前暂不支持应用多开。')}</div>
@@ -1890,7 +1897,11 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
             >
               <div className="ghcp-flow-notice-title">
                 <CircleAlert size={16} />
-                <span>{t('qoder.flowNotice.title', 'Qoder 账号接入说明（点击展开/收起）')}</span>
+                <span>
+                  {region === 'cn'
+                    ? t('qoder.cn.flowNoticeTitle', 'Qoder CN 账号接入说明（点击展开/收起）')
+                    : t('qoder.flowNotice.title', 'Qoder 账号接入说明（点击展开/收起）')}
+                </span>
               </div>
               <ChevronDown size={16} className={`ghcp-flow-notice-arrow ${isFlowNoticeCollapsed ? 'collapsed' : ''}`} />
             </button>
@@ -2196,7 +2207,6 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
         <div className="modal-overlay">
           <div className="modal-content codex-add-modal platform-account-add-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <button className="btn btn-secondary icon-only" onClick={() => setShowAddModal(false)} title={t('common.back', '返回')} aria-label={t('common.back', '返回')}><ChevronLeft size={14} /></button>
               <h2>{t('qoder.addModal.title')} · {qoderRegionLabel(region, t)}</h2>
               <button className="modal-close" onClick={() => setShowAddModal(false)} aria-label={t('common.close', '关闭')}>
                 <X />
@@ -2230,7 +2240,9 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
               {addTab === 'oauth' ? (
                 <div className="add-section">
                   <p className="section-desc">
-                    {t('qoder.oauth.hint', '点击下方按钮，在浏览器中完成 Qoder 账号 OAuth 授权。')}
+                    {region === 'cn'
+                      ? t('qoder.cn.oauthHint', '点击下方按钮，在浏览器中完成 Qoder CN 账号 OAuth 授权。')
+                      : t('qoder.oauth.hint', '点击下方按钮，在浏览器中完成 Qoder 账号 OAuth 授权。')}
                   </p>
                   {oauthError ? (
                     <div className="add-status error">
@@ -2278,7 +2290,11 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
                 </div>
               ) : addTab === 'token' ? (
                 <div className="add-section">
-                  <p className="section-desc">{t('accounts.importJsonHint', '导入由本工具导出的 Qoder JSON 文件。')}</p>
+                  <p className="section-desc">
+                    {region === 'cn'
+                      ? t('qoder.cn.importJsonHint', '导入由本工具导出的 Qoder CN JSON 文件。')
+                      : t('accounts.importJsonHint', '导入由本工具导出的 Qoder JSON 文件。')}
+                  </p>
                   <textarea
                     className="token-input"
                     value={tokenInput}
@@ -2293,12 +2309,52 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
               ) : (
                 <div className="add-section">
                   <p className="section-desc">
-                    {t('qoder.import.localDesc')}
+                    {region === 'cn' ? t('qoder.cn.importLocalDesc', '从当前已登录的本机 Qoder CN 客户端导入账号。') : t('qoder.import.localDesc')}
                   </p>
+                  <div className="qoder-import-source">
+                    <span className="qoder-import-source-label">
+                      {t('qoder.clientTarget.importSource')}
+                    </span>
+                    <SingleSelectDropdown
+                      className="qoder-import-source-select"
+                      ariaLabel={t('qoder.clientTarget.importSource')}
+                      value={importClient}
+                      disabled={addStatus === 'loading'}
+                      onChange={(value) => {
+                        setImportClient(value as QoderClient);
+                        setImportNeedsOpen(false);
+                        setAddStatus('idle');
+                        setAddMessage(null);
+                      }}
+                      options={[
+                        {
+                          value: 'desktop',
+                          disabled: !isQoderClientAvailable(region, 'desktop', isWindows, isMac),
+                          label: region === 'cn'
+                            ? t('qoder.clientTarget.desktopCn', 'Qoder CN 桌面端')
+                            : t('qoder.clientTarget.desktop', 'Qoder 桌面端'),
+                        },
+                        {
+                          value: 'cli',
+                          label: region === 'cn' ? t('qoder.clientTarget.cliCn', 'Qoder CN CLI') : t('qoder.clientTarget.cli', 'Qoder CLI'),
+                        },
+                        ...(region === 'global'
+                          ? [{ value: 'ide', label: t('qoder.clientTarget.ide', 'Qoder IDE') }]
+                          : []),
+                      ]}
+                    />
+                  </div>
                   <button className="btn btn-secondary btn-full" onClick={() => void handleImportLocal()} disabled={addStatus === 'loading'}>
                     {addStatus === 'loading' ? <RefreshCw size={16} className="loading-spinner" /> : <Database size={16} />}
                     {t('common.shared.addModal.import')}
                   </button>
+                  {importNeedsOpen && <div className="qoder-import-initialization">
+                    <p className="section-desc" role="status">{t('qoder.clientTarget.initializeHint')}</p>
+                    <button type="button" className="btn btn-secondary" disabled={addStatus === 'loading'}
+                      onClick={() => void openImportClient()}>
+                      <Play size={16} />{t('common.open')}
+                    </button>
+                  </div>}
                   <div className="oauth-hint" style={{ margin: '8px 0 4px' }}>
                     {t('common.shared.import.orJson', '或从 JSON 文件导入')}
                   </div>
@@ -2383,6 +2439,17 @@ export function QoderAccountsPage({ region = 'global' }: { region?: QoderRegion 
           onSave={async (tags) => {
             await handleSaveTags(showTagModal!, tags);
           }}
+        />
+      )}
+
+      {switchAccount && (
+        <QoderClientLaunchDialog
+          region={region}
+          account={switchAccount}
+          accountLabel={maskAccountText(getQoderAccountDisplayEmail(switchAccount))}
+          onClose={() => setSwitchAccount(null)}
+          onSubmit={submitSwitch}
+          formatError={(error) => formatQoderError(error, region)}
         />
       )}
 

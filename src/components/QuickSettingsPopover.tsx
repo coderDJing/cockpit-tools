@@ -1,3 +1,4 @@
+import { QoderLaunchPathFields } from './QoderCnLaunchDialog';
 import { PlatformLaunchPathField } from './PlatformLaunchPathField';
 import { T3codeNativeSettingsPanel } from './t3code/T3codeNativeSettings';
 import { CodexAppEnhancementSettings } from './codex/CodexAppEnhancementSettings';
@@ -9,6 +10,7 @@ import { CodexQuotaRecoverySettings } from './codex/CodexQuotaRecoverySettings';
 import { CodexQuotaHistorySettings } from './codex/CodexQuotaHistorySettings';
 import { CodexProxyDirectHosts } from './codex/CodexProxyDirectHosts';
 import { SingleSelectDropdown } from './SingleSelectDropdown';
+import { AntigravityDesktopSettingsFields, readAntigravityDesktopSettings, type AntigravityDesktopSettings } from './antigravity/AntigravityDesktopSettings';
 import { MenuBarLeftClickSetting } from './MenuBarLeftClickSetting';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -91,7 +93,7 @@ import { CodexExperimentalModelEditor } from './codex/CodexExperimentalModelEdit
 import './QuickSettingsPopover.css';
 
 /** GeneralConfig from backend */
-interface GeneralConfig {
+interface GeneralConfig extends AntigravityDesktopSettings {
   language: string;
   theme: string;
   ui_scale: number;
@@ -557,7 +559,7 @@ export function QuickSettingsPopover({
         return {
           id: account.id,
           label: account.email,
-          badge: <span className={`tier-badge ${badge.className}`}>{badge.label}</span>,
+          badge: <span className={`tier-badge ${badge.className}`} title={badge.rawTier || badge.label}>{badge.label}</span>,
           searchableText: account.email,
           tags: account.tags || [],
           type: typeValue,
@@ -1320,7 +1322,7 @@ export function QuickSettingsPopover({
       case 'codebuddy_cn':
         return t('quickSettings.codebuddyCn.appPath', 'CodeBuddy CN 路径');
       case 'qoder':
-        return t('quickSettings.qoder.appPath', 'Qoder 路径');
+        return t('appPath.missing.pathLabel', { app: t('qoder.clientTarget.ide') });
       case 'qoder_cn':
         return t('settings.general.qoderCnAppPath', 'Qoder CN 启动路径');
       case 'zcode':
@@ -2431,7 +2433,7 @@ export function QuickSettingsPopover({
                       {t(
                         'settings.general.antigravityLaunchOnSwitch',
                         '切换时启动 Antigravity',
-                  )}
+                      )}
                     </span>
                   </div>
                   <div className="qs-row-control">
@@ -2452,15 +2454,21 @@ export function QuickSettingsPopover({
                 <div className="qs-hint">
                   {t(
                     'antigravityLaunch.quickSwitchSetting',
-              )}
+                  )}
                 </div>
+                <AntigravityDesktopSettingsFields
+                  settings={readAntigravityDesktopSettings(config)}
+                  variant="quick"
+                  onChange={updates => void saveConfig(updates)}
+                />
+                <div className="qs-hint">{t('antigravityLaunch.desktopSettingsHint')}</div>
               </div>
             )}
 
             {/* ─── App Path ─── */}
             {showAppPathSection && (
               <div className="qs-section">
-                {type !== 'codebuddy' && type !== 'codebuddy_cn' && (
+                {type !== 'codebuddy' && type !== 'codebuddy_cn' && type !== 'qoder' && type !== 'qoder_cn' && (
                   <div className="qs-section-header">
                     <FolderOpen size={15} />
                     <span>{getAppPathLabel()}</span>
@@ -2533,6 +2541,8 @@ export function QuickSettingsPopover({
                     <PlatformLaunchPathField key={type} target={type} />
                     <PlatformLaunchPathField target="codebuddy_cli" />
                   </>
+                ) : type === 'qoder' || type === 'qoder_cn' ? (
+                  <QoderLaunchPathFields region={type === 'qoder_cn' ? 'cn' : 'global'} />
                 ) : config && (
 	                <div className="qs-path-control">
                   <input

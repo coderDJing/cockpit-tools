@@ -1,3 +1,4 @@
+import { readAntigravityDesktopSettings, type AntigravityDesktopSettings } from '../components/antigravity/AntigravityDesktopSettings';
 import {
   hasActiveWakeupQuotaReset,
   loadAntigravityWakeupState,
@@ -141,7 +142,7 @@ interface GrokCliStatus {
 }
 
 /** 通用配置类型 */
-interface GeneralConfig {
+interface GeneralConfig extends AntigravityDesktopSettings {
   language: string;
   default_terminal: string;
   theme: string;
@@ -203,7 +204,6 @@ interface GeneralConfig {
   codebuddy_cn_app_path: string;
   codebuddy_cn_share_sessions_on_switch: boolean;
   qoder_app_path: string;
-  qoder_cn_app_path: string;
   zcode_app_path: string;
   t3code_app_path: string;
   t3code_app_ui_injection_enabled?: boolean;
@@ -643,8 +643,6 @@ export function useSettingsPageController() {
   const [codebuddyShareSessionsOnSwitch, setCodebuddyShareSessionsOnSwitch] = useState(false);
   const [codebuddyCnAppPath, setCodebuddyCnAppPath] = useState('');
   const [codebuddyCnShareSessionsOnSwitch, setCodebuddyCnShareSessionsOnSwitch] = useState(false);
-  const [qoderAppPath, setQoderAppPath] = useState('');
-  const [qoderCnAppPath, setQoderCnAppPath] = useState('');
   const [zcodeAppPath, setZcodeAppPath] = useState('');
   const [t3codeAppPath, setT3codeAppPath] = useState('');
   const [t3codeAppUiInjectionEnabled, setT3codeAppUiInjectionEnabled] = useState(true);
@@ -746,6 +744,7 @@ export function useSettingsPageController() {
   const [codexAutomaticSessionRepair, setCodexAutomaticSessionRepair] = useState<CodexAutomaticSessionRepair>('quick');
   const [codexAutoRestoreTakeoverOnLaunch, setCodexAutoRestoreTakeoverOnLaunch] = useState(true);
   const [antigravityLaunchOnSwitch, setAntigravityLaunchOnSwitch] = useState(true);
+  const [antigravityDesktopSettings, setAntigravityDesktopSettings] = useState(readAntigravityDesktopSettings);
   const [codexRestartSpecifiedAppOnSwitch, setCodexRestartSpecifiedAppOnSwitch] = useState(false);
   const [codexLocalAccessEntryVisible, setCodexLocalAccessEntryVisible] = useState(true);
   const [codexHideRelayQuota, setCodexHideRelayQuota] = useState(false);
@@ -862,7 +861,7 @@ export function useSettingsPageController() {
         return {
           id: account.id,
           label: account.email,
-          badge: <span className={`tier-badge ${badge.className}`}>{badge.label}</span>,
+          badge: <span className={`tier-badge ${badge.className}`} title={badge.rawTier || badge.label}>{badge.label}</span>,
           searchableText: account.email,
           tags: account.tags || [],
           type,
@@ -1231,8 +1230,6 @@ export function useSettingsPageController() {
       codebuddy_share_sessions_on_switch: codebuddyShareSessionsOnSwitch,
       codebuddy_cn_app_path: codebuddyCnAppPath,
       codebuddy_cn_share_sessions_on_switch: codebuddyCnShareSessionsOnSwitch,
-      qoder_app_path: qoderAppPath,
-      qoder_cn_app_path: qoderCnAppPath,
       zcode_app_path: zcodeAppPath,
       t3code_app_path: t3codeAppPath,
       trae_app_path: traeAppPath,
@@ -1261,6 +1258,7 @@ export function useSettingsPageController() {
       codex_automatic_session_repair: codexAutomaticSessionRepair,
       codex_auto_restore_takeover_on_launch: codexAutoRestoreTakeoverOnLaunch,
       antigravity_launch_on_switch: antigravityLaunchOnSwitch,
+      ...antigravityDesktopSettings,
       codex_restart_specified_app_on_switch: codexRestartSpecifiedAppOnSwitch,
       codex_local_access_entry_visible: codexLocalAccessEntryVisible,
       codex_hide_relay_quota: codexHideRelayQuota,
@@ -1496,8 +1494,6 @@ export function useSettingsPageController() {
     codebuddyShareSessionsOnSwitch,
     codebuddyCnAppPath,
     codebuddyCnShareSessionsOnSwitch,
-    qoderAppPath,
-    qoderCnAppPath,
     zcodeAppPath,
     t3codeAppPath,
     traeAppPath,
@@ -1521,6 +1517,7 @@ export function useSettingsPageController() {
     codexAutomaticSessionRepair,
     codexAutoRestoreTakeoverOnLaunch,
     antigravityLaunchOnSwitch,
+    antigravityDesktopSettings,
     codexRestartSpecifiedAppOnSwitch,
     codexLocalAccessEntryVisible,
     codexHideRelayQuota,
@@ -1825,8 +1822,6 @@ export function useSettingsPageController() {
       setCodebuddyShareSessionsOnSwitch(config.codebuddy_share_sessions_on_switch ?? false);
       setCodebuddyCnAppPath(config.codebuddy_cn_app_path || '');
       setCodebuddyCnShareSessionsOnSwitch(config.codebuddy_cn_share_sessions_on_switch ?? false);
-      setQoderAppPath(config.qoder_app_path || '');
-      setQoderCnAppPath(config.qoder_cn_app_path || '');
       setZcodeAppPath(config.zcode_app_path || '');
       setT3codeAppPath(config.t3code_app_path || '');
       setT3codeAppUiInjectionEnabled(Boolean(config.t3code_app_ui_injection_enabled ?? true));
@@ -1891,6 +1886,7 @@ export function useSettingsPageController() {
       setCodexAutomaticSessionRepair(config.codex_automatic_session_repair ?? 'quick');
       setCodexAutoRestoreTakeoverOnLaunch(config.codex_auto_restore_takeover_on_launch ?? true);
       setAntigravityLaunchOnSwitch(config.antigravity_launch_on_switch ?? true);
+      setAntigravityDesktopSettings(readAntigravityDesktopSettings(config));
       setCodexRestartSpecifiedAppOnSwitch(
         config.codex_restart_specified_app_on_switch ?? false,
       );
@@ -2211,10 +2207,6 @@ export function useSettingsPageController() {
       setCodebuddyAppPath(path);
     } else if (target === 'codebuddy_cn') {
       setCodebuddyCnAppPath(path);
-    } else if (target === 'qoder') {
-      setQoderAppPath(path);
-    } else if (target === 'qoder_cn') {
-      setQoderCnAppPath(path);
     } else if (target === 'zcode') {
       setZcodeAppPath(path);
     } else if (target === 't3code') {
@@ -3354,6 +3346,7 @@ export function useSettingsPageController() {
     antigravityLegacyAppPath,
     antigravityDualSwitchNoRestartEnabled,
     antigravityLaunchOnSwitch,
+    antigravityDesktopSettings,
     antigravityScopeAccounts,
     antigravityScopeTypeOptions,
     antigravitySeamlessSwitchUnlocked,
@@ -3543,8 +3536,6 @@ export function useSettingsPageController() {
     openLink,
     openMenuBarQuotaModal,
     platformSettingsOrder,
-    qoderAppPath,
-    qoderCnAppPath,
     qoderAutoRefresh,
     qoderAutoRefreshCustomMode,
     qoderAutoRefreshIsPreset,
@@ -3592,6 +3583,7 @@ export function useSettingsPageController() {
     setAntigravityLegacyAppPath,
     setAntigravityDualSwitchNoRestartEnabled,
     setAntigravityLaunchOnSwitch,
+    setAntigravityDesktopSettings,
     setAppAutoLaunchEnabled,
     setAutoImportFromLocalEnabled,
     setAutoImportScanBusy,
@@ -3705,8 +3697,6 @@ export function useSettingsPageController() {
     setOpencodeAppPath,
     setOpencodeAuthOverwriteOnSwitch,
     setOpencodeSyncOnSwitch,
-    setQoderAppPath,
-    setQoderCnAppPath,
     setQoderAutoRefresh,
     setQoderAutoRefreshCustomMode,
     setQoderQuotaAlertEnabled,

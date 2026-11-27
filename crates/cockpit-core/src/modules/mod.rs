@@ -70,7 +70,6 @@ pub mod qoder_instance;
 mod qoder_native_profile;
 pub mod qoder_oauth;
 mod qoder_paths;
-mod qoder_token_renewal;
 pub mod qoder_usage;
 pub mod quota;
 pub mod quota_cache;

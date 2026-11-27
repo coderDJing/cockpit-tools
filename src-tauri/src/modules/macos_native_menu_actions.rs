@@ -220,6 +220,32 @@ async fn refresh_codex_api_service_pool_for_menu(app: AppHandle) -> Result<i32, 
     Ok(success_count)
 }
 
+async fn refresh_all_t3code_providers_for_menu() -> Result<i32, String> {
+    let summaries = tokio::task::spawn_blocking(
+        modules::t3code_provider_bindings::list_default_tray_provider_summaries,
+    )
+    .await
+    .map_err(|error| error.to_string())?;
+    let mut refreshed = 0;
+    let mut last_error: Option<String> = None;
+    for summary in summaries {
+        match modules::t3code_provider_bindings::refresh_provider_account_quota(
+            None,
+            &summary.instance_id,
+        )
+        .await
+        {
+            Ok(_) => refreshed += 1,
+            Err(err) => last_error = Some(err),
+        }
+    }
+    if refreshed > 0 {
+        Ok(refreshed)
+    } else {
+        Err(last_error.unwrap_or_else(|| "没有可刷新的 T3 Code Provider 实例".to_string()))
+    }
+}
+
 fn spawn_refresh(platform: PlatformId, account_id: Option<String>) {
     let Some(app) = crate::get_app_handle().cloned() else {
         return;
@@ -238,6 +264,15 @@ fn spawn_refresh(platform: PlatformId, account_id: Option<String>) {
                     .await
                     .map(|_| 0)
             }
+            (PlatformId::T3Code, Some(provider_instance_id)) => {
+                modules::t3code_provider_bindings::refresh_provider_account_quota(
+                    None,
+                    &provider_instance_id,
+                )
+                .await
+                .map(|_| 0)
+            }
+            (PlatformId::T3Code, None) => refresh_all_t3code_providers_for_menu().await,
             (PlatformId::Codex, Some(account_id))
                 if modules::codex_instance::is_api_service_bind_account_id(&account_id) =>
             {
@@ -406,6 +441,10 @@ fn spawn_switch_account(platform: PlatformId, account_id: String) {
             PlatformId::Antigravity => commands::account::switch_account(app, account_id, None, None, None)
                 .await
                 .map(|_| ()),
+            PlatformId::T3Code => modules::floating_card_window::show_main_window_and_navigate(
+                &app,
+                PlatformId::T3Code.nav_target(),
+            ),
             PlatformId::Codex
                 if modules::codex_instance::is_api_service_bind_account_id(&account_id) =>
             {

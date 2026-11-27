@@ -13,7 +13,6 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::models::qoder::{QoderAccount, QoderOAuthStartResponse};
-use crate::modules::qoder_token_renewal::TokenRenewal;
 use crate::modules::qoder_channel::{
     ide_source, preserve_refresh_source, Channel, CredentialSource,
 };
@@ -134,12 +133,12 @@ fn generate_pkce_verifier() -> String {
     URL_SAFE_NO_PAD.encode(bytes)
 }
 
-fn generate_pkce_challenge(verifier: &str) -> String {
+pub(crate) fn generate_pkce_challenge(verifier: &str) -> String {
     let digest = Sha256::digest(verifier.as_bytes());
     URL_SAFE_NO_PAD.encode(digest)
 }
 
-fn generate_login_nonce() -> String {
+pub(crate) fn generate_login_nonce() -> String {
     Uuid::new_v4().simple().to_string()
 }
 
@@ -1006,7 +1005,6 @@ async fn renew_device_token(
     client: &reqwest::Client,
     endpoint: &str,
     account: &QoderAccount,
-    renewal: &Arc<Renewal>,
 ) -> Result<QoderAccount, String> {
     let info = account.auth_user_info_raw.as_ref();
     let refresh_token = qoder_identity::field(info, "refreshToken").ok_or(REAUTH_REQUIRED)?;
@@ -1038,64 +1036,50 @@ async fn renew_device_token(
         parse_expire_timestamp_ms(tokens.refresh_token_expires_at.as_deref()),
     );
 
-    // Credentials must be durable before requesting user status or quota. The
-    // rotation is staged in the journal first, so a write that is interrupted
-    // between the OAuth response and the store is resumed on the next load.
+    // Persist the rotated token before making further requests that can fail.
     let verified_origin = (endpoint != DEFAULT_OPENAPI_BASE_URL).then(|| endpoint.to_string());
     let account = account.clone();
-    let renewal = Arc::clone(renewal);
     tokio::task::spawn_blocking(move || {
-        renewal.save_rotated(&account, Value::Object(updated), verified_origin)
+        save_refreshed_account(
+            &account,
+            Value::Object(updated),
+            None,
+            None,
+            account.quota_query_last_error.clone(),
+            verified_origin,
+        )
     })
     .await
     .map_err(|_| "QODER_ACCOUNT_BUSY")?
 }
 
-/// Which store owns the account being refreshed. The renewal journal lives next
-/// to that store's detail file, so the handle carries the store with it.
-enum Renewal {
-    Global(TokenRenewal),
-    Cn(crate::modules::qoder_cn_account::QoderCnAccountStore, TokenRenewal),
+async fn load_refresh_target(account_id: &str) -> Result<QoderAccount, String> {
+    load_refresh_target_for_source(account_id, None).await
 }
 
-impl Renewal {
-    fn save_rotated(
-        &self,
-        expected: &QoderAccount,
-        user_info: Value,
-        verified_origin: Option<String>,
-    ) -> Result<QoderAccount, String> {
-        match self {
-            Self::Global(renewal) => {
-                qoder_account::save_rotated_token(renewal, expected, user_info, verified_origin)
-            }
-            Self::Cn(store, renewal) => {
-                store.save_rotated_token(renewal, expected, user_info, verified_origin)
-            }
-        }
-    }
-}
-
-/// Loads the account and, before anything else, applies a renewal that was
-/// staged but never reached the store.
-async fn load_refresh_target(account_id: &str) -> Result<(QoderAccount, Arc<Renewal>), String> {
+async fn load_refresh_target_for_source(
+    account_id: &str,
+    source: Option<CredentialSource>,
+) -> Result<QoderAccount, String> {
     let id = account_id.to_string();
     tokio::task::spawn_blocking(move || {
-        if qoder_account::load_account(&id).is_some() {
-            let renewal = qoder_account::open_token_renewal(&id)?;
-            let target = qoder_account::recover_token_renewal(&id, &renewal)?;
-            return Ok((target, Arc::new(Renewal::Global(renewal))));
+        if source != Some(CredentialSource::PublicCn) {
+            if let Some(account) = qoder_account::load_account(&id) {
+                if let Some(expected) = source {
+                    if crate::modules::qoder_channel::credential_source(&account)? != expected {
+                        return Err("QODER_PLATFORM_MISMATCH".into());
+                    }
+                }
+                return Ok(account);
+            }
+            if source.is_some() {
+                return Err("QODER_SESSION_CHANGED".into());
+            }
         }
-        let store = match crate::modules::qoder_cn_account::QoderCnAccountStore::default_store() {
-            Ok(store) => store,
-            Err(_) => return Err("QODER_SESSION_CHANGED".to_string()),
-        };
-        if store.load_account(&id)?.is_none() {
-            return Err("QODER_SESSION_CHANGED".to_string());
-        }
-        let renewal = store.open_token_renewal(&id)?;
-        let target = store.recover_token_renewal(&id, &renewal)?;
-        Ok((target, Arc::new(Renewal::Cn(store, renewal))))
+        crate::modules::qoder_cn_account::QoderCnAccountStore::default_store()
+            .map_err(|_| "QODER_SESSION_CHANGED".to_string())?
+            .load_account(&id)?
+            .ok_or_else(|| "QODER_SESSION_CHANGED".to_string())
     })
     .await
     .map_err(|_| "QODER_ACCOUNT_BUSY")?
@@ -1151,27 +1135,31 @@ async fn account_endpoint(account: &QoderAccount) -> Result<String, String> {
 }
 
 pub(crate) async fn prepare_account_for_switch(account_id: &str) -> Result<(), String> {
-    let (target, renewal) = load_refresh_target(account_id).await?;
+    let target = load_refresh_target(account_id).await?;
     ide_source(&target)?;
-    // The journal lock is exclusive: release it before the switch path re-reads.
-    drop(renewal);
-    prepare_target_for_switch(target).await
+    prepare_target_for_switch(target, None).await
 }
 
 /// Same preparation for the public CN client, which writes credentials into its
 /// own store instead of the IDE database.
 pub(crate) async fn prepare_cn_account_for_switch(account_id: &str) -> Result<(), String> {
-    let (target, renewal) = load_refresh_target(account_id).await?;
-    if crate::modules::qoder_channel::credential_source(&target)? != CredentialSource::PublicCn {
-        return Err("QODER_PLATFORM_MISMATCH".into());
-    }
-    drop(renewal);
-    prepare_target_for_switch(target).await
+    prepare_account_for_client(account_id, CredentialSource::PublicCn).await
+}
+
+pub(crate) async fn prepare_account_for_client(
+    account_id: &str,
+    source: CredentialSource,
+) -> Result<(), String> {
+    let target = load_refresh_target_for_source(account_id, Some(source)).await?;
+    prepare_target_for_switch(target, Some(source)).await
 }
 
 /// Guarantees the account has a usable access token, renewing it when the
 /// recorded expiry has passed.
-async fn prepare_target_for_switch(target: QoderAccount) -> Result<(), String> {
+async fn prepare_target_for_switch(
+    target: QoderAccount,
+    source: Option<CredentialSource>,
+) -> Result<(), String> {
     let account_id = target.id.clone();
     let info = target.auth_user_info_raw.as_ref();
     access_token_from_info(info).ok_or(REAUTH_REQUIRED)?;
@@ -1182,22 +1170,20 @@ async fn prepare_target_for_switch(target: QoderAccount) -> Result<(), String> {
     }
     let lock = refresh_lock(&account_id)?;
     let _guard = lock.lock().await;
-    // Re-read under the refresh lock: a queued refresh may have renewed already.
-    let (target, renewal) = load_refresh_target(&account_id).await?;
+    let target = load_refresh_target_for_source(&account_id, source).await?;
     let info = target.auth_user_info_raw.as_ref();
     access_token_from_info(info).ok_or(REAUTH_REQUIRED)?;
     if token_expiry(info, "expireTime")
         .is_some_and(|expiry| expiry <= chrono::Utc::now().timestamp_millis())
     {
         let endpoint = account_endpoint(&target).await?;
-        renew_device_token(&build_reqwest_client()?, &endpoint, &target, &renewal).await?;
+        renew_device_token(&build_reqwest_client()?, &endpoint, &target).await?;
     }
     Ok(())
 }
 
 async fn refresh_account_from_openapi_once(
     mut target: QoderAccount,
-    renewal: Arc<Renewal>,
 ) -> Result<QoderAccount, String> {
     let endpoint = account_endpoint(&target).await?;
     let client = build_reqwest_client()?;
@@ -1217,7 +1203,7 @@ async fn refresh_account_from_openapi_once(
             && qoder_identity::field(info, "refreshToken").is_some()
             && refresh_expiry.is_none_or(|expiry| expiry - now >= RENEWAL_WINDOW_MS));
     if renewed {
-        target = renew_device_token(&client, &endpoint, &target, &renewal).await?;
+        target = renew_device_token(&client, &endpoint, &target).await?;
     }
     let mut access =
         access_token_from_info(target.auth_user_info_raw.as_ref()).ok_or(REAUTH_REQUIRED)?;
@@ -1226,7 +1212,7 @@ async fn refresh_account_from_openapi_once(
             .await
         {
             Err(error) if error == UNAUTHORIZED && !renewed => {
-                target = renew_device_token(&client, &endpoint, &target, &renewal).await?;
+                target = renew_device_token(&client, &endpoint, &target).await?;
                 access = access_token_from_info(target.auth_user_info_raw.as_ref())
                     .ok_or(REAUTH_REQUIRED)?;
                 renewed = true;
@@ -1267,10 +1253,17 @@ async fn refresh_account_from_openapi_once(
 }
 
 pub async fn refresh_account_from_openapi(account_id: &str) -> Result<QoderAccount, String> {
+    refresh_account_for_source(account_id, None).await
+}
+
+pub(crate) async fn refresh_account_for_source(
+    account_id: &str,
+    source: Option<CredentialSource>,
+) -> Result<QoderAccount, String> {
     let lock = refresh_lock(account_id)?;
     let _guard = lock.lock().await;
-    let (target, renewal) = load_refresh_target(account_id).await?;
-    let result = refresh_account_from_openapi_once(target.clone(), renewal).await;
+    let target = load_refresh_target_for_source(account_id, source).await?;
+    let result = refresh_account_from_openapi_once(target.clone()).await;
     if let Err(error) = &result {
         if error != "QODER_SESSION_CHANGED" {
             let error = error.clone();
@@ -1809,7 +1802,7 @@ fn persist_login_snapshot(
 }
 
 pub fn peek_pending_login() -> Option<QoderOAuthStartResponse> {
-    peek_login_for(|_| true)
+    peek_login_for(|channel| channel.source() != CredentialSource::PublicCn)
 }
 
 /// Peeks only a login started by the public CN client, so the CN page never
@@ -2032,13 +2025,17 @@ async fn qoder_sash_request(
     path_and_query: &str,
     body: Option<Value>,
 ) -> Result<QoderSashResponse, String> {
-    let (mut target, renewal) = load_refresh_target(account_id).await?;
+    let mut target = load_refresh_target(account_id).await?;
     let endpoint = account_endpoint(&target).await?;
     let client = build_reqwest_client()?;
     let mut renewed = false;
     loop {
         let access =
             access_token_from_info(target.auth_user_info_raw.as_ref()).ok_or(REAUTH_REQUIRED)?;
+        // endpoint 由 `session_endpoint` 按渠道给出，固定为 https（国际站与 CN 的
+        // origin 都是常量，IDE 渠道用已校验的存储 origin）；凭证只走 Authorization
+        // 头，URL 里只有接口路径。Rust 侧的 CodeQL 没有行内抑制（codeql#21637），
+        // 所以这条 rust/cleartext-transmission 只能靠误报 dismiss 处理。
         let mut request = client
             .request(method.clone(), format!("{}{}", endpoint, path_and_query))
             .headers(build_sash_headers(&access));
@@ -2054,7 +2051,7 @@ async fn qoder_sash_request(
             if renewed {
                 return Err(UNAUTHORIZED.into());
             }
-            target = renew_device_token(&client, &endpoint, &target, &renewal).await?;
+            target = renew_device_token(&client, &endpoint, &target).await?;
             renewed = true;
             continue;
         }
@@ -2408,5 +2405,54 @@ mod tests {
         assert!(!status.active);
         assert!(!status.checked_in);
         assert!(status.amount.is_none());
+    }
+
+    #[test]
+    fn peek_pending_login_isolates_cn_and_global_channels() {
+        static PENDING_LOGIN_TEST_MUTEX: Mutex<()> = Mutex::new(());
+        let _guard = PENDING_LOGIN_TEST_MUTEX
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let cn = Channel::for_source(CredentialSource::PublicCn).expect("CN channel");
+        let global = Channel::for_source(CredentialSource::GlobalIde).expect("global channel");
+        let expires_at = now_timestamp() + 120;
+
+        {
+            let mut pending = PENDING_OAUTH_STATE.lock().unwrap();
+            *pending = Some(PendingOAuthState {
+                login_id: "cn-login".into(),
+                channel: cn,
+                expected_nonce: "n".into(),
+                code_verifier: "v".into(),
+                challenge_method: "S256".into(),
+                openapi_base_url: cn.openapi_base_url().into(),
+                machine_info: None,
+                verification_uri: "https://qoder.com.cn/oauth".into(),
+                expires_at,
+                cancelled: false,
+            });
+        }
+        assert!(peek_pending_login().is_none());
+        assert_eq!(peek_pending_cn_login().map(|r| r.login_id), Some("cn-login".into()));
+
+        {
+            let mut pending = PENDING_OAUTH_STATE.lock().unwrap();
+            *pending = Some(PendingOAuthState {
+                login_id: "global-login".into(),
+                channel: global,
+                expected_nonce: "n".into(),
+                code_verifier: "v".into(),
+                challenge_method: "S256".into(),
+                openapi_base_url: global.openapi_base_url().into(),
+                machine_info: None,
+                verification_uri: "https://qoder.com/oauth".into(),
+                expires_at,
+                cancelled: false,
+            });
+        }
+        assert_eq!(peek_pending_login().map(|r| r.login_id), Some("global-login".into()));
+        assert!(peek_pending_cn_login().is_none());
+
+        *PENDING_OAUTH_STATE.lock().unwrap() = None;
     }
 }

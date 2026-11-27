@@ -57,6 +57,7 @@ export const MAIN_WINDOW_NAVIGABLE_PAGES: readonly Page[] = [
   'qoder',
   'qoder-cn',
   'zcode',
+  't3code',
   'trae',
   'trae-solo',
   'trae-cn',

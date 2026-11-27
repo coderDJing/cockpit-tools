@@ -41,7 +41,7 @@ import {
   usePlatformLayoutStore,
 } from '../stores/usePlatformLayoutStore';
 import { Page } from '../types/navigation';
-import { Users, CheckCircle2, Sparkles, RotateCw, Play, Github, Tag, ChevronDown, EyeOff, X } from 'lucide-react';
+import { Users, CheckCircle2, Sparkles, RotateCw, Play, Tag, ChevronDown, EyeOff, X } from 'lucide-react';
 import { TagEditModal } from '../components/TagEditModal';
 import { Account } from '../types/account';
 import {
@@ -95,7 +95,6 @@ import { KiroIcon } from '../components/icons/KiroIcon';
 import { CursorIcon } from '../components/icons/CursorIcon';
 import { ClaudeIcon } from '../components/icons/ClaudeIcon';
 import { CodebuddyIcon } from '../components/icons/CodebuddyIcon';
-import { QoderIcon } from '../components/icons/QoderIcon';
 import { ZcodeIcon } from '../components/icons/ZcodeIcon';
 import { WorkbuddyIcon } from '../components/icons/WorkbuddyIcon';
 import { MinimaxCodeIcon } from '../components/icons/MinimaxCodeIcon';
@@ -2068,6 +2067,11 @@ export function DashboardPage({
     [qoderAccounts, qoderCurrent?.id],
   );
 
+  const zcodeRecommended = useMemo(
+    () => getRecommendedZcodeAccount(zcodeAccounts, zcodeCurrent?.id),
+    [zcodeAccounts, zcodeCurrent?.id],
+  );
+
   const qoderCnCurrent = useMemo(
     () => resolveDashboardCurrentAccount(qoderCnAccounts, qoderCnCurrentId),
     [qoderCnAccounts, qoderCnCurrentId],
@@ -2076,11 +2080,6 @@ export function DashboardPage({
   const qoderCnRecommended = useMemo(
     () => getRecommendedQoderAccount(qoderCnAccounts, qoderCnCurrent?.id),
     [qoderCnAccounts, qoderCnCurrent?.id],
-  );
-
-  const zcodeRecommended = useMemo(
-    () => getRecommendedZcodeAccount(zcodeAccounts, zcodeCurrent?.id),
-    [zcodeAccounts, zcodeCurrent?.id],
   );
 
   const getTraeCurrentForPlatform = (platformId: TraePlatformId): TraeAccount | null => {
@@ -2263,7 +2262,7 @@ export function DashboardPage({
               {maskAccountText(presentation.displayName)}
             </span>
             {shouldShowPlan && (
-              <span className={`tier-badge ${presentation.planClass}`}>{presentation.planLabel}</span>
+              <span className={`tier-badge ${presentation.planClass}`} title={presentation.planTitle || presentation.planLabel}>{presentation.planLabel}</span>
             )}
           </div>
         </div>
@@ -2331,7 +2330,7 @@ export function DashboardPage({
             <span className="account-email" title={displayName}>
               {displayName}
             </span>
-            <span className={`tier-badge ${presentation.planClass}`}>{presentation.planLabel}</span>
+            <span className={`tier-badge ${presentation.planClass}`} title={presentation.planTitle || presentation.planLabel}>{presentation.planLabel}</span>
           </div>
         </div>
 
@@ -3100,7 +3099,7 @@ export function DashboardPage({
         <div className="main-card github-copilot-card" key={platformId}>
           <div className="main-card-header">
             <div className="header-title">
-              <Github size={18} />
+              {renderPlatformIcon('github-copilot', 18)}
               <h3>{getPlatformLabel(platformId, t)}</h3>
             </div>
             <div className="header-action-group">
@@ -3427,7 +3426,7 @@ export function DashboardPage({
         <div className="main-card windsurf-card" key={platformId}>
           <div className="main-card-header">
             <div className="header-title">
-              <QoderIcon style={{ width: 18, height: 18 }} />
+              {renderPlatformIcon('qoder', 18)}
               <h3>{getPlatformLabel(platformId, t)}</h3>
             </div>
             <div className="header-action-group">
@@ -3474,7 +3473,7 @@ export function DashboardPage({
         <div className="main-card windsurf-card" key={platformId}>
           <div className="main-card-header">
             <div className="header-title">
-              <QoderIcon style={{ width: 18, height: 18 }} />
+              {renderPlatformIcon('qoder_cn', 18)}
               <h3>{getPlatformLabel(platformId, t)}</h3>
             </div>
             <div className="header-action-group">

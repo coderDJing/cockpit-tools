@@ -9,6 +9,7 @@ use crate::modules::{
     qoder_native_profile,
 };
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+#[cfg(windows)]
 use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use fs2::FileExt;
@@ -108,6 +109,74 @@ impl NativeRegion {
     }
 }
 
+pub(crate) fn write_t3_cli_profile(
+    region: NativeRegion,
+    account_id: &str,
+    config_dir: &Path,
+) -> Result<String, String> {
+    let account = region.load_account(account_id)?;
+    if super::qoder_channel::credential_source(&account)? != region.channel()?.source() {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
+    let info = account.auth_user_info_raw.as_ref().ok_or("QODER_NATIVE_TOKEN_MISSING")?;
+    let profile = qoder_native_profile::for_client(info, false)?;
+    write_scoped_cli_profile(config_dir, &profile)?;
+    Ok(account.email)
+}
+
+fn write_scoped_cli_profile(config_dir: &Path, profile: &Value) -> Result<(), String> {
+    let root = config_dir.join(".auth");
+    initialize_cli_root(&root)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(config_dir, fs::Permissions::from_mode(0o700)).map_err(io_error)?;
+    }
+    let client = NativeClient::Cli;
+    let encrypted = encode(&root, client, profile)?;
+    atomic_write::write_bytes_atomic(&root.join(client.filename()), &encrypted)
+}
+
+fn initialize_cli_root(root: &Path) -> Result<(), String> {
+    fs::create_dir_all(&root).map_err(io_error)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(root, fs::Permissions::from_mode(0o700)).map_err(io_error)?;
+    }
+    let machine_id = root.join("machine_id");
+    // The CLI also accepts a generated UUID when there is no existing machine ID.
+    if !machine_id.try_exists().map_err(io_error)? {
+        atomic_write::write_bytes_atomic(&machine_id, uuid::Uuid::new_v4().to_string().as_bytes())?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+#[test]
+fn qoder_cli_profiles_have_separate_credentials_and_stable_machine_ids() {
+    let state = tempfile::tempdir().unwrap();
+    let first = state.path().join("first");
+    let second = state.path().join("second");
+    let first_user = serde_json::json!({"userId": "first", "accessToken": "fixture-1"});
+    let second_user = serde_json::json!({"userId": "second", "accessToken": "fixture-2"});
+    write_scoped_cli_profile(&first, &first_user).unwrap();
+    write_scoped_cli_profile(&second, &second_user).unwrap();
+    let first_root = first.join(".auth");
+    let second_root = second.join(".auth");
+    let first_machine = fs::read(first_root.join("machine_id")).unwrap();
+    let second_machine = fs::read(second_root.join("machine_id")).unwrap();
+    assert_ne!(first_machine, second_machine);
+    for (root, user) in [(&first_root, &first_user), (&second_root, &second_user)] {
+        let client = NativeClient::Cli;
+        let bytes = fs::read(root.join(client.filename())).unwrap();
+        assert_eq!(&decode(root, client, &bytes).unwrap(), user);
+    }
+    write_scoped_cli_profile(&first, &first_user).unwrap();
+    assert_eq!(fs::read(first_root.join("machine_id")).unwrap(), first_machine);
+    assert_eq!(fs::read(second_root.join("machine_id")).unwrap(), second_machine);
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum NativeClient {
     Desktop,
@@ -163,6 +232,7 @@ fn unprotect(bytes: &[u8]) -> Result<Vec<u8>, String> {
     }
 }
 
+#[cfg(windows)]
 fn desktop_key(root: &Path) -> Result<Vec<u8>, String> {
     #[cfg(windows)]
     {
@@ -186,16 +256,17 @@ fn desktop_key(root: &Path) -> Result<Vec<u8>, String> {
         }
         Ok(key)
     }
-    #[cfg(not(windows))]
-    {
-        let _ = root;
-        Err("Native desktop adapter currently supports Windows; use the CLI adapter on this platform".into())
-    }
 }
 
 fn decode(root: &Path, client: NativeClient, bytes: &[u8]) -> Result<Value, String> {
     let plain = match client {
         NativeClient::Desktop => {
+            #[cfg(target_os = "macos")]
+            {
+                super::vscode_inject::decode_qoder_desktop(root, bytes)?
+            }
+            #[cfg(windows)]
+            {
             if !bytes.starts_with(b"v10") || bytes.len() < 31 {
                 return Err("QODER_NATIVE_ENVELOPE_UNSUPPORTED".into());
             }
@@ -203,6 +274,9 @@ fn decode(root: &Path, client: NativeClient, bytes: &[u8]) -> Result<Value, Stri
                 .map_err(|_| "QODER_NATIVE_KEY_INVALID")?
                 .decrypt(Nonce::from_slice(&bytes[3..15]), &bytes[15..])
                 .map_err(|_| "QODER_NATIVE_DECRYPT_FAILED")?
+            }
+            #[cfg(not(any(windows, target_os = "macos")))]
+            return Err("QODER_NATIVE_DESKTOP_UNSUPPORTED".into());
         }
         NativeClient::Cli => {
             if bytes.first() == Some(&b'{') {
@@ -232,14 +306,22 @@ fn encode(root: &Path, client: NativeClient, profile: &Value) -> Result<Vec<u8>,
     let plain = serde_json::to_vec(profile).map_err(|_| "QODER_NATIVE_JSON_INVALID")?;
     let bytes = match client {
         NativeClient::Desktop => {
-            use aes_gcm::aead::{rand_core::RngCore, OsRng};
-            let mut nonce = [0u8; 12];
-            OsRng.fill_bytes(&mut nonce);
+            #[cfg(target_os = "macos")]
+            {
+                super::vscode_inject::encode_qoder_desktop(root, &plain)?
+            }
+            #[cfg(windows)]
+            {
+            use aes_gcm::aead::{AeadCore, OsRng};
+            let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
             let cipher = Aes256Gcm::new_from_slice(&desktop_key(root)?)
                 .map_err(|_| "QODER_NATIVE_KEY_INVALID")?
-                .encrypt(Nonce::from_slice(&nonce), plain.as_slice())
+                .encrypt(&nonce, plain.as_slice())
                 .map_err(|_| "QODER_NATIVE_ENCRYPT_FAILED")?;
-            [b"v10".as_slice(), &nonce, &cipher].concat()
+            [b"v10".as_slice(), nonce.as_slice(), &cipher].concat()
+            }
+            #[cfg(not(any(windows, target_os = "macos")))]
+            return Err("QODER_NATIVE_DESKTOP_UNSUPPORTED".into());
         }
         NativeClient::Cli => {
             let machine = fs::read_to_string(root.join("machine_id")).map_err(io_error)?;
@@ -281,8 +363,8 @@ pub(crate) const CN_DESKTOP_PROCESS_NAMES: &[&str] = &[
     "qoderlauncher",
 ];
 const CN_CLI_PROCESS_NAMES: &[&str] = &["qoderclicn.exe", "qoderclicn"];
-/// Directory names only the CN installer produces.
-const CN_INSTALL_DIR_NAMES: &[&str] = &["qoder cn", "qodercn"];
+/// Path fragments that only the CN installer produces.
+const CN_INSTALL_MARKERS: &[&str] = &["\\qoder cn\\", "\\qodercn\\", "/qoder cn/", "/qodercn/"];
 
 fn normalize_path_key(path: &Path) -> String {
     path.to_string_lossy()
@@ -308,27 +390,6 @@ fn is_unambiguous_cn_name(name_lower: &str) -> bool {
     name_lower == "qoder cn.exe" || name_lower == "qoder cn"
 }
 
-/// Install root of one executable: its nearest ancestor directory that only the
-/// CN installer creates.
-///
-/// The root is derived per process instead of once for the whole system. Taking
-/// the parent of whichever CN process came first (the previous approach) returned
-/// a versioned payload directory such as `<root>\.qoder-versions\0.5.12` whenever
-/// that process happened to be enumerated first, and every executable above it
-/// then failed the `path_is_within` check — so a running client looked idle and
-/// the switch wrote credentials underneath it.
-fn cn_install_root_of(path: &Path) -> Option<PathBuf> {
-    path.ancestors()
-        .find(|dir| {
-            dir.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| {
-                    CN_INSTALL_DIR_NAMES.contains(&name.to_ascii_lowercase().as_str())
-                })
-        })
-        .map(Path::to_path_buf)
-}
-
 /// Whether a process is the CN desktop client. Without a known install
 /// directory only unambiguous names count, so the global client is never taken
 /// for the CN one.
@@ -349,40 +410,99 @@ pub(crate) fn is_qoder_cn_desktop_process(
     is_unambiguous_cn_name(name_lower)
 }
 
-fn process_is_cn_desktop(process: &sysinfo::Process) -> bool {
-    let name = process.name().to_string_lossy().to_ascii_lowercase();
-    let exe = process.exe();
-    let install_root = exe.and_then(cn_install_root_of);
-    is_qoder_cn_desktop_process(&name, exe, install_root.as_deref())
+/// The CN install directory, learned from a running client. Deliberately not
+/// read from config: a stale override must not redirect a kill at the global
+/// client.
+pub(crate) fn qoder_cn_install_dir(system: &sysinfo::System) -> Option<PathBuf> {
+    system
+        .processes()
+        .values()
+        .filter_map(|process| process.exe())
+        .map(PathBuf::from)
+        .find(|path| {
+            let key = normalize_path_key(path);
+            CN_INSTALL_MARKERS.iter().any(|marker| key.contains(marker))
+        })
+        .and_then(|path| path.parent().map(Path::to_path_buf))
 }
 
 pub(crate) fn qoder_cn_desktop_pids(system: &sysinfo::System) -> Vec<u32> {
-    let mut pids: Vec<u32> = system
-        .processes()
-        .values()
-        .filter(|process| process_is_cn_desktop(process))
-        .map(|process| process.pid().as_u32())
-        .collect();
-    pids.sort_unstable();
-    pids.dedup();
-    pids
+    #[cfg(target_os = "macos")]
+    return system.processes().values().filter_map(|process| {
+        let name = process.name().to_string_lossy();
+        if !is_unambiguous_cn_name(&name.to_ascii_lowercase())
+            || !super::qoder_cn_clients::mac_current_user_process(process)
+        {
+            return None;
+        }
+        process.exe()
+            .filter(|path| super::qoder_cn_clients::mac_main_process(path, super::qoder_cn_clients::Client::Desktop))
+            .map(|_| process.pid().as_u32())
+    }).collect();
+    #[cfg(not(target_os = "macos"))]
+    {
+        let dir = qoder_cn_install_dir(system);
+        let mut pids: Vec<u32> = system
+            .processes()
+            .values()
+            .filter(|process| {
+                let name = process.name().to_string_lossy().to_ascii_lowercase();
+                is_qoder_cn_desktop_process(&name, process.exe(), dir.as_deref())
+            })
+            .map(|process| process.pid().as_u32())
+            .collect();
+        pids.sort_unstable();
+        pids.dedup();
+        pids
+    }
 }
 
 /// Executable of the running CN desktop client, so a switch can reopen exactly
 /// the binary it closed instead of guessing an install path.
 pub(crate) fn qoder_cn_desktop_executable(system: &sysinfo::System) -> Option<PathBuf> {
-    system
-        .processes()
-        .values()
-        .filter(|process| process_is_cn_desktop(process))
-        .filter_map(|process| process.exe())
-        .map(PathBuf::from)
-        .find(|path| path.is_file())
+    #[cfg(target_os = "macos")]
+    return qoder_cn_desktop_pids(system).into_iter().find_map(|pid| {
+        system.process(sysinfo::Pid::from_u32(pid))?.exe().map(Path::to_path_buf)
+    });
+    #[cfg(not(target_os = "macos"))]
+    {
+        let dir = qoder_cn_install_dir(system);
+        system
+            .processes()
+            .values()
+            .filter(|process| {
+                let name = process.name().to_string_lossy().to_ascii_lowercase();
+                is_qoder_cn_desktop_process(&name, process.exe(), dir.as_deref())
+            })
+            .filter_map(|process| process.exe())
+            .map(PathBuf::from)
+            .find(|path| path.is_file())
+    }
 }
 
-/// Whether the target client is running. Only the CN desktop client needs the
-/// install-directory guard, because only it shares its launcher names with the
-/// global one; the other three combinations have distinct names.
+#[cfg(target_os = "macos")]
+pub(crate) fn mac_global_desktop_pids(system: &sysinfo::System) -> Vec<u32> {
+    use super::qoder_cn_clients::{mac_current_user_process, mac_global_desktop_executable};
+    system.processes().values().filter_map(|process| {
+        if !process.name().eq_ignore_ascii_case("Qoder") || !mac_current_user_process(process) {
+            return None;
+        }
+        let path = process.exe()?;
+        (mac_global_desktop_executable(path).as_deref() == Some(path)).then_some(process.pid().as_u32())
+    }).collect()
+}
+
+/// Whether the target client is running. macOS Qoder Desktop and IDE can
+/// share an executable name, so desktop clients use the bundle identity.
+#[cfg(windows)]
+pub(crate) fn windows_global_desktop_pids(system: &sysinfo::System, executable: &Path) -> Vec<u32> {
+    let expected = normalize_path_key(executable);
+    system.processes().values().filter_map(|process| {
+        let path = process.exe()?;
+        (normalize_path_key(path) == expected).then_some(process.pid().as_u32())
+    }).collect()
+}
+
 fn ensure_idle(region: NativeRegion, client: NativeClient) -> Result<(), String> {
     let system = sysinfo::System::new_all();
     if system.processes().is_empty() {
@@ -390,6 +510,15 @@ fn ensure_idle(region: NativeRegion, client: NativeClient) -> Result<(), String>
     }
     let running = match (region, client) {
         (NativeRegion::Cn, NativeClient::Desktop) => !qoder_cn_desktop_pids(&system).is_empty(),
+        #[cfg(target_os = "macos")]
+        (NativeRegion::Global, NativeClient::Desktop) => !mac_global_desktop_pids(&system).is_empty(),
+        #[cfg(windows)]
+        (NativeRegion::Global, NativeClient::Desktop) => {
+            let settings = super::config::get_user_config();
+            super::qoder_cn_clients::resolve_global_desktop(Some(&settings.qoder_desktop_app_path))
+                .is_some_and(|path| !windows_global_desktop_pids(&system, &path).is_empty())
+        }
+        #[cfg(not(any(windows, target_os = "macos")))]
         (region, NativeClient::Desktop) => system.processes().values().any(|process| {
             region.desktop_process_names().contains(
                 &process
@@ -476,9 +605,11 @@ pub fn switch(
     ensure_idle(region, client)?;
     let profile = qoder_native_profile::for_client(info, client == NativeClient::Desktop)?;
     let root = client.root(channel)?;
-    // Require an initialized client: do not synthesize machine IDs or OS keys.
+    if client == NativeClient::Cli && !root.join("machine_id").try_exists().map_err(io_error)? {
+        initialize_cli_root(&root)?;
+    }
     if !root.is_dir() {
-        return Err("请先启动一次目标 Qoder 客户端，再切换账号".into());
+        return Err("QODER_CLIENT_INITIALIZATION_REQUIRED".into());
     }
     let lock = fs::OpenOptions::new()
         .read(true)
@@ -578,6 +709,43 @@ pub fn switch(
     Ok(())
 }
 
+#[cfg(any(windows, target_os = "macos"))]
+pub(crate) fn desktop_ready(region: NativeRegion) -> Result<bool, String> {
+    let root = NativeClient::Desktop.root(region.channel()?)?;
+    let platform = match region {
+        NativeRegion::Global => "qoder_desktop",
+        NativeRegion::Cn => "qoder_cn_desktop",
+    };
+    Ok(root.try_exists().map_err(io_error)?
+        && super::vscode_inject::client_secret_storage_ready(platform, &root)?)
+}
+
+#[cfg(target_os = "macos")]
+pub(crate) fn switch_cn_ide(account_id: &str) -> Result<(), String> {
+    let _guard = SWITCH_LOCK.lock().map_err(|_| "QODER_ACCOUNT_BUSY")?;
+    let region = NativeRegion::Cn;
+    let account = region.load_account(account_id)?;
+    if super::qoder_channel::credential_source(&account)? != CredentialSource::PublicCn {
+        return Err("QODER_PLATFORM_MISMATCH".into());
+    }
+    let db = dirs::config_dir()
+        .ok_or("QODER_DATA_ROOT_UNAVAILABLE")?
+        .join("QoderCN/User/globalStorage/state.vscdb");
+    if !db.is_file() {
+        return Err("QODER_CN_IDE_INITIALIZATION_REQUIRED".into());
+    }
+    super::qoder_account::inject_cn_ide_snapshot(&db, &account)?;
+    if let Err(error) = region.mark_switched(account_id) {
+        logger::log_warn(&format!("[Qoder CN Switch] 记录 IDE 切换时间失败: {error}"));
+    }
+    if let Err(error) =
+        super::provider_current_state::set_current_account_id(region.platform_id(), Some(account_id))
+    {
+        logger::log_warn(&format!("[Qoder CN Switch] 记录当前账号失败: {error}"));
+    }
+    Ok(())
+}
+
 /// Stable key for the account the client of `region` is signed into, used by the
 /// local auto-import watcher to notice a change without importing first.
 pub fn local_identity_key(region: NativeRegion) -> Option<String> {
@@ -641,6 +809,9 @@ pub fn import(region: NativeRegion, client: NativeClient) -> Result<QoderAccount
     let _guard = SWITCH_LOCK.lock().map_err(|_| "QODER_ACCOUNT_BUSY")?;
     let channel = region.channel()?;
     let root = client.root(channel)?;
+    if !root.is_dir() {
+        return Err("QODER_CLIENT_INITIALIZATION_REQUIRED".into());
+    }
     let profile = decode(
         &root,
         client,
@@ -745,29 +916,6 @@ mod tests {
         assert!(is_qoder_cn_desktop_process("qoder cn.exe", None, None));
         assert!(!is_qoder_cn_desktop_process("qoder launcher.exe", None, None));
         assert!(!is_qoder_cn_desktop_process("qoder.exe", None, None));
-    }
-
-    /// 版本化安装布局：`.qoder-versions/<版本>/` 下的 exe 必须解析到安装根，否则
-    /// 根目录的 launcher 不在 `path_is_within` 范围内，运行中的客户端会被当成没开。
-    #[test]
-    fn versioned_payload_resolves_to_the_install_root() {
-        let exe = Path::new("Programs/Qoder CN/.qoder-versions/0.5.12/Qoder CN.exe");
-        let root = cn_install_root_of(exe).expect("CN install root");
-        assert_eq!(root, Path::new("Programs/Qoder CN"));
-        // The launcher that shares its name with the global client has to match
-        // through that same root.
-        assert!(is_qoder_cn_desktop_process(
-            "qoder launcher.exe",
-            Some(&root.join("Qoder Launcher.exe")),
-            Some(&root),
-        ));
-    }
-
-    #[test]
-    fn an_install_outside_a_cn_directory_has_no_cn_root() {
-        assert!(cn_install_root_of(Path::new("Programs/Qoder/Qoder.exe")).is_none());
-        // A folder that merely starts with the name is not an install root.
-        assert!(cn_install_root_of(Path::new("Programs/Qoder CNTools/Qoder.exe")).is_none());
     }
 
     #[test]

@@ -3283,7 +3283,9 @@ function MainApp() {
       console.error('设置应用路径失败:', error);
       setAppPathActionError((readMissingLaunchPathApp(error) || /^CLI_PATH_NOT_FOUND:/.test(String(error).replace(/^Error: /, '')))
         ? t('appPath.missing.invalidPath', { app: appPathMissingAppName })
-        : appPathMissing.app === 'qoder' || appPathMissing.app === 'qoder_cn' ? formatQoderError(error) : String(error));
+        : appPathMissing.app === 'qoder' || appPathMissing.app === 'qoder_cn'
+          ? formatQoderError(error, appPathMissing.app === 'qoder_cn' ? 'cn' : 'global')
+          : String(error));
       setAppPathSetting(false);
     } finally {
       setAppPathSetting(false);
@@ -3484,6 +3486,7 @@ function MainApp() {
       className={`app-container${isWindowsPlatform() ? ' app-container-windows' : ''}${isLinux ? ' app-container-linux' : ''}${sideNavLayoutMode === 'classic' ? ' app-container-side-nav-classic' : ''}${sideNavLayoutMode === 'classic' && sideNavClassicCollapsed ? ' app-container-side-nav-classic-collapsed' : ''}`}
     >
       <AppBackground />
+      <ClientInitializationStatus />
       {/* 更新通知：活跃状态时保持挂载，关闭后继续保留当前更新状态 */}
       {shouldRenderUpdateNotification && (
         <div style={showUpdateNotification ? undefined : { display: 'none' }}>
@@ -3931,3 +3934,4 @@ function App() {
 }
 
 export default App;
+import { ClientInitializationStatus } from './components/ClientInitializationStatus';

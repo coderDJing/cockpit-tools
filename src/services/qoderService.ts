@@ -3,6 +3,14 @@ import { QoderAccount } from '../types/qoder';
 import type { QoderSwitchOutcome } from '../types/qoder';
 import type { QoderRegion, QoderClient } from '../utils/qoderRegion';
 
+export function openQoderClient(
+  region: QoderRegion,
+  client: QoderClient,
+  options?: { workingDir?: string; terminal?: string; instanceId?: string },
+): Promise<void> {
+  return invoke('qoder_open_client', { region, client, ...options });
+}
+
 export interface QoderOAuthStartResponse {
   loginId: string;
   verificationUri: string;
@@ -77,15 +85,14 @@ export async function importQoderNative(
 }
 
 /**
- * Writes one account into the installed global client. The client has to be
- * closed first and is reopened by the user, so the outcome never claims a
- * relaunch.
+ * Writes one account into the installed global client.
  */
 export async function injectQoderNative(
   accountId: string,
   client: QoderClient,
+  options: { launch?: boolean; workingDir?: string; terminal?: string } = {},
 ): Promise<QoderSwitchOutcome> {
-  return await invoke('inject_qoder_native', { accountId, client });
+  return await invoke('inject_qoder_native', { accountId, client, ...options });
 }
 
 export async function qoderOauthLoginStart(_region?: QoderRegion): Promise<QoderOAuthStartResponse> {

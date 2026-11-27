@@ -6,7 +6,6 @@
 
 use aes_gcm::{Aes256Gcm, KeyInit};
 use serde::{de::DeserializeOwned, Serialize};
-use serde_json::Value;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -145,21 +144,7 @@ pub(super) fn write_at<T: Serialize>(
     path: &Path,
     kind: &str,
     account: &T,
-    desktop_fields: &[(&str, &[&str])],
-) -> Result<(), String> {
-    write_at_checked(root, path, kind, account, desktop_fields, |_| Ok(()))
-}
-
-/// Same write, but only while the stored detail still satisfies `check_current`.
-/// The check runs under the file lock and after the read, so a concurrent
-/// renewal or a deleted account cannot be overwritten by a stale snapshot.
-pub(super) fn write_at_checked<T: Serialize>(
-    root: &Path,
-    path: &Path,
-    kind: &str,
-    account: &T,
     _desktop_fields: &[(&str, &[&str])],
-    check_current: impl FnOnce(Option<&Value>) -> Result<(), String>,
 ) -> Result<(), String> {
     let _account_lock = lock_account_file_for_write(path)?;
     let mut next = serde_json::to_value(account).map_err(|error| error.to_string())?;
@@ -171,7 +156,6 @@ pub(super) fn write_at_checked<T: Serialize>(
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
         Err(error) => return Err(format!("读取待更新账号详情失败: {error}")),
     };
-    check_current(previous.as_ref())?;
     if let Some(previous) = &previous {
         if previous["id"] != next["id"] {
             return Err("账号 ID 与原详情不一致".into());

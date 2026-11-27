@@ -675,8 +675,6 @@ export function InstancesManager<TAccount extends AccountLike>({
   const [openInlineMenuId, setOpenInlineMenuId] = useState<string | null>(null);
   const [runningNoticeInstance, setRunningNoticeInstance] =
     useState<InstanceProfile | null>(null);
-  const [initGuideInstance, setInitGuideInstance] =
-    useState<InstanceProfile | null>(null);
   const [deleteConfirmInstance, setDeleteConfirmInstance] =
     useState<InstanceProfile | null>(null);
   const {
@@ -754,7 +752,6 @@ export function InstancesManager<TAccount extends AccountLike>({
     [stoppingInstanceIds],
   );
   const isGrokApp = appType === "grok";
-  const canBindBeforeInitialization = isGrokApp || appType === "minimax_code" || appType === "qoder";
   const supportsInstanceInitialization = !isGrokApp;
   const isCodexApp = appType === "codex";
   const isClaudeApp = appType === "claude";
@@ -1134,14 +1131,10 @@ export function InstancesManager<TAccount extends AccountLike>({
 
   useEffect(() => {
     if (editing) return;
-    if (formInitMode === "empty" && !canBindBeforeInitialization) {
-      setFormBindAccountId("");
-      return;
-    }
     if (!formCopySourceInstanceId) {
       setFormCopySourceInstanceId(defaultInstanceId);
     }
-  }, [defaultInstanceId, editing, formCopySourceInstanceId, formInitMode, canBindBeforeInitialization]);
+  }, [defaultInstanceId, editing, formCopySourceInstanceId]);
 
   useEffect(() => {
     if (!isAccountAllowedForLaunchMode || !formBindAccountId) return;
@@ -1271,7 +1264,6 @@ export function InstancesManager<TAccount extends AccountLike>({
   }, [actionLoading, clearDeleteConfirm, deleteConfirmInstance]);
 
   useEscClose(showModal, closeModal);
-  useEscClose(!!initGuideInstance, () => setInitGuideInstance(null));
   useEscClose(!!deleteConfirmInstance, dismissDeleteConfirm);
   useEscClose(!!runningNoticeInstance, () => setRunningNoticeInstance(null));
 
@@ -1562,13 +1554,10 @@ export function InstancesManager<TAccount extends AccountLike>({
         if (!isEditingDefault) {
           updatePayload.name = formName.trim();
         }
-        const canEditBind =
-          canBindBeforeInitialization || !(editing.initialized === false && !isEditingDefault);
-        if (canEditBind) {
-          const nextBindId = resolveBindAccountValue(formBindAccountId);
-          if (nextBindId !== (editing.bindAccountId ?? null)) {
-            updatePayload.bindAccountId = nextBindId;
-          }
+        const nextBindId = resolveBindAccountValue(formBindAccountId);
+        if (nextBindId !== (editing.bindAccountId ?? null)) {
+          updatePayload.bindAccountId = nextBindId;
+          if (isCodexApp && editing.initialized === false) updatePayload.deferBindAccountApplication = true;
         }
         if (isEditingDefault) {
           updatePayload.followLocalAccount = false;
@@ -1640,9 +1629,7 @@ export function InstancesManager<TAccount extends AccountLike>({
           initMode: isGrokApp ? "empty" : formInitMode,
           launchMode: nextLaunchMode,
           appSpeed: isCodexApp ? formAppSpeed : undefined,
-          bindAccountId: isCreateEmpty && !canBindBeforeInitialization
-            ? null
-            : resolveBindAccountValue(formBindAccountId),
+          bindAccountId: resolveBindAccountValue(formBindAccountId),
           modelRouting: nextModelRouting,
           copySourceInstanceId: formCopySourceInstanceId || defaultInstanceId,
           copyTimeoutSeconds:
@@ -1662,14 +1649,7 @@ export function InstancesManager<TAccount extends AccountLike>({
             formExperimentalDefaultModelId,
           );
         }
-        setMessage({
-          text: isCreateEmpty && !canBindBeforeInitialization
-            ? t(
-                "instances.messages.emptyCreated",
-                "空白实例已创建，请先启动一次后再绑定账号",
-              )
-            : t("instances.messages.created", "实例已创建"),
-        });
+        setMessage({ text: t("instances.messages.created", "实例已创建") });
       }
       closeModal();
     } catch (e) {
@@ -1860,6 +1840,7 @@ export function InstancesManager<TAccount extends AccountLike>({
       }
     },
     [
+      appType,
       handleMissingPathError,
       isCodexApp,
       markInstanceStarting,
@@ -2526,32 +2507,10 @@ export function InstancesManager<TAccount extends AccountLike>({
     }
   };
 
-  const handleInitGuideStart = async () => {
-    if (!initGuideInstance) return;
-    const target = initGuideInstance;
-    setActionLoading(target.id);
-    try {
-      const outcome = await startStoppedInstance(target, {
-        showSuccessMessage: true,
-      });
-      if (outcome !== "started") {
-        return;
-      }
-      setInitGuideInstance(null);
-      setOpenInlineMenuId(target.id);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   const handleInlineBindChange = async (
     instance: InstanceProfile,
     nextId: string | null,
   ) => {
-    if (!canBindBeforeInitialization && instance.initialized === false) {
-      setInitGuideInstance(instance);
-      return;
-    }
     if (!nextId) return;
     const normalizedNextId = resolveBindAccountValue(nextId);
     const sameSelection = (instance.bindAccountId || null) === normalizedNextId;
@@ -2746,10 +2705,6 @@ export function InstancesManager<TAccount extends AccountLike>({
               missing: accountMissing,
               isApiService: accountIsApiService,
             } = resolveAccount(instance);
-            const accountDisabledByInit =
-              !canBindBeforeInitialization &&
-              !instance.isDefault &&
-              instance.initialized === false;
             const isInstanceStarting = startingInstanceIdSet.has(instance.id);
             const isInstanceStopping = stoppingInstanceIdSet.has(instance.id);
             const isInstanceBusy =
@@ -2845,18 +2800,6 @@ export function InstancesManager<TAccount extends AccountLike>({
                 </div>
 
                 <div className="instance-account">
-                  {accountDisabledByInit ? (
-                    <button
-                      type="button"
-                      className="instance-account-disabled"
-                      onClick={() => setInitGuideInstance(instance)}
-                    >
-                      {t(
-                        "instances.labels.pendingInit",
-                        "待初始化（先启动一次）",
-                      )}
-                    </button>
-                  ) : (
                     <InlineAccountSelect
                       value={instance.bindAccountId || null}
                       onChange={(nextId) =>
@@ -2896,7 +2839,6 @@ export function InstancesManager<TAccount extends AccountLike>({
                         setOpenInlineMenuId(open ? instance.id : null);
                       }}
                     />
-                  )}
                 </div>
 
                 {isCodexApp && (
@@ -3023,76 +2965,6 @@ export function InstancesManager<TAccount extends AccountLike>({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {initGuideInstance && (
-        <div className="modal-overlay">
-          <div
-            className="modal instance-init-guide-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="modal-header">
-              <button
-                className="btn btn-secondary icon-only"
-                onClick={() => setInitGuideInstance(null)}
-                title={t("common.back", "返回")}
-                aria-label={t("common.back", "返回")}
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <h2>{t("instances.initGuide.title", "实例尚未初始化")}</h2>
-              <button
-                className="modal-close"
-                onClick={() => setInitGuideInstance(null)}
-                aria-label={t("common.close", "关闭")}
-              >
-                <X />
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="form-hint">
-                {t(
-                  "instances.initGuide.desc",
-                  "该实例为“空白实例”，当前仅创建了目录，尚未生成实例数据。",
-                )}
-              </p>
-              <div className="instance-init-guide-box">
-                {t(
-                  "instances.initGuide.tip",
-                  "请先启动一次实例，初始化完成后即可绑定账号。",
-                )}
-              </div>
-              <div className="form-group">
-                <label>
-                  {t("instances.runningDialog.pathLabel", "实例目录")}
-                </label>
-                <input
-                  className="form-input"
-                  value={initGuideInstance.userDataDir}
-                  disabled
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setInitGuideInstance(null)}
-              >
-                {t("common.cancel", "取消")}
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleInitGuideStart}
-                disabled={
-                  actionLoading === initGuideInstance.id ||
-                  startingInstanceIdSet.has(initGuideInstance.id)
-                }
-              >
-                {t("instances.initGuide.startNow", "立即启动")}
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
@@ -3293,14 +3165,6 @@ export function InstancesManager<TAccount extends AccountLike>({
                       </span>
                     </label>
                   </div>
-                  {formInitMode === "empty" && !canBindBeforeInitialization && (
-                    <div className="instance-init-note">
-                      {t(
-                        "instances.form.emptyInitHint",
-                        "选择无需复制实例，只会创建空白目录。需要启动一次后，才可以进行账号绑定。",
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -3489,57 +3353,16 @@ export function InstancesManager<TAccount extends AccountLike>({
                       ? `（${t("instances.form.optional", "可选")}）`
                       : ""}
                   </label>
-                  {!canBindBeforeInitialization &&
-                  formInitMode === "empty" ? (
-                    <>
-                      {renderFormAccountSelect({
-                        value: null,
-                        onChange: () => {},
-                        disabled: true,
-                        placeholder: t(
-                          "instances.form.bindAfterInit",
-                          "初始化后可绑定",
-                        ),
-                      })}
-                      <p className="form-hint">
-                        {t(
-                          "instances.form.bindDisabledHint",
-                          "空白实例需先启动一次生成实例数据后，才可绑定账号。",
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    renderFormAccountSelect({
+                  {renderFormAccountSelect({
                       value: formBindAccountId || null,
                       onChange: handleFormAccountChange,
                     })
-                  )}
+                  }
                 </div>
               ) : (
                 <div className="form-group">
                   <label>{t("instances.form.bindAccount", "绑定账号")}</label>
-                  {!canBindBeforeInitialization &&
-                  editing?.initialized === false &&
-                  !editing.isDefault ? (
-                    <>
-                      {renderFormAccountSelect({
-                        value: null,
-                        onChange: () => {},
-                        disabled: true,
-                        placeholder: t(
-                          "instances.form.bindAfterInit",
-                          "初始化后可绑定",
-                        ),
-                      })}
-                      <p className="form-hint">
-                        {t(
-                          "instances.form.bindDisabledHint",
-                          "空白实例需先启动一次生成实例数据后，才可绑定账号。",
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    renderFormAccountSelect({
+                  {renderFormAccountSelect({
                       value: formBindAccountId || null,
                       onChange: handleFormAccountChange,
                       missing: Boolean(
@@ -3548,7 +3371,7 @@ export function InstancesManager<TAccount extends AccountLike>({
                         resolveBoundAccount(formBindAccountId).missing,
                       ),
                     })
-                  )}
+                  }
                 </div>
               )}
 

@@ -6,7 +6,7 @@ use std::time::Instant;
 use tauri::AppHandle;
 
 use crate::models::qoder::{QoderAccount, QoderOAuthStartResponse};
-use crate::modules::{logger, qoder_cn_account, qoder_native, qoder_oauth};
+use crate::modules::{logger, qoder_cn_account, qoder_cn_clients, qoder_native, qoder_oauth};
 
 fn store() -> Result<qoder_cn_account::QoderCnAccountStore, String> {
     qoder_cn_account::QoderCnAccountStore::default_store()
@@ -19,6 +19,27 @@ fn ensure_cn_region(region: Option<&str>) -> Result<(), String> {
         "cn" => Ok(()),
         _ => Err("QODER_PLATFORM_MISMATCH".into()),
     }
+}
+
+#[tauri::command]
+pub async fn qoder_open_client(
+    region: String,
+    client: String,
+    working_dir: Option<std::path::PathBuf>,
+    terminal: Option<String>,
+    instance_id: Option<String>,
+) -> Result<(), String> {
+    let cn = match region.as_str() {
+        "cn" => true,
+        "global" => false,
+        _ => return Err("QODER_REGION_INVALID".into()),
+    };
+    let target = qoder_cn_clients::Client::parse(&client)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        qoder_cn_clients::open_client(cn, target, working_dir, terminal, instance_id.as_deref())
+    })
+    .await
+    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())?
 }
 
 #[tauri::command]
@@ -100,16 +121,32 @@ pub struct QoderCnSwitchOutcome {
 
 #[tauri::command]
 pub async fn inject_qoder_cn_native(
+    app: AppHandle,
     account_id: String,
     client: String,
+    launch: Option<bool>,
+    working_dir: Option<std::path::PathBuf>,
+    terminal: Option<String>,
 ) -> Result<QoderCnSwitchOutcome, String> {
-    let target = qoder_native::NativeClient::parse(&client)?;
+    let target = qoder_cn_clients::Client::parse(&client)?;
+    let launch = launch.unwrap_or(cfg!(windows) && target == qoder_cn_clients::Client::Desktop);
     qoder_oauth::prepare_cn_account_for_switch(&account_id).await?;
     let id = account_id.clone();
     let started_at = Instant::now();
-    let relaunched = tauri::async_runtime::spawn_blocking(move || switch_qoder_cn(&id, target))
-        .await
-        .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
+    let outcome = tauri::async_runtime::spawn_blocking(move || {
+        qoder_cn_clients::switch(&id, target, launch, working_dir, terminal)
+    })
+    .await
+    .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())?;
+    if let Err(error) = &outcome {
+        if !error.starts_with("QODER_CN_RELAUNCH_FAILED:") {
+            return Err(error.clone());
+        }
+    }
+    if let Err(error) = crate::modules::tray::update_tray_menu(&app) {
+        logger::log_warn(&format!("[Qoder CN Switch] 刷新托盘失败: {error}"));
+    }
+    let relaunched = outcome?;
     logger::log_info(&format!(
         "[Qoder CN Switch] 写入客户端完成: account_id={account_id}, client={client}, relaunched={relaunched}, elapsed={}ms",
         started_at.elapsed().as_millis()
@@ -120,97 +157,18 @@ pub async fn inject_qoder_cn_native(
     })
 }
 
-/// Closes the desktop client, replaces its credentials and starts it again.
-/// Returns whether the client was actually started again.
-#[cfg(target_os = "windows")]
-fn switch_qoder_cn(
-    account_id: &str,
-    target: qoder_native::NativeClient,
-) -> Result<bool, String> {
-    if target != qoder_native::NativeClient::Desktop {
-        qoder_native::switch(qoder_native::NativeRegion::Cn, account_id, target)?;
-        return Ok(false);
-    }
-
-    // Resolve the binary before closing it. A running client is the most
-    // reliable source of its own path; the stored/detected path covers the case
-    // where the client is not running yet, so the switch can still bring it up.
-    // Failing to resolve is not fatal: writing credentials is useful on its own,
-    // and the UI falls back to asking the user to open the client manually.
-    let launch_path = match crate::modules::process::resolve_qoder_cn_launch_path() {
-        Ok(path) => Some(path),
-        Err(error) => {
-            logger::log_warn(&format!(
-                "[Qoder CN Switch] launch path unresolved, skipping relaunch: {error}"
-            ));
-            None
-        }
-    };
-    let system = sysinfo::System::new_all();
-    let pids = qoder_native::qoder_cn_desktop_pids(&system);
-    if !pids.is_empty() {
-        if let Err(close_error) = crate::modules::process::close_qoder_cn_desktop(&pids, 20) {
-            // The client may already be gone: never leave the user with a bare
-            // "switch failed" while nothing is running.
-            return Err(restore_after_failure(launch_path.as_deref(), close_error));
-        }
-    }
-    if let Err(error) = qoder_native::switch(qoder_native::NativeRegion::Cn, account_id, target) {
-        // Credentials were rolled back and the client is closed, so the real
-        // state depends on whether it comes back, not on the original error.
-        return Err(restore_after_failure(launch_path.as_deref(), error));
-    }
-    let Some(path) = launch_path else {
-        return Ok(false);
-    };
-    crate::modules::process::start_qoder_cn_desktop(&path)
-        .map_err(|error| format!("QODER_CN_RELAUNCH_FAILED: {error}"))?;
-    Ok(true)
-}
-
-/// Last resort after a failed switch: put the client back. When that also fails
-/// the caller must report both facts instead of an unrelated error.
-#[cfg(target_os = "windows")]
-fn restore_after_failure(executable: Option<&std::path::Path>, cause: String) -> String {
-    let Some(path) = executable else {
-        return cause;
-    };
-    match crate::modules::process::start_qoder_cn_desktop(path) {
-        Ok(_) => cause,
-        Err(relaunch_error) => {
-            logger::log_warn(&format!(
-                "[Qoder CN Switch] restore launch failed after failure: cause={cause}, relaunch={relaunch_error}"
-            ));
-            format!("QODER_CN_RELAUNCH_FAILED: {relaunch_error} (cause: {cause})")
-        }
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-fn switch_qoder_cn(
-    account_id: &str,
-    target: qoder_native::NativeClient,
-) -> Result<bool, String> {
-    qoder_native::switch(qoder_native::NativeRegion::Cn, account_id, target)?;
-    Ok(false)
-}
-
-/// The CN desktop client only ships for Windows, so other platforms fall back to
-/// the CLI client instead of failing on a missing OS key store.
-fn default_cn_client() -> qoder_native::NativeClient {
-    if cfg!(target_os = "windows") {
-        qoder_native::NativeClient::Desktop
-    } else {
-        qoder_native::NativeClient::Cli
-    }
-}
-
 #[tauri::command]
 pub async fn inject_qoder_cn_account(app: AppHandle, account_id: String) -> Result<String, String> {
     qoder_oauth::prepare_cn_account_for_switch(&account_id).await?;
     let id = account_id.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        qoder_native::switch(qoder_native::NativeRegion::Cn, &id, default_cn_client())
+        let client = if cfg!(windows) {
+            qoder_cn_clients::Client::Desktop
+        } else {
+            qoder_cn_clients::Client::Cli
+        };
+        let launch = cfg!(windows) && crate::modules::process::resolve_qoder_cn_launch_path().is_ok();
+        qoder_cn_clients::switch(&id, client, launch, None, None).map(|_| ())
     })
         .await
         .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;

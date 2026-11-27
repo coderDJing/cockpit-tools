@@ -31,6 +31,7 @@ test('Qoder account region follows the qoder_cn marker, not the display name', (
 test('Qoder client targets follow native adapter platform support', () => {
   assert.equal(defaultQoderClient('cn', true), 'desktop');
   assert.equal(defaultQoderClient('cn', false), 'cli');
+  assert.equal(defaultQoderClient('cn', false, true), 'desktop');
   assert.equal(defaultQoderClient('global', true), 'ide');
   assert.equal(defaultQoderClient('global', false), 'ide');
 
@@ -38,8 +39,10 @@ test('Qoder client targets follow native adapter platform support', () => {
   assert.equal(isQoderClientAvailable('cn', 'desktop', false), false);
   assert.equal(isQoderClientAvailable('cn', 'cli', false), true);
   assert.equal(isQoderClientAvailable('cn', 'ide', true), false);
-  // The global client got the native desktop and CLI adapters too; desktop stays
-  // Windows-only on both realms because its credential file is.
+  assert.equal(isQoderClientAvailable('cn', 'desktop', false, true), true);
+  assert.equal(isQoderClientAvailable('cn', 'ide', false, true), true);
+  assert.equal(isQoderClientAvailable('cn', 'ide', false), false);
+  assert.equal(isQoderClientAvailable('global', 'desktop', false, true), true);
   assert.equal(isQoderClientAvailable('global', 'desktop', true), true);
   assert.equal(isQoderClientAvailable('global', 'desktop', false), false);
   assert.equal(isQoderClientAvailable('global', 'cli', true), true);

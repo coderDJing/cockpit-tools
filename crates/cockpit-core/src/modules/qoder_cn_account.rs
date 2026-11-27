@@ -13,8 +13,7 @@ use super::{
     logger, provider_account_index,
     qoder_channel::{credential_source, CredentialSource},
     qoder_identity::normalize_account_id,
-    qoder_token_renewal::TokenRenewal,
-    secure_account_storage::{read_at, write_at, write_at_checked},
+    secure_account_storage::{read_at, write_at},
 };
 use crate::models::qoder::{QoderAccount, QoderCnAccountIndex};
 
@@ -112,6 +111,7 @@ impl QoderCnAccountStore {
                 Ok(None) => {}
                 // One file written by another channel must not make the whole
                 // page unusable: drop it from the list and say so in the log.
+                // lgtm[rs/cleartext-logging] 只记录账号 id，不含凭证；没有它用户无法判断哪个账号被跳过
                 Err(error) if error == "QODER_PLATFORM_MISMATCH" => logger::log_warn(&format!(
                     "[Qoder CN Account] 跳过非本渠道账号: id={}, 请重新导入",
                     summary.id
@@ -354,7 +354,7 @@ impl QoderCnAccountStore {
         if path.try_exists().map_err(|error| error.to_string())? {
             fs::remove_file(&path).map_err(|error| format!("删除账号文件失败: {error}"))?;
         }
-        TokenRenewal::discard(&path)
+        Ok(())
     }
 
     /// Writes one detail file and refreshes its index summary. Callers hold the lock.
@@ -369,65 +369,6 @@ impl QoderCnAccountStore {
         let mut index = self.load_index_checked()?;
         refresh_summary(&mut index, account);
         self.save_index(&index)
-    }
-
-    /// Same write, but only while the stored detail still matches `expected`.
-    /// Callers hold the index lock.
-    fn write_details_checked(
-        &self,
-        expected: &QoderAccount,
-        account: &QoderAccount,
-    ) -> Result<(), String> {
-        require_public_cn(account)?;
-        if account.id.trim() != account.id {
-            return Err("Qoder 账号 ID 包含首尾空白".into());
-        }
-        let path = self.path(&account.id)?;
-        fs::create_dir_all(self.directory()).map_err(|error| error.to_string())?;
-        write_at_checked(&self.root, &path, STORE_KIND, account, &[], |raw| {
-            TokenRenewal::check_current(expected, raw)
-        })?;
-        let mut index = self.load_index_checked()?;
-        refresh_summary(&mut index, account);
-        self.save_index(&index)
-    }
-
-    pub(crate) fn open_token_renewal(&self, id: &str) -> Result<TokenRenewal, String> {
-        TokenRenewal::open(self.root.clone(), &self.path(id)?)
-    }
-
-    pub(crate) fn recover_token_renewal(
-        &self,
-        id: &str,
-        renewal: &TokenRenewal,
-    ) -> Result<QoderAccount, String> {
-        let _guard = index_guard()?;
-        let current = self
-            .load_account(id)?
-            .ok_or("QODER_SESSION_CHANGED")?;
-        renewal.recover(current, |expected, updated| {
-            self.write_details_checked(expected, updated)
-        })
-    }
-
-    pub(crate) fn save_rotated_token(
-        &self,
-        renewal: &TokenRenewal,
-        expected: &QoderAccount,
-        user_info: Value,
-        verified_origin: Option<String>,
-    ) -> Result<QoderAccount, String> {
-        let _guard = index_guard()?;
-        renewal.commit(
-            expected,
-            user_info,
-            verified_origin,
-            || {
-                self.load_account(&expected.id)?
-                    .ok_or_else(|| "QODER_SESSION_CHANGED".into())
-            },
-            |expected, updated| self.write_details_checked(expected, updated),
-        )
     }
 
     fn load_index_checked(&self) -> Result<QoderCnAccountIndex, String> {
@@ -618,7 +559,7 @@ mod tests {
         let switched = loaded.last_switched_at.expect("last_switched_at");
         assert!(
             (1_600_000_000..2_000_000_000).contains(&switched),
-            "expected epoch seconds after load, got {switched}"
+            "expected epoch seconds after load"
         );
     }
 
@@ -637,7 +578,7 @@ mod tests {
         // showed up as year 58863.
         assert!(
             (1_600_000_000..2_000_000_000).contains(&switched),
-            "expected epoch seconds, got {switched}"
+            "expected epoch seconds"
         );
     }
 
@@ -686,9 +627,10 @@ mod tests {
             &[],
         )
         .unwrap();
-        assert_eq!(
-            store.load_account(&misfiled.id).unwrap_err(),
-            "QODER_PLATFORM_MISMATCH"
+        let error = store.load_account(&misfiled.id).unwrap_err();
+        assert!(
+            error == "QODER_PLATFORM_MISMATCH",
+            "a detail filed under another channel must be rejected"
         );
     }
 

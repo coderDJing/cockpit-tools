@@ -176,10 +176,15 @@ pub async fn get_available_terminals() -> Result<Vec<String>, String> {
 
     #[cfg(target_os = "windows")]
     {
-        // Windows 下检查可执行文件是否在 PATH 中
+        // Windows 下检查可执行文件是否在 PATH 中；pwsh 同时接受商店版执行别名。
         let terminals = ["cmd", "PowerShell", "pwsh", "wt"];
         for name in terminals {
-            if is_command_available(name) {
+            let detected = if name == "pwsh" {
+                super::codex_instance::terminal::windows_pwsh_available()
+            } else {
+                is_command_available(name)
+            };
+            if detected {
                 available.push(name.to_string());
             }
         }
@@ -450,6 +455,9 @@ pub fn get_general_config(app: tauri::AppHandle) -> Result<GeneralConfig, String
         codex_cli_auto_refresh_on_switch: user_config.codex_cli_auto_refresh_on_switch,
         codex_auto_restore_takeover_on_launch: user_config.codex_auto_restore_takeover_on_launch,
         antigravity_launch_on_switch: user_config.antigravity_launch_on_switch,
+        antigravity_desktop_chinese_enabled: user_config.antigravity_desktop_chinese_enabled,
+        antigravity_desktop_layout: user_config.antigravity_desktop_layout,
+        antigravity_desktop_permission: user_config.antigravity_desktop_permission,
         codex_restart_specified_app_on_switch: user_config.codex_restart_specified_app_on_switch,
         codex_local_access_entry_visible: user_config.codex_local_access_entry_visible,
         codex_hide_relay_quota: user_config.codex_hide_relay_quota,

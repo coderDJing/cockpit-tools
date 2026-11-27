@@ -4,7 +4,6 @@ import {
   Ban,
   CalendarCheck,
   CheckCircle,
-  ChevronLeft,
   Gift,
   Loader2,
   RefreshCw,
@@ -12,7 +11,12 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { QoderAccount, getQoderAccountDisplayEmail } from '../types/qoder';
+import {
+  QoderAccount,
+  getQoderAccountDisplayEmail,
+  getQoderPlanBadge,
+  resolveQoderPlanBadgeClass,
+} from '../types/qoder';
 import {
   QoderCheckinStatus,
   claimQoderCnCheckin,
@@ -72,9 +76,18 @@ export function QoderCheckinModal({
   // 一键签到的预检阶段还没置 checkingIn，单账号按钮仍可点击；
   // 用一个同步的 in-flight 集合兜住并发，避免同一账号被领取两次。
   const inFlightRef = useRef<Set<string>>(new Set());
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const updateAccountState = useCallback(
     (accountId: string, update: Partial<AccountCheckinState>) => {
+      if (!mountedRef.current) return;
       setAccountStates((prev) => ({
         ...prev,
         [accountId]: { ...prev[accountId], ...update } as AccountCheckinState,
@@ -105,9 +118,12 @@ export function QoderCheckinModal({
   );
 
   const fetchAllStatus = useCallback(async () => {
+    if (!mountedRef.current) return;
     setRefreshLoading(true);
     await Promise.all(accounts.map((account) => fetchStatus(account.id)));
-    setRefreshLoading(false);
+    if (mountedRef.current) {
+      setRefreshLoading(false);
+    }
   }, [accounts, fetchStatus]);
 
   const accountIdsKey = accounts.map((account) => account.id).join(',');
@@ -134,7 +150,7 @@ export function QoderCheckinModal({
           checkingIn: false,
           error: null,
         });
-        if (uiState === 'claimed') {
+        if (uiState === 'claimed' && mountedRef.current) {
           onCheckinComplete?.(accountId);
         }
       } catch (err) {
@@ -165,12 +181,14 @@ export function QoderCheckinModal({
   );
 
   const handleCheckAll = useCallback(async () => {
+    if (!mountedRef.current) return;
     setCheckAllLoading(true);
     const targetIds: string[] = [];
     await Promise.allSettled(
       accounts.map(async (account) => {
+        if (inFlightRef.current.has(account.id)) return;
         // 预检期间先置 checkingIn，避免单账号按钮在等待响应时仍可点击。
-        updateAccountState(account.id, { checkingIn: true });
+        updateAccountState(account.id, { checkingIn: true, error: null });
         try {
           const status = await getQoderCnCheckinStatus(account.id);
           updateAccountState(account.id, {
@@ -185,12 +203,18 @@ export function QoderCheckinModal({
           }
         } catch (err) {
           console.warn('[QoderCheckin] 一键领取预检失败:', account.id, err);
-          updateAccountState(account.id, { checkingIn: false });
+          updateAccountState(account.id, {
+            checkingIn: false,
+            uiState: 'error',
+            error: err instanceof Error ? err.message : String(err),
+          });
         }
       }),
     );
     await Promise.allSettled(targetIds.map((accountId) => handleCheck(accountId)));
-    setCheckAllLoading(false);
+    if (mountedRef.current) {
+      setCheckAllLoading(false);
+    }
   }, [accounts, handleCheck, updateAccountState]);
 
   const claimedCount = accounts.filter(
@@ -210,19 +234,15 @@ export function QoderCheckinModal({
     <div className="modal-overlay">
       <div className="modal-content checkin-modal" onClick={(event) => event.stopPropagation()}>
         <div className="modal-header">
-          <button
-            className="btn btn-secondary icon-only"
-            onClick={onClose}
-            title={t('common.back', '返回')}
-            aria-label={t('common.back', '返回')}
-          >
-            <ChevronLeft size={14} />
-          </button>
           <h2>
             <CalendarCheck size={20} /> {t('workbuddy.checkin.modalTitle', '每日签到')} -{' '}
             {platformLabel}
           </h2>
-          <button className="modal-close" onClick={onClose}>
+          <button
+            className="modal-close"
+            onClick={onClose}
+            aria-label={t('common.close', '关闭')}
+          >
             <X size={18} />
           </button>
         </div>
@@ -252,7 +272,7 @@ export function QoderCheckinModal({
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => void fetchAllStatus()}
-              disabled={refreshLoading}
+              disabled={refreshLoading || checkAllLoading || accounts.length === 0}
             >
               {refreshLoading ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -264,7 +284,7 @@ export function QoderCheckinModal({
             <button
               className="btn btn-primary btn-sm"
               onClick={() => void handleCheckAll()}
-              disabled={checkAllLoading || accounts.length === 0}
+              disabled={checkAllLoading || refreshLoading || accounts.length === 0}
             >
               {checkAllLoading ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -284,6 +304,8 @@ export function QoderCheckinModal({
               {accounts.map((account) => {
                 const state = accountStates[account.id] || emptyAccountState();
                 const displayEmail = getQoderAccountDisplayEmail(account);
+                const plan = getQoderPlanBadge(account);
+                const planClass = resolveQoderPlanBadgeClass(plan);
                 const uiState = state.uiState;
 
                 return (
@@ -294,9 +316,14 @@ export function QoderCheckinModal({
                     }`}
                   >
                     <div className="checkin-account-info">
-                      <span className="checkin-account-name" title={displayEmail}>
-                        {displayEmail}
-                      </span>
+                      <div className="checkin-account-name-row">
+                        <span className="checkin-account-name" title={displayEmail}>
+                          {displayEmail}
+                        </span>
+                        <span className={`tier-badge account-picker-plan raw-value ${planClass}`}>
+                          {plan}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="checkin-account-status">

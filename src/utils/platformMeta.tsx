@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { Github } from 'lucide-react';
 import { TFunction } from 'i18next';
 import { PlatformId } from '../types/platform';
 import { AntigravityIcon } from '../components/icons/AntigravityIcon';
@@ -12,6 +11,7 @@ import { CursorIcon } from '../components/icons/CursorIcon';
 import { GrokIcon } from '../components/icons/GrokIcon';
 import { CodebuddyIcon } from '../components/icons/CodebuddyIcon';
 import { QoderIcon } from '../components/icons/QoderIcon';
+import { CopilotIcon } from '../components/icons/CopilotIcon';
 import { TraeCnIcon, TraeIcon, TraeSoloCnIcon, TraeSoloIcon } from '../components/icons/TraeIcon';
 import { WorkbuddyIcon } from '../components/icons/WorkbuddyIcon';
 import { MinimaxCodeIcon } from '../components/icons/MinimaxCodeIcon';
@@ -88,7 +88,7 @@ export function renderPlatformIcon(platformId: PlatformId, size = 20): ReactNode
     case 'zed':
       return <ZedIcon size={size} />;
     case 'github-copilot':
-      return <Github size={size} />;
+      return <CopilotIcon size={size} />;
     case 'windsurf':
       return <WindsurfIcon style={{ width: size, height: size }} />;
     case 'kiro':
@@ -102,6 +102,7 @@ export function renderPlatformIcon(platformId: PlatformId, size = 20): ReactNode
     case 'codebuddy_cn':
       return <CodebuddyIcon style={{ width: size, height: size }} />;
     case 'qoder_cn':
+      return <QoderIcon region="cn" style={{ width: size, height: size }} />;
     case 'qoder':
       return <QoderIcon style={{ width: size, height: size }} />;
     case 'zcode':

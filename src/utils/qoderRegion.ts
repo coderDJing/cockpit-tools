@@ -4,28 +4,27 @@ export type QoderRegion = 'global' | 'cn';
 export type QoderClient = 'ide' | 'desktop' | 'cli';
 
 /**
- * Both realms ship a desktop app, but its credential file can only be read and
- * written on Windows. The `ide` target is the global IDE's own database, so it
- * exists only there; the CLI is cross-platform on both sides.
+ * Native targets available for the corresponding realm and host OS.
  */
 export function isQoderClientAvailable(
   region: QoderRegion,
   client: QoderClient,
   isWindows: boolean,
+  isMac = false,
 ): boolean {
-  if (client === 'ide') return region === 'global';
-  if (client === 'desktop') return isWindows;
+  if (client === 'ide') return region === 'global' || isMac;
+  if (client === 'desktop') return isWindows || isMac;
   return true;
 }
 
-export function defaultQoderClient(region: QoderRegion, isWindows: boolean): QoderClient {
+export function defaultQoderClient(region: QoderRegion, isWindows: boolean, isMac = false): QoderClient {
   if (region === 'global') return 'ide';
-  return isWindows ? 'desktop' : 'cli';
+  return isWindows || isMac ? 'desktop' : 'cli';
 }
 
 /**
- * Mirrors `qoder_channel::source_of`: `qoder_cn` marks the public CN client,
- * while `qodercn` stays reserved for the retired CN IDE adapter.
+ * Cockpit's public CN account store uses `qoder_cn`. The IDE's native
+ * `qodercn` marker is translated when writing that client's profile.
  */
 export function getQoderRegion(account: QoderAccount): QoderRegion {
   const info = account.auth_user_info_raw as { login_source?: string } | undefined;

@@ -94,6 +94,29 @@ pub async fn set_app_path(app: String, path: String, validate: Option<bool>) -> 
         {
             return Err(modules::workbuddy_ai_account::MISSING_APP_PATH.to_string());
         }
+        if app == "qoder_cn_ide" && !normalized_path.is_empty()
+            && modules::qoder_cn_clients::resolve_ide(Some(&normalized_path)).is_none()
+        {
+            return Err(format!("APP_PATH_NOT_FOUND:{app}"));
+        }
+        if app == "qoder" && !normalized_path.is_empty() && validate.unwrap_or(false)
+            && modules::process::qoder_ide_launch_candidate(Some(&normalized_path)).is_none()
+        {
+            return Err(format!("APP_PATH_NOT_FOUND:{app}"));
+        }
+        if app == "qoder_desktop" && !normalized_path.is_empty()
+            && modules::qoder_cn_clients::resolve_global_desktop(Some(&normalized_path)).is_none()
+        {
+            return Err(format!("APP_PATH_NOT_FOUND:{app}"));
+        }
+        #[cfg(target_os = "macos")]
+        if app == "qoder_cn" && !normalized_path.is_empty()
+            && modules::qoder_cn_clients::mac_executable(
+                std::path::Path::new(&normalized_path), modules::qoder_cn_clients::Client::Desktop,
+            ).is_none()
+        {
+            return Err(format!("APP_PATH_NOT_FOUND:{app}"));
+        }
         if validate.unwrap_or(false) && !normalized_path.is_empty()
             && !(cfg!(windows) && app == "claude" && normalized_path.starts_with("shell:AppsFolder\\"))
         {
@@ -121,7 +144,9 @@ pub async fn set_app_path(app: String, path: String, validate: Option<bool>) -> 
                 "codebuddy" => current.codebuddy_app_path = normalized_path,
                 "codebuddy_cn" => current.codebuddy_cn_app_path = normalized_path,
                 "qoder" => current.qoder_app_path = normalized_path,
+                "qoder_desktop" => current.qoder_desktop_app_path = normalized_path,
                 "qoder_cn" => current.qoder_cn_app_path = normalized_path,
+                "qoder_cn_ide" => current.qoder_cn_ide_path = normalized_path,
                 "zcode" => current.zcode_app_path = normalized_path,
                 "t3code" => current.t3code_app_path = normalized_path,
                 "trae" => current.trae_app_path = normalized_path,
@@ -271,8 +296,9 @@ pub async fn scan_app_launch_targets(
     match app.as_str() {
         "antigravity" | "antigravity_ide" | "antigravity_legacy" | "codex" | "claude"
         | "vscode" | "windsurf" | "kiro" | "cursor" | "codebuddy" | "codebuddy_cn" | "qoder"
-        | "qoder_cn" | "zcode" | "t3code" | "trae" | "trae_solo" | "trae_cn" | "trae_solo_cn"
-        | "workbuddy" | "zed" | "opencode" | "minimaxcode" | "minimax_code" | "workbuddy_ai" => {}
+        | "qoder_cn" | "zcode" | "trae" | "trae_solo"
+        | "trae_cn" | "trae_solo_cn" | "workbuddy" | "zed"
+        | "opencode" | "minimaxcode" | "minimax_code" | "workbuddy_ai" | "t3code" => {}
         _ => return Err("未知应用类型".to_string()),
     }
     let _ = scan_roots;

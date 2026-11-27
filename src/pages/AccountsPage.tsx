@@ -30,6 +30,8 @@ import {
 import { useTranslation } from 'react-i18next'
 import { AccountLastUsed } from '../components/AccountLastUsed'
 import { AntigravityLaunchDialog } from '../components/AntigravityLaunchDialog'
+import { AntigravityAccountProxyButton } from '../components/antigravity/AntigravityAccountProxyButton'
+import { AntigravityProxyAccountDialog } from '../components/antigravity/AntigravityProxyAccountDialog'
 import { setAntigravityRuntimeTarget, type AntigravityLaunchClient, type AntigravityRuntimeTarget } from '../utils/antigravityRuntimeTarget'
 import { useAccountStore } from '../stores/useAccountStore'
 import * as accountService from '../services/accountService'
@@ -404,6 +406,11 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
   } = useLocalHistory(accountService.loadAntigravitySwitchHistory, undefined, undefined, showSwitchHistoryModal)
   const [antigravitySeamlessSwitchUnlocked, setAntigravitySeamlessSwitchUnlocked] = useState(
     isAntigravitySeamlessSwitchFeatureUnlocked,
+  )
+  const [proxyDialogAccountId, setProxyDialogAccountId] = useState<string | null>(null)
+  const proxyDialogAccount = useMemo(
+    () => (proxyDialogAccountId ? accounts.find((account) => account.id === proxyDialogAccountId) ?? null : null),
+    [accounts, proxyDialogAccountId],
   )
   const exportModal = useExportJsonModal({
     exportFilePrefix: 'accounts_export',
@@ -2834,7 +2841,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
                 {t('accounts.status.forbidden')}
               </span>
             )}
-            <span className={`tier-badge ${tierBadge.className}`}>
+            <span className={`tier-badge ${tierBadge.className}`} title={tierBadge.rawTier || tierBadge.label}>
               {tierBadge.label}
             </span>
             <AntigravityGcpTosBadge account={account} />
@@ -2949,6 +2956,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
           <div className="card-footer antigravity-card-footer">
             <AccountLastUsed accountId={account.id} lastSwitchedAt={account.last_switched_at} refreshAt={account.quota?.last_updated} createdAt={account.created_at} formatDate={formatDate} />
             <div className="card-actions">
+              <AntigravityAccountProxyButton account={account} onOpen={setProxyDialogAccountId} />
               {isPendingAntigravityAccount(account) && (
                 <button
                   type="button"
@@ -3198,7 +3206,7 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
                 {maskAccountText(account.email)}
               </span>
             </span>
-            <span className={`tier-badge ${tierBadge.className}`}>
+            <span className={`tier-badge ${tierBadge.className}`} title={tierBadge.rawTier || tierBadge.label}>
               {tierBadge.label}
             </span>
             <div className={styles.quotas}>
@@ -3532,10 +3540,11 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
                 </div>
               )}
               <div className="account-sub-line">
-                <span className={`tier-badge ${tierBadge.className}`}>
+                <span className={`tier-badge ${tierBadge.className}`} title={tierBadge.rawTier || tierBadge.label}>
                   {tierBadge.label}
                 </span>
                 <AntigravityGcpTosBadge account={account} />
+                <AntigravityAccountProxyButton account={account} onOpen={setProxyDialogAccountId} />
                 {(() => {
                   const vBadge = getVerificationBadge(account)
                   return vBadge ? (
@@ -3905,6 +3914,8 @@ export function useAccountsPageController({ onNavigate }: AccountsPageProps) {
     setShowSwitchHistoryModal,
     setShowTagModal,
     setShowVerificationErrorModal,
+    proxyDialogAccount,
+    setProxyDialogAccountId,
     setSortDirection,
     setSwitchHistoryClearConfirmOpen,
     setTagDeleteConfirm,
@@ -3955,8 +3966,11 @@ export function AccountsPage(props: AccountsPageProps) {
   const tier = launchAccount && getAntigravityTierBadge(launchAccount.quota);
   return <>
     <AccountsOverviewView {...controller} />
+    {controller.proxyDialogAccount && <AntigravityProxyAccountDialog key={controller.proxyDialogAccount.id}
+      account={controller.proxyDialogAccount}
+      onClose={() => controller.setProxyDialogAccountId(null)} />}
     {launchAccount && tier && <AntigravityLaunchDialog key={launchAccount.id}
-      account={{ label: controller.maskAccountText(launchAccount.email), badge: <span className={`tier-badge ${tier.className}`} title={tier.label}>{tier.label}</span> }}
+      account={{ label: controller.maskAccountText(launchAccount.email), badge: <span className={`tier-badge ${tier.className}`} title={tier.rawTier || tier.label}>{tier.label}</span> }}
       initialClient={controller.antigravityRuntimeTarget}
       primaryLabel={() => controller.t('antigravityLaunch.switchAndLaunch')}
       onClose={closeLaunchDialog}

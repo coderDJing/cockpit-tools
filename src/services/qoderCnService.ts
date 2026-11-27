@@ -70,8 +70,9 @@ export async function importQoderNative(region: QoderRegion, client: QoderClient
 export async function injectQoderNative(
   accountId: string,
   client: QoderClient,
+  options?: { launch: boolean; workingDir?: string; terminal?: string },
 ): Promise<QoderSwitchOutcome> {
-  return await invoke('inject_qoder_cn_native', { accountId, client });
+  return await invoke('inject_qoder_cn_native', { accountId, client, ...options });
 }
 
 export async function qoderOauthLoginPeek(): Promise<QoderOAuthStartResponse | null> {

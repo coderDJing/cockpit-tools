@@ -13,6 +13,8 @@ import { dismissBootSplash } from '../utils/bootSplash';
 import { useCodexQuotaSync } from '../hooks/useCodexQuotaSync';
 import { isCodexLaunchCancelled } from '../utils/codexLaunchCancellation';
 import { formatAntigravitySwitchError } from '../utils/antigravitySwitchError';
+import { formatQoderError } from '../utils/qoderErrors';
+import { ClientInitializationStatus } from '../components/ClientInitializationStatus';
 import {
   buildAntigravityAccountPresentation,
   buildClaudeAccountPresentation,
@@ -170,7 +172,7 @@ type FloatingCardAccount =
 
 type FloatingCardInstanceStoreApi = Pick<
   InstanceStoreState,
-  'refreshInstances' | 'updateInstance' | 'startInstance'
+  'refreshInstances' | 'updateInstance' | 'startInstance' | 'openInstanceWindow'
 >;
 
 function isTraeSuitePlatform(platformId: PlatformId): platformId is TraePlatformId {
@@ -1497,7 +1499,9 @@ export function FloatingCardWindow() {
             })
           : selectedPlatform === 'antigravity' || selectedPlatform === 'antigravity_ide'
             ? formatAntigravitySwitchError(t, rawError)
-            : rawError;
+            : selectedPlatform === 'qoder' || selectedPlatform === 'qoder_cn'
+              ? formatQoderError(rawError, selectedPlatform === 'qoder_cn' ? 'cn' : 'global')
+              : rawError;
       setErrorText(
         t('floatingCard.errors.switchFailed', {
           error: displayError,
@@ -1861,7 +1865,9 @@ export function FloatingCardWindow() {
             </div>
           )}
 
-          {errorText ? <div className="floating-card-error">{errorText}</div> : null}
+          <ClientInitializationStatus platform={selectedPlatform === 'github-copilot' ? 'github_copilot' : selectedPlatform}
+            targetId={instanceContext?.instanceId} />
+          {errorText ? <div className="floating-card-error" role="alert">{errorText}</div> : null}
           {appearance.error ? <div className="floating-card-error" role="alert">{t(appearance.error, { defaultValue: appearance.error })}</div> : null}
         </div>
 

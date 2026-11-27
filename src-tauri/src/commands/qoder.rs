@@ -62,10 +62,7 @@ pub async fn import_qoder_native(
     Ok(vec![account])
 }
 
-/// Result of writing into a native client. The global desktop and CLI adapters
-/// require the client to be closed first and never reopen it themselves, so
-/// `relaunched` is always false here; the field keeps the payload identical to
-/// the CN command so the UI renders one shape.
+/// Result of writing into a native client and optionally launching it.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QoderNativeSwitchOutcome {
@@ -76,20 +73,40 @@ pub struct QoderNativeSwitchOutcome {
 /// Writes one account into the installed global desktop or CLI client.
 #[tauri::command]
 pub async fn inject_qoder_native(
+    app: AppHandle,
     account_id: String,
     client: String,
+    launch: Option<bool>,
+    working_dir: Option<String>,
+    terminal: Option<String>,
 ) -> Result<QoderNativeSwitchOutcome, String> {
+    let launch = launch.unwrap_or(false);
+    if client == "ide" {
+        let result = if launch {
+            super::qoder_instance::start_qoder_instance("__default__".into(), Some(account_id.clone()))
+                .await.map(|_| ())
+        } else {
+            super::qoder_instance::switch_qoder_ide_only(account_id.clone()).await
+        };
+        if result.is_ok() || result.as_ref().is_err_and(|error| error.starts_with("QODER_SWITCH_LAUNCH_FAILED:")) {
+            let _ = crate::modules::tray::update_tray_menu(&app);
+        }
+        result?;
+        return Ok(QoderNativeSwitchOutcome { account_id, relaunched: launch });
+    }
     let target = qoder_native::NativeClient::parse(&client)?;
     qoder_oauth::prepare_account_for_switch(&account_id).await?;
     let id = account_id.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        qoder_native::switch(qoder_native::NativeRegion::Global, &id, target)
+    let relaunched = tauri::async_runtime::spawn_blocking(move || {
+        crate::modules::qoder_cn_clients::switch_global_native(
+            &id, target, launch, working_dir.map(std::path::PathBuf::from), terminal,
+        )
     })
     .await
     .map_err(|_| "QODER_NATIVE_WORKER_FAILED".to_string())??;
     Ok(QoderNativeSwitchOutcome {
         account_id,
-        relaunched: false,
+        relaunched,
     })
 }
 
