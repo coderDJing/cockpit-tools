@@ -814,13 +814,6 @@
   flex: 0 0 auto;
 }
 
-.export-json-preview-note {
-  margin-top: 6px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 @media (max-width: 760px) {
   .export-json-toolbar {
     align-items: stretch;
