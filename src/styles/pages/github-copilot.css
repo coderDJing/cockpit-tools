@@ -1857,17 +1857,12 @@
   height: 14px;
 }
 
-/* The global .toolbar-left uses flex-basis 0, so its min-content can silently
-   overflow under .toolbar-right at medium widths. Give it a real basis and let
-   the filter controls wrap instead of overlapping the action buttons. */
 .ghcp-accounts-page .toolbar > .toolbar-left {
-  flex: 1 1 420px;
   min-width: 0;
   flex-wrap: wrap;
 }
 
 .ghcp-accounts-page .toolbar > .toolbar-right {
-  justify-content: flex-end;
   max-width: 100%;
 }
 
