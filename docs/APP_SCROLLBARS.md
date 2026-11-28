@@ -1,8 +1,8 @@
 # Application scrollbars
 
-The DJ build uses OverlayScrollbars 2 for application scroll owners, including
-the sidebar, page content, dialogs, tables, menus and textareas. The installer
-includes the dependency's MIT license.
+The application uses OverlayScrollbars 2 for its scroll owners: the sidebar,
+page content, dialogs, tables and menus. Textareas intentionally keep their
+native scrollbars. The installer includes the dependency's MIT license.
 
 `installAppScrollbars` runs once per frontend window. It discovers native
 `overflow: auto/scroll` elements and observes mounted content, size changes,
